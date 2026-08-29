@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>window.location.href = './login.html';</script>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background-color: var(--verde-fundo-1, #e3f4e2);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-family: var(--font-family);
+    }
+    .top-bar-mobile {
+      height: 44px;
+      background: linear-gradient(to right, #e0e0e0, #888, var(--verde-500));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 1rem;
+      font-weight: 800;
+      color: var(--verde-900);
+    }
+    .hero-banner {
+      width: 100%;
+      height: 180px;
+      background-image: url('../assets/prototypes/web/imagem_fundo.png');
+      background-size: cover;
+      background-position: center 60%;
+      position: relative;
+    }
+    .hero-banner::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(227, 244, 226, 0.2), var(--verde-fundo-1, #e3f4e2));
+    }
+    .mobile-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      margin-top: -2rem;
+      position: relative;
+      z-index: 2;
+    }
+    .logo-wrap {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .logo-wrap img {
+      max-width: 160px;
+      height: auto;
+    }
+    .form-login-mobile {
+      width: 100%;
+      max-width: 360px;
+      background: var(--branco);
+      padding: 1.75rem 1.5rem;
+      border-radius: 1.25rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+    .form-login-mobile h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--verde-700);
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+    .campo { margin-bottom: 1.25rem; }
+    .campo label { display: block; color: var(--verde-800); font-weight: 700; font-size: 0.9rem; margin-bottom: 0.35rem; }
+    .input-icon-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon-wrap i {
+      position: absolute;
+      left: 0;
+      color: var(--verde-600);
+      font-size: 1.1rem;
+    }
+    .input-icon-wrap input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--verde-300);
+      padding: 8px 0 8px 28px;
+      font-family: var(--font-family);
+      font-weight: 600;
+      color: var(--verde-900);
+      outline: none;
+      font-size: 1rem;
+    }
+    .input-icon-wrap input:focus { border-bottom-color: var(--verde-600); }
+    .btn-entrar-mobile {
+      width: 100%;
+      background: linear-gradient(180deg, #81c784, #4caf50);
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      color: white;
+      font-family: var(--font-family);
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .bottom-bar-mobile {
+      height: 40px;
+      background-color: var(--verde-800);
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar-mobile">Reciclagem Solidária</div>
+  <div class="hero-banner"></div>
+
+  <div class="mobile-container">
+    <div class="logo-wrap">
+      <img src="../assets/logo.jpg" alt="Reciclagem Solidária Logo">
+    </div>
+
+    <form class="form-login-mobile" id="formLoginMobile" novalidate>
+      <h1>Login</h1>
+      <div class="status-message" id="statusMsg"></div>
+
+      <div class="campo">
+        <label for="email">E-mail / Usuário:</label>
+        <div class="input-icon-wrap">
+          <i class="fa-solid fa-envelope"></i>
+          <input type="email" id="email" placeholder="Seu e-mail" required>
+        </div>
+      </div>
+
+      <div class="campo">
+        <label for="senha">Senha:</label>
+        <div class="input-icon-wrap">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="senha" placeholder="Sua senha" required>
+        </div>
+      </div>
+
+      <div style="text-align: right; margin-bottom: 1rem;">
+        <a href="recuperar-senha.html" style="color: var(--verde-700); font-weight: 600; font-size: 0.85rem; text-decoration: underline;">Esqueci a senha</a>
+      </div>
+
+      <button type="submit" class="btn-entrar-mobile" id="btnEntrarMobile">
+        <i class="fa-solid fa-right-to-bracket"></i> Entrar
+      </button>
+
+      <p style="text-align: center; margin: 1.25rem 0 0; font-size: 0.88rem; font-weight: 600; color: var(--verde-800);">
+        Ainda não tem conta? <a href="cadastro-mobile.html" style="color: #ff5252; font-weight: 800;">Cadastre-se</a>
+      </p>
+    </form>
+  </div>
+
+  <div class="bottom-bar-mobile"></div>
+
+  <script type="module">
+    import { login, redirectPorPerfil } from '../js/services/auth.js';
+
+    const form = document.getElementById('formLoginMobile');
+    const statusMsg = document.getElementById('statusMsg');
+    const btn = document.getElementById('btnEntrarMobile');
+
+    const mostrarErro = (m) => {
+      statusMsg.className = 'status-message error';
+      statusMsg.textContent = m;
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusMsg.className = 'status-message';
+
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value;
+
+      if (!email) return mostrarErro('Informe seu e-mail.');
+      if (!senha) return mostrarErro('Informe sua senha.');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Entrando...';
+
+      try {
+        const resultado = await login(email, senha);
+        if (!resultado.ok) {
+          mostrarErro(resultado.erro);
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar';
+          return;
+        }
+        redirectPorPerfil(resultado.perfil.tipo);
+      } catch (err) {
+        mostrarErro('Erro inesperado: ' + err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar';
+      }
+    });
+  </script>
+</body>
+</html>

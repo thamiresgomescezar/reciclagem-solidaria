@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>window.location.href = './cadastro.html';</script>
+  <link rel="stylesheet" href="../css/style.css">
+  <!-- ref: assets/prototypes/cadastro_mobile.jpeg -->
+</head>
+<body style="background-color: var(--verde-fundo-2);">
+
+  <div class="mobile-view">
+    <div class="mobile-content">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="../assets/prototypes/logo.jpg" alt="Logo" class="app-logo" style="max-width: 140px;">
+        <h3 style="color: var(--verde-escuro);">Criar Conta</h3>
+      </div>
+
+      <div id="feedback-msg" class="feedback-msg"></div>
+
+      <form id="cadastro-form">
+        
+        <div class="form-group">
+          <label class="form-label" for="tipo_perfil">Tipo de Perfil</label>
+          <select id="tipo_perfil" class="input-pill" required>
+            <option value="cidadao">Cidadão Consciente</option>
+            <option value="catador">Catador Autônomo</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="nome">Nome</label>
+          <input type="text" id="nome" class="input-pill" placeholder="Seu nome completo" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="telefone">Telefone</label>
+          <input type="tel" id="telefone" class="input-pill" placeholder="(11) 90000-0000" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">E-mail</label>
+          <input type="email" id="email" class="input-pill" placeholder="email@exemplo.com" required>
+        </div>
+
+        <input type="hidden" id="email_confirma_mobile">
+
+        <div class="form-group">
+          <label class="form-label" for="senha">Senha</label>
+          <input type="password" id="senha" class="input-pill" placeholder="Mínimo 6 dígitos" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="senha_confirma">Confirme a Senha</label>
+          <input type="password" id="senha_confirma" class="input-pill" placeholder="Digite novamente" required>
+        </div>
+
+        <h5 style="color: var(--verde-escuro); margin-top: 10px;">Endereço</h5>
+        <div id="endereco-container"></div>
+
+        <button type="submit" id="btn-cadastrar" class="btn-pill" style="margin-top: 16px;">CADASTRAR</button>
+      </form>
+
+      <div style="text-align: center; margin-top: 16px; font-size: 14px;">
+        <a href="./login.html">Voltar para o Login</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/pages/cadastro.js"></script>
+</body>
+</html>

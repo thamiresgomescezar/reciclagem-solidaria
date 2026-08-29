@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reciclagem Solidária</title>
+  
+  <!-- Configurações de PWA, Ícone e Nome do App -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <meta name="theme-color" content="#1b6d24">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Reciclagem Solidária">
+  <meta name="application-name" content="Reciclagem Solidária">
+
+  <link rel="stylesheet" href="css/design-tokens.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #e3f4e2;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .splash {
+      text-align: center;
+      background: #e3f4e2;
+      padding: 2.5rem 2rem;
+      max-width: 420px;
+      width: 100%;
+    }
+    .splash img {
+      max-width: 220px;
+      height: auto;
+      margin-bottom: 1.5rem;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .splash h1 {
+      color: var(--verde-800, #2c5d2d);
+      font-size: 1.85rem;
+      font-weight: 800;
+      margin: 0 0 0.5rem;
+    }
+    .splash p {
+      color: var(--verde-700, #347535);
+      font-weight: 600;
+      margin-bottom: 2rem;
+      font-size: 1rem;
+    }
+    .spinner-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: var(--verde-700);
+      font-weight: 700;
+    }
+    .spinner-icon {
+      font-size: 1.75rem;
+      color: var(--verde-600);
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="splash">
+    <img src="assets/logo.jpg" alt="Reciclagem Solidária Logo">
+    <h1>Reciclagem Solidária</h1>
+    <p>Conectando cidadãos conscientes a catadores</p>
+    <div class="spinner-container">
+      <i class="fa-solid fa-circle-notch spinner-icon"></i>
+      <span>Carregando...</span>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase } from './js/lib/supabaseClient.js';
+    import { getPerfilAtual } from './js/services/auth.js';
+
+    async function redirecionar() {
+      // Delay suave de 1.5s para exibição da tela de abertura e animação de carregamento
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        window.location.href = 'pages/login.html';
+        return;
+      }
+
+      const perfil = await getPerfilAtual();
+      if (perfil.erro || (perfil.dados && perfil.dados.situacao && perfil.dados.situacao !== 'ativo')) {
+        await supabase.auth.signOut();
+        window.location.href = 'pages/login.html';
+        return;
+      }
+
+      const destinos = {
+        cidadao: 'pages/dashboard-cidadao.html',
+        administrador: 'pages/dashboard-admin.html',
+        catador: 'pages/dashboard-catador.html',
+      };
+      window.location.href = destinos[perfil.tipo] || 'pages/login.html';
+    }
+
+    redirecionar();
+  </script>
+</body>
+</html>

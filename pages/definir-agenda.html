@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Definir Agenda — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="./dashboard-admin.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Link + Logo no Topo Fixo -->
+        <aside class="left-panel">
+          <div class="links" style="margin-bottom: 0.5rem;">
+            <a href="./definir-agenda.html" class="l1" id="link_left_agenda"><i class="fa-solid fa-calendar-days"></i> Agenda & Horários</a>
+          </div>
+
+          <div class="logo-wrap">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Configuração de Agenda e Calendário Visual de Dias Cadastrados -->
+        <main class="center-panel" style="align-items: stretch; justify-content: flex-start;">
+          <div style="width: 100%; padding-bottom: 2rem;">
+            <h1 id="titulo_pagina_agenda" style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem;">
+              Agenda & Horários de Atendimento
+            </h1>
+
+            <!-- Configuração Recorrente Mensal (Visível Apenas para Administradores) -->
+            <div id="box_config_admin" style="background: white; padding: 20px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 1.5rem; display: none;">
+              <h4 style="color: var(--verde-escuro, #1b6d24); margin-bottom: 12px; font-size: 1.1rem; font-weight: 800;">
+                <i class="fa-regular fa-clock"></i> Gerar Agenda Automática Mensal
+              </h4>
+
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem;" id="weekdays-group">
+                <button type="button" class="btn-tab active" data-day="1">Segunda</button>
+                <button type="button" class="btn-tab active" data-day="2">Terça</button>
+                <button type="button" class="btn-tab active" data-day="3">Quarta</button>
+                <button type="button" class="btn-tab active" data-day="4">Quinta</button>
+                <button type="button" class="btn-tab active" data-day="5">Sexta</button>
+                <button type="button" class="btn-tab" data-day="6">Sábado</button>
+                <button type="button" class="btn-tab" data-day="0">Domingo</button>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem;">
+                <div class="campo">
+                  <label for="horario_inicio">Horário Inicial:</label>
+                  <input type="time" id="horario_inicio" class="input-underline" value="08:00">
+                </div>
+                <div class="campo">
+                  <label for="horario_fim">Horário Final:</label>
+                  <input type="time" id="horario_fim" class="input-underline" value="17:00">
+                </div>
+              </div>
+
+              <button type="button" id="btn-gerar-recorrente" class="btn-avancar">
+                <i class="fa-solid fa-bolt"></i> GERAR AGENDA AUTOMÁTICA (MÊS ATUAL)
+              </button>
+            </div>
+
+            <!-- Calendário Visual de Dias Cadastrados -->
+            <div id="calendar-picker-box"></div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { supabase } from '../js/lib/supabaseClient.js';
+    import { getPerfilAtual } from '../js/services/auth.js';
+    import { listarAgendaPorLocal, salvarAgendaEmLote } from '../js/services/agenda.js';
+    import { getLocalRetiradaPadrao } from '../js/services/coletas.js';
+    import { renderCalendarGrid } from '../js/pages/calendarPicker.js';
+    import { showAlertModal } from '../js/lib/modal.js';
+
+    const boxAdmin = document.getElementById('box_config_admin');
+    const btnGerar = document.getElementById('btn-gerar-recorrente');
+    const inputInicio = document.getElementById('horario_inicio');
+    const inputFim = document.getElementById('horario_fim');
+    const btnVoltarTop = document.getElementById('btn-voltar-top');
+
+    let localPadrao = null;
+    let diasSelecionados = [1, 2, 3, 4, 5];
+    let agendaBanco = [];
+    let perfilAtual = null;
+
+    // Renderiza a grade IMEDIATAMENTE e DE FORMA SÍNCRONA no carregamento para que a tela NUNCA fique em branco
+    renderCalendarGrid('calendar-picker-box', { agendaData: [], isAdmin: false });
+
+    async function carregarEExibirCalendario() {
+      const eAdmin = perfilAtual?.tipo === 'administrador';
+
+      try {
+        if (!localPadrao) localPadrao = await getLocalRetiradaPadrao().catch(() => ({ id: '11111111-1111-1111-1111-111111111111' }));
+        agendaBanco = await listarAgendaPorLocal(localPadrao.id).catch(() => []);
+
+        renderCalendarGrid('calendar-picker-box', {
+          agendaData: agendaBanco,
+          isAdmin: eAdmin,
+          onSaveAgenda: eAdmin ? async (pendingMap) => {
+            const statusEl = document.getElementById('save-status-msg');
+            if (statusEl) {
+              statusEl.className = 'status-message';
+              statusEl.style.display = 'block';
+              statusEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando alterações...';
+            }
+
+            try {
+              await salvarAgendaEmLote({
+                local_retirada_id: localPadrao.id,
+                mapaDatas: pendingMap,
+                hora_inicio: inputInicio.value || '08:00',
+                hora_fim: inputFim.value || '17:00'
+              });
+
+              if (statusEl) {
+                statusEl.className = 'status-message success';
+                statusEl.style.display = 'block';
+                statusEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> Alterações da agenda salvas com sucesso!';
+              }
+
+              agendaBanco = await listarAgendaPorLocal(localPadrao.id);
+            } catch (err) {
+              if (statusEl) {
+                statusEl.className = 'status-message error';
+                statusEl.style.display = 'block';
+                statusEl.textContent = 'Erro ao salvar agenda: ' + err.message;
+              }
+            }
+          } : null
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    if (btnVoltarTop) {
+      btnVoltarTop.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const perfil = perfilAtual || await getPerfilAtual().catch(() => null);
+        const tipo = perfil?.tipo || 'cidadao';
+        const dest = tipo === 'administrador' ? './dashboard-admin.html' : (tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+        window.location.href = dest;
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Inicia a renderização do banco imediatamente
+      carregarEExibirCalendario();
+
+      perfilAtual = await getPerfilAtual().catch(() => null);
+      const tituloEl = document.getElementById('titulo_pagina_agenda');
+      const linkLeftEl = document.getElementById('link_left_agenda');
+
+      if (perfilAtual?.tipo === 'administrador') {
+        if (boxAdmin) boxAdmin.style.display = 'block';
+        if (tituloEl) tituloEl.textContent = 'Definir Agenda de Coletas & Horários';
+        if (linkLeftEl) linkLeftEl.innerHTML = '<i class="fa-solid fa-calendar-days"></i> Definir Agenda';
+      } else {
+        if (boxAdmin) boxAdmin.style.display = 'none';
+        if (tituloEl) tituloEl.textContent = 'Agenda & Horários de Atendimento';
+        if (linkLeftEl) linkLeftEl.innerHTML = '<i class="fa-solid fa-calendar-days"></i> Agenda & Horários';
+      }
+
+      document.querySelectorAll('#weekdays-group button').forEach(btn => {
+        const dayVal = parseInt(btn.dataset.day, 10);
+        btn.addEventListener('click', () => {
+          if (diasSelecionados.includes(dayVal)) {
+            diasSelecionados = diasSelecionados.filter(d => d !== dayVal);
+            btn.classList.remove('active');
+          } else {
+            diasSelecionados.push(dayVal);
+            btn.classList.add('active');
+          }
+          btn.blur();
+        });
+      });
+
+      // Atualiza novamente após confirmar o perfil
+      await carregarEExibirCalendario();
+    });
+
+    // Gerador de Agenda Mensal Apenas em Memória
+    if (btnGerar) {
+      btnGerar.addEventListener('click', () => {
+        if (diasSelecionados.length === 0) {
+          showAlertModal({ title: 'Seleção Necessária', message: 'Selecione pelo menos um dia da semana para atendimento.' });
+          return;
+        }
+
+        const hoje = new Date();
+        const ano = hoje.getFullYear();
+        const mes = hoje.getMonth();
+        const totalDias = new Date(ano, mes + 1, 0).getDate();
+
+        const newMap = window._calendarPendingMap || {};
+        const hIni = inputInicio?.value || '08:00';
+        const hFim = inputFim?.value || '17:00';
+
+        for (let dia = 1; dia <= totalDias; dia++) {
+          const d = new Date(ano, mes, dia);
+          const dayOfWeek = d.getDay();
+          const monthStr = String(mes + 1).padStart(2, '0');
+          const dayStr = String(dia).padStart(2, '0');
+          const dateFormatted = `${ano}-${monthStr}-${dayStr}`;
+
+          if (diasSelecionados.includes(dayOfWeek)) {
+            newMap[dateFormatted] = {
+              disponivel: true,
+              hora_inicio: hIni,
+              hora_fim: hFim
+            };
+          } else {
+            // Se o dia não foi selecionado no grupo atual, marca como fechado
+            newMap[dateFormatted] = {
+              disponivel: false,
+              hora_inicio: hIni,
+              hora_fim: hFim
+            };
+          }
+        }
+
+        window._calendarPendingMap = newMap;
+
+        // Re-renderiza a grade para o usuário visualizar o resultado antes de salvar no banco
+        renderCalendarGrid('calendar-picker-box', {
+          agendaData: agendaBanco,
+          isAdmin: true,
+          onSaveAgenda: async (pendingMap) => {
+            const statusEl = document.getElementById('save-status-msg');
+            if (statusEl) {
+              statusEl.className = 'status-message';
+              statusEl.style.display = 'block';
+              statusEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando alterações...';
+            }
+
+            try {
+              await salvarAgendaEmLote({
+                local_retirada_id: localPadrao.id,
+                mapaDatas: pendingMap,
+                hora_inicio: inputInicio.value || '08:00',
+                hora_fim: inputFim.value || '17:00'
+              });
+
+              if (statusEl) {
+                statusEl.className = 'status-message success';
+                statusEl.style.display = 'block';
+                statusEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> Alterações da agenda salvas com sucesso!';
+              }
+
+              agendaBanco = await listarAgendaPorLocal(localPadrao.id);
+            } catch (err) {
+              if (statusEl) {
+                statusEl.className = 'status-message error';
+                statusEl.style.display = 'block';
+                statusEl.textContent = 'Erro ao salvar agenda: ' + err.message;
+              }
+            }
+          }
+        });
+
+        const statusEl = document.getElementById('save-status-msg');
+        if (statusEl) {
+          statusEl.className = 'status-message info';
+          statusEl.style.display = 'block';
+          statusEl.innerHTML = '<i class="fa-solid fa-circle-info"></i> Horários gerados para os dias selecionados! Clique no botão <b>SALVAR ALTERAÇÕES DA AGENDA</b> abaixo para confirmar.';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

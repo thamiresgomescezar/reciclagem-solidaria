@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Reciclagem Solidária</title>
+  
+  <!-- Configurações de PWA, Ícone e Nome do App -->
+  <link rel="manifest" href="../manifest.json">
+  <link rel="icon" type="image/png" href="../assets/icon-192.png">
+  <link rel="apple-touch-icon" href="../assets/icon-192.png">
+  <meta name="theme-color" content="#1b6d24">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Reciclagem Solidária">
+  <meta name="application-name" content="Reciclagem Solidária">
+
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="app-container" id="app-shell">
+    <!-- Top Header com Botão de Cadastro em Branco à Direita -->
+    <div class="top-bar">
+      <div></div>
+      <a href="./cadastro.html" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        Criar Conta <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo Fixo no Topo -->
+        <aside class="left-panel">
+          <div class="links" style="margin-bottom: 0.5rem; margin-top: 0;">
+            <a href="./login.html" class="l1"><i class="fa-solid fa-right-to-bracket"></i> Acesso ao Sistema</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 0.25rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Login Começando na Mesma Linha de Topo de Todas as Outras Telas -->
+        <main class="center-panel">
+          <div style="width: 100%; max-width: 440px; margin: 0 auto;">
+            <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.5rem; margin-top: 0;">Login</h1>
+
+            <form id="formLogin" novalidate style="width: 100%;">
+              <div class="campo">
+                <label for="email">Usuário / E-mail:<span class="req">*</span></label>
+                <input type="email" id="email" class="input-underline" placeholder="Seu e-mail" autocomplete="email" required>
+              </div>
+
+              <div class="campo">
+                <label for="senha">Senha:<span class="req">*</span></label>
+                <input type="password" id="senha" class="input-underline" placeholder="Sua senha" autocomplete="current-password" required>
+              </div>
+
+              <div style="text-align: right; margin: 0.5rem 0 1.5rem;">
+                <a href="./recuperar-senha.html" style="color: var(--verde-escuro, #1b6d24); font-weight: 600; font-size: 0.85rem; text-decoration: underline;">Esqueci minha senha</a>
+              </div>
+
+              <button type="submit" class="btn-avancar" id="btnEntrar">
+                <i class="fa-solid fa-right-to-bracket"></i> Login
+              </button>
+
+              <div id="statusMsg" class="status-message" style="margin-top: 1rem;"></div>
+
+              <p style="text-align: center; margin: 1.5rem 0 0; font-size: 0.9rem; font-weight: 600; color: var(--verde-escuro, #1b6d24);">
+                Ainda não tem login? Realize seu cadastro <a href="./cadastro.html" style="color: #ff5252; font-weight: 800; text-decoration: underline;">aqui!</a>
+              </p>
+            </form>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { login, redirectPorPerfil, getPerfilAtual } from '../js/services/auth.js';
+
+    const form = document.getElementById('formLogin');
+    const statusMsg = document.getElementById('statusMsg');
+    const btn = document.getElementById('btnEntrar');
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const perfil = await getPerfilAtual();
+      if (perfil) {
+        redirectPorPerfil(perfil.tipo);
+      }
+    });
+
+    const mostrarErro = (m) => {
+      statusMsg.className = 'status-message error';
+      statusMsg.textContent = m;
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusMsg.className = 'status-message';
+
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value;
+
+      if (!email) return mostrarErro('Informe seu e-mail.');
+      if (!senha) return mostrarErro('Informe sua senha.');
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Entrando...';
+
+      try {
+        const resultado = await login(email, senha);
+        if (!resultado.ok) {
+          mostrarErro(resultado.erro);
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login';
+          return;
+        }
+        redirectPorPerfil(resultado.perfil.tipo);
+      } catch (err) {
+        mostrarErro('Erro inesperado: ' + err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login';
+      }
+    });
+  </script>
+</body>
+</html>

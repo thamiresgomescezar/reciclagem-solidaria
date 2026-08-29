@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cadastro - Reciclagem Solidária</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              DEFAULT: '#4caf50',
+              50: '#f5fbee',
+              100: '#e8f6df',
+              200: '#d0ebc0',
+              300: '#addb95',
+              400: '#83c464',
+              500: '#4caf50',
+              600: '#3f933f',
+              700: '#347535',
+              800: '#2c5d2d',
+              900: '#254c27',
+              950: '#112913',
+            },
+            surface: '#f5fbef',
+            'surface-dim': '#d6dcd0',
+            'surface-bright': '#f5fbef',
+          },
+          borderRadius: {
+            'xl': '0.75rem',
+            '2xl': '1rem',
+            '3xl': '1.5rem',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="layout">
+body {
+    background-color: #d6dcd0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 1rem;
+}
+.app-container {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    aspect-ratio: 16/10;
+    background-color: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+}
+/* Top Bar */
+.top-bar {
+    height: 40px;
+    background: linear-gradient(to right, #e0e0e0, #888, #4caf50);
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    position: relative;
+    z-index: 10;
+}
+.main-content {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+}
+/* Slanted Background Split */
+.bg-split {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    z-index: 0;
+}
+.bg-left {
+    width: 75%;
+    background-color: white;
+    position: relative;
+}
+.bg-right {
+    width: 25%;
+    background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuARP3DiGwMHFARQlbQcKzE3_8fGUD-LnVqLsLjDzYI5ZjsYROBDZ1M35wxiRnFXuLF0ij5T0GqxFR2g0e6tL-mJBrNjed9fvsjI0utAbVJR_1Ic9rWIGvDVupv39fVSX81UCGKItvTzlkWKfNCiXqKeQnO-JyFw_xX_x1BA6u9zYb3GhSWpu9fhqdtupvdSidBjGP3lW5kxdX4YZqZsQf8AgFiv0NIKzuRb_OM651voqywwtWuksDnC7A');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    position: relative;
+}
+.bg-right::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(76, 175, 80, 0.7);
+}
+/* Content Overlay */
+.content-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    display: flex;
+    padding: 2rem;
+}
+.left-panel {
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+}
+/* Curved background for logo area */
+.left-panel::before {
+    content: "";
+    position: absolute;
+    top: -2rem;
+    left: -2rem;
+    bottom: -2rem;
+    width: 120%;
+    background-color: #e8f6df;
+    border-radius: 0 50% 50% 0;
+    z-index: -1;
+}
+.center-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 2rem;
+}
+.right-panel {
+    width: 25%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding-bottom: 2rem;
+    padding-left: 1.5rem;
+}
+/* Footer */
+.bottom-bar {
+    height: 50px;
+    background-color: #2c5d2d;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 10;
+}
+
+/* Custom Input Styling from original */
+.custom-input {
+    background-color: #81c784;
+    border: none;
+    border-radius: 20px;
+    color: white;
+    padding: 10px 20px;
+    width: 100%;
+    margin-bottom: 15px;
+}
+.custom-input::placeholder {
+    color: rgba(255, 255, 255, 0.8);
+}
+.custom-label {
+    color: #4caf50;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+.required-asterisk {
+    color: red;
+}
+/* Checkbox Styling */
+.captcha-box {
+    background-color: #81c784;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+    width: 250px;
+}
+</style>
+</head>
+<body>
+<!-- BEGIN: AppContainer -->
+<div class="app-container">
+<!-- BEGIN: TopBar -->
+<div class="top-bar">
+<button class="text-primary-500 hover:text-primary-600 focus:outline-none">
+<i class="fa-solid fa-bars text-2xl"></i>
+</button>
+</div>
+<!-- END: TopBar -->
+<!-- BEGIN: MainContent -->
+<div class="main-content">
+<!-- Background Split -->
+<div class="bg-split">
+<div class="bg-left"></div>
+<div class="bg-right" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDnL7EDOf9SiJ7OYgHRI_hNFB5iMNySeI2vTDvbWfG-4OZRd2xKGo2OwUx__HOvMZPKanGafWFZxtQk_Exbpm9iiBqH-_Za_m2kuQh8pCbyRlgu9hxc09Mks-Fd9mFNb8TjiU87X-hJ0h6v7G-Sx14BZ-aBR_Ok6qB3bTLENxgfpLb8gFpn75G5qoORSpFpRKHBRtDz17dEsBDJKce96mehkz0dVcsb2In5XSICfzVoFJINdkfnQrodnQ'); background-position: center center; background-size: cover;"></div>
+</div>
+<!-- Content Overlay -->
+<div class="content-overlay">
+<!-- BEGIN: LeftPanel (Logo) -->
+<div class="left-panel">
+<div>
+<a class="text-primary-600 font-semibold flex items-center gap-2 hover:text-primary-700" href="#">
+              Quem somos <i class="fa-solid fa-leaf"></i>
+</a>
+<a class="text-primary-500 font-semibold block mt-1 hover:text-primary-600" href="#">
+              Saiba mais
+            </a>
+</div>
+<div class="flex-1 flex items-center justify-center">
+<img alt="Reciclagem Solidária Logo" class="max-w-full max-h-64 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4m0lpJGnhHJPmfTi2DDFYr-vyT44TowSvuB5gfYUfM-oGFU_MMvYFsKYVBZg9Fs7UhSeP5wp-iHhJTOyMvViQd8EKvSOu7DKY-N3EJeGuXRN01cbkPehxdLnN_0I5UxFviYZRkA-1ol73r44DoyJ-AM8hAptjMHTpoYk4AdUOpOVUmPpi2s0PbEl14GH2Bp707h1sBf8nNOJ-BlIIzZLBxvGgQD7ggWBxLDLG-cXpJAk67-pAX270IdjS-NS_imi-rgY"/>
+</div>
+<div></div>
+</div>
+<!-- END: LeftPanel -->
+<!-- BEGIN: CenterPanel (Form Area) -->
+<div class="center-panel w-full">
+<h1 class="text-4xl font-bold text-primary-500 mb-8 text-center">Cadastro</h1>
+<form action="#" class="max-w-sm w-full" method="POST">
+<div>
+<label class="custom-label">Nome:<span class="required-asterisk">*</span></label>
+<input class="custom-input" placeholder="" type="text"/>
+</div>
+<div>
+<label class="custom-label">Seu melhor e-mail:<span class="required-asterisk">*</span></label>
+<input class="custom-input" placeholder="nnnnnnn@nnnn.nnnn" type="email"/>
+</div>
+<div>
+<label class="custom-label">Repita seu e-mail:<span class="required-asterisk">*</span></label>
+<input class="custom-input" placeholder="nnnnnnn@nnnn.nnnn" type="email"/>
+</div>
+<div>
+<label class="custom-label">Telefone: <i class="fa-brands fa-whatsapp text-green-600"></i><span class="required-asterisk">*</span></label>
+<input class="custom-input" placeholder="(00) 00000-0000" type="tel"/>
+</div>
+<div class="flex gap-4">
+<div class="flex-1">
+<label class="custom-label text-xs">Crie uma senha com 6 digitos:<span class="required-asterisk">*</span></label>
+<div class="flex gap-2 text-primary-500 mb-2">
+<i class="fa-solid fa-square-full rotate-45 text-xs"></i>
+<i class="fa-solid fa-square-full rotate-45 text-xs"></i>
+<i class="fa-solid fa-square-full rotate-45 text-xs"></i>
+<i class="fa-solid fa-square-full rotate-45 text-xs"></i>
+<i class="fa-solid fa-square-full rotate-45 text-xs"></i>
+<i class="fa-solid fa-square-full rotate-45 text-xs"></i>
+</div>
+</div>
+<div class="flex-1">
+<label class="custom-label text-xs">Confirme sua senha:<span class="required-asterisk">*</span></label>
+<div class="flex gap-2 text-primary-500 mb-2">
+<i class="fa-solid fa-square-full rotate-45 text-xs"></i>
+<i class="fa-solid fa-square-full rotate-45 text-xs"></i>
+<i class="fa-solid fa-square-full rotate-45 text-xs"></i>
+<i class="fa-solid fa-square-full rotate-45 text-xs"></i>
+<i class="fa-solid fa-square-full rotate-45 text-xs"></i>
+<i class="fa-solid fa-square-full rotate-45 text-xs"></i>
+</div>
+</div>
+</div>
+<div class="mt-6 flex justify-center">
+<div class="captcha-box">
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="form-checkbox text-primary-500 h-6 w-6 rounded-full border-2 border-white bg-transparent" type="checkbox"/>
+<span class="font-semibold">Eu não sou um robô</span>
+</label>
+<div class="text-center text-[10px]">
+<i class="fa-solid fa-recycle text-2xl mb-1"></i><br/>
+              reCAPTCHA
+            </div>
+</div>
+</div>
+</form>
+</div>
+<!-- END: CenterPanel -->
+<!-- BEGIN: RightPanel (User Type) -->
+<div class="right-panel text-white">
+<h2 class="text-xl font-bold mb-4 drop-shadow-md">Selecione uma opção:<span class="text-red-500">*</span></h2>
+<div class="flex flex-col gap-4">
+<label class="flex items-center gap-2 cursor-pointer drop-shadow-md">
+<input class="form-radio text-primary-500 focus:ring-primary-500 h-5 w-5 bg-transparent border-white" name="user_type" type="radio"/>
+<span class="text-lg font-semibold"><i class="fa-solid fa-leaf mr-1"></i> Catador</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer drop-shadow-md">
+<input class="form-radio text-primary-500 focus:ring-primary-500 h-5 w-5 bg-transparent border-white" name="user_type" type="radio"/>
+<span class="text-lg font-semibold leading-tight text-left"><i class="fa-solid fa-leaf mr-1"></i> Cidadão<br/>Consciente</span>
+</label>
+</div>
+</div>
+<!-- END: RightPanel -->
+</div>
+</div>
+<!-- END: MainContent -->
+<!-- BEGIN: BottomBar -->
+<div class="bottom-bar">
+</div>
+<!-- END: BottomBar -->
+</div>
+<!-- END: AppContainer -->
+</body></html>

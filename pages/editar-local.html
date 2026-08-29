@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Locais de Coleta — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="./dashboard-admin.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo e Navegação -->
+        <aside class="left-panel">
+          <div class="links">
+            <a href="./editar-local.html" class="l1"><i class="fa-solid fa-map-location-dot"></i> Locais de Coleta</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 1rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Gestão de Locais de Retirada -->
+        <main class="center-panel" style="align-items: stretch; justify-content: flex-start;">
+          <div style="max-width: 680px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem;">
+              Gestão de Locais de Coleta & Retirada
+            </h1>
+
+            <div id="statusMsg" class="status-message"></div>
+
+            <!-- Botão de Ação para Abrir Formulário de Novo Local -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span style="font-size: 14px; font-weight: 700; color: var(--verde-escuro, #1b6d24);">
+                <i class="fa-solid fa-location-dot"></i> Pontos de Retirada Cadastrados
+              </span>
+              <button type="button" id="btn_toggle_form" class="btn-tab active" style="font-size: 0.85rem; padding: 6px 16px;">
+                <i class="fa-solid fa-plus"></i> Novo Local de Coleta
+              </button>
+            </div>
+
+            <!-- Formulário de Cadastro / Edição de Local -->
+            <div id="box_form_local" style="background: white; padding: 20px; border-radius: 16px; border: 1.5px solid #a5d6a7; margin-bottom: 1.5rem; box-shadow: 0 4px 14px rgba(0,0,0,0.05); display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e8f5e9; padding-bottom: 8px;">
+                <h3 id="form_title" style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; font-weight: 800; margin: 0;">
+                  <i class="fa-solid fa-map-pin"></i> Cadastrar Novo Ponto de Coleta
+                </h3>
+                <button type="button" id="btn_cancelar_form" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #666;" title="Fechar formulário">✕</button>
+              </div>
+
+              <form id="form_local_retirada" novalidate>
+                <input type="hidden" id="local_id" value="">
+
+                <div class="campo">
+                  <label for="local_nome">Nome do Ponto / Instituição:<span class="req">*</span></label>
+                  <input type="text" id="local_nome" class="input-underline" placeholder="Ex: Fatec Franco da Rocha" required>
+                </div>
+
+                <!-- Linha 1: CEP -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <div class="campo">
+                    <label for="local_cep">CEP:<span class="req">*</span></label>
+                    <input type="text" id="local_cep" class="input-underline" placeholder="00000-000" maxlength="9" required>
+                  </div>
+                  <div></div>
+                </div>
+
+                <!-- Linha 2: Cidade e Estado -->
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+                  <div class="campo">
+                    <label for="local_cidade">Cidade:<span class="req">*</span></label>
+                    <input type="text" id="local_cidade" class="input-underline" placeholder="Ex: Franco da Rocha" required>
+                  </div>
+                  <div class="campo">
+                    <label for="local_estado">Estado:<span class="req">*</span></label>
+                    <input type="text" id="local_estado" class="input-underline" placeholder="SP" maxlength="2" required>
+                  </div>
+                </div>
+
+                <!-- Linha 3: Bairro -->
+                <div class="campo">
+                  <label for="local_bairro">Bairro:<span class="req">*</span></label>
+                  <input type="text" id="local_bairro" class="input-underline" placeholder="Ex: Centro" required>
+                </div>
+
+                <!-- Linha 4: Rua -->
+                <div class="campo">
+                  <label for="local_rua">Rua / Logradouro:<span class="req">*</span></label>
+                  <input type="text" id="local_rua" class="input-underline" placeholder="Ex: Rua das Flores" required>
+                </div>
+
+                <!-- Linha 5: Número e Complemento - Opcional -->
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+                  <div class="campo">
+                    <label for="local_numero">Número:<span class="req">*</span></label>
+                    <input type="text" id="local_numero" class="input-underline" placeholder="Ex: 123 ou S/N" required>
+                  </div>
+                  <div class="campo">
+                    <label for="local_complemento">Complemento <span style="font-size: 0.8rem; font-weight: 500; color: #777;">- Opcional</span>:</label>
+                    <input type="text" id="local_complemento" class="input-underline" placeholder="Ex: Bloco B, portaria principal">
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 16px; align-items: center; margin-top: 10px; margin-bottom: 16px;">
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: var(--verde-escuro, #1b6d24); font-size: 0.9rem;">
+                    <input type="checkbox" id="local_ativo" checked style="width: 18px; height: 18px; accent-color: var(--verde-escuro, #1b6d24);">
+                    Ponto de Coleta Ativo no Sistema
+                  </label>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                  <button type="button" id="btn_cancelar_edicao" class="btn-tab" style="display: none;">
+                    Cancelar
+                  </button>
+                  <button type="submit" id="btn_salvar_local" class="btn-avancar" style="width: auto; padding: 10px 24px;">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar Local de Coleta
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Lista de Locais Cadastrados -->
+            <div id="lista_locais_container" style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="text-align: center; padding: 30px; color: var(--cinza-texto-aux);">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando locais de coleta...
+              </div>
+            </div>
+
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { supabase } from '../js/lib/supabaseClient.js';
+    import { protegerRota } from '../js/lib/routeGuard.js';
+    import { showConfirmModal } from '../js/lib/modal.js';
+
+    const container = document.getElementById('lista_locais_container');
+    const boxForm = document.getElementById('box_form_local');
+    const form = document.getElementById('form_local_retirada');
+    const formTitle = document.getElementById('form_title');
+    const statusMsg = document.getElementById('statusMsg');
+    const btnToggleForm = document.getElementById('btn_toggle_form');
+    const btnCancelarForm = document.getElementById('btn_cancelar_form');
+    const btnCancelarEdicao = document.getElementById('btn_cancelar_edicao');
+    const btnSalvar = document.getElementById('btn_salvar_local');
+    const inputCep = document.getElementById('local_cep');
+
+    let locaisCarregados = [];
+
+    // CEP auto-complete via ViaCEP
+    if (inputCep) {
+      inputCep.addEventListener('blur', async () => {
+        const cepVal = inputCep.value.replace(/\D/g, '');
+        if (cepVal.length === 8) {
+          try {
+            const resp = await fetch(`https://viacep.com.br/ws/${cepVal}/json/`);
+            const data = await resp.json();
+            if (!data.erro) {
+              const inputRua = document.getElementById('local_rua');
+              const inputBairro = document.getElementById('local_bairro');
+              const inputCidade = document.getElementById('local_cidade');
+              const inputEstado = document.getElementById('local_estado');
+
+              if (data.logradouro && inputRua && !inputRua.value) {
+                inputRua.value = data.logradouro;
+              }
+              if (data.bairro && inputBairro && !inputBairro.value) {
+                inputBairro.value = data.bairro;
+              }
+              if (data.localidade && inputCidade && !inputCidade.value) {
+                inputCidade.value = data.localidade;
+              }
+              if (data.uf && inputEstado) {
+                inputEstado.value = data.uf;
+              }
+            }
+          } catch (e) {}
+        }
+      });
+    }
+
+    function abrirFormularioNovo() {
+      form.reset();
+      document.getElementById('local_id').value = '';
+      document.getElementById('local_cidade').value = '';
+      document.getElementById('local_estado').value = '';
+      document.getElementById('local_ativo').checked = true;
+      formTitle.innerHTML = '<i class="fa-solid fa-map-pin"></i> Cadastrar Novo Ponto de Coleta';
+      btnCancelarEdicao.style.display = 'none';
+      boxForm.style.display = 'block';
+      boxForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function abrirFormularioEdicao(local) {
+      document.getElementById('local_id').value = local.id;
+      document.getElementById('local_nome').value = local.nome || '';
+      document.getElementById('local_cep').value = local.cep || '';
+      document.getElementById('local_cidade').value = local.cidade || '';
+      document.getElementById('local_estado').value = local.estado || '';
+      document.getElementById('local_bairro').value = local.bairro || '';
+      document.getElementById('local_rua').value = local.rua || '';
+      document.getElementById('local_numero').value = local.numero || '';
+      document.getElementById('local_complemento').value = local.complemento || '';
+      document.getElementById('local_ativo').checked = local.ativo !== false;
+
+      formTitle.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Editar Ponto de Coleta: ${local.nome}`;
+      btnCancelarEdicao.style.display = 'inline-block';
+      boxForm.style.display = 'block';
+      boxForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function fecharFormulario() {
+      form.reset();
+      document.getElementById('local_id').value = '';
+      boxForm.style.display = 'none';
+    }
+
+    if (btnToggleForm) btnToggleForm.addEventListener('click', abrirFormularioNovo);
+    if (btnCancelarForm) btnCancelarForm.addEventListener('click', fecharFormulario);
+    if (btnCancelarEdicao) btnCancelarEdicao.addEventListener('click', fecharFormulario);
+
+    async function carregarLocais() {
+      try {
+        const { data, error } = await supabase
+          .from('local_retirada')
+          .select('*')
+          .order('criado_em', { ascending: true });
+
+        if (error) throw error;
+
+        locaisCarregados = data || [];
+
+        if (locaisCarregados.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; color: var(--cinza-texto-aux); padding: 32px; background: white; border-radius: 14px; border: 1.5px dashed #a5d6a7;">
+              <i class="fa-solid fa-map-location-dot" style="font-size: 2.2rem; color: var(--verde-escuro, #1b6d24); margin-bottom: 8px; display: block;"></i>
+              <p style="font-weight: 800; color: var(--verde-escuro, #1b6d24); font-size: 1.05rem;">Nenhum ponto de coleta cadastrado</p>
+              <p style="font-size: 0.85rem; color: #666; margin-top: 4px;">Clique em "Novo Local de Coleta" acima para cadastrar.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = '';
+        locaisCarregados.forEach(local => {
+          const card = document.createElement('div');
+          card.style.cssText = 'background: white; padding: 18px 20px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 3px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column; gap: 10px;';
+
+          const isAtivo = local.ativo !== false;
+          const statusBadge = isAtivo
+            ? '<span style="font-size: 0.75rem; font-weight: 800; background: #e8f5e9; color: #1b5e20; padding: 3px 10px; border-radius: 8px;"><i class="fa-solid fa-circle-check"></i> ATIVO</span>'
+            : '<span style="font-size: 0.75rem; font-weight: 800; background: #ffebee; color: #c62828; padding: 3px 10px; border-radius: 8px;"><i class="fa-solid fa-circle-pause"></i> INATIVO</span>';
+
+          const endCompleto = `${local.rua || ''}, ${local.numero || ''} ${local.complemento ? ' - ' + local.complemento : ''} - ${local.bairro || ''}, ${local.cidade || 'Franco da Rocha'} - CEP ${local.cep || ''}`.trim();
+          const mapsQuery = `${local.nome} ${local.rua || ''} ${local.bairro || ''} ${local.cidade || ''}`.trim();
+
+          card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-location-dot" style="color: #2e7d32;"></i> ${local.nome}
+                </strong>
+                <div style="font-size: 0.88rem; color: #444; margin-top: 6px; line-height: 1.4;">
+                  <strong>Endereço:</strong> ${endCompleto}
+                </div>
+              </div>
+              <div>${statusBadge}</div>
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; padding-top: 10px; border-top: 1px solid #f0f0f0;">
+              <button type="button" class="btn-abrir-mapa btn-secondary-pill" data-nome="${local.nome}" data-endereco="${mapsQuery}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer;">
+                <i class="fa-solid fa-map-location-dot"></i> Ver no Mapa
+              </button>
+              <button type="button" class="btn-editar-local btn-tab" data-id="${local.id}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer;">
+                <i class="fa-solid fa-pen-to-square"></i> Editar Dados
+              </button>
+              <button type="button" class="btn-toggle-status btn-secondary-pill" data-id="${local.id}" data-ativo="${isAtivo}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer;">
+                ${isAtivo ? '<i class="fa-solid fa-pause"></i> Desativar' : '<i class="fa-solid fa-play"></i> Ativar'}
+              </button>
+              <button type="button" class="btn-excluir-local" data-id="${local.id}" data-nome="${local.nome}" style="background: none; border: 1.5px solid #ffcdd2; color: #c62828; padding: 7px 12px; border-radius: 999px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-left: auto;">
+                <i class="fa-solid fa-trash-can"></i> Excluir
+              </button>
+            </div>
+          `;
+
+          container.appendChild(card);
+        });
+
+        // Eventos dos botões nos cards
+        container.querySelectorAll('.btn-editar-local').forEach(b => {
+          b.addEventListener('click', () => {
+            const locId = b.dataset.id;
+            const targetLoc = locaisCarregados.find(l => l.id === locId);
+            if (targetLoc) abrirFormularioEdicao(targetLoc);
+          });
+        });
+
+        container.querySelectorAll('.btn-abrir-mapa').forEach(b => {
+          b.addEventListener('click', () => {
+            showAlertModal({
+              title: 'Funcionalidade Futura',
+              message: 'A integração com mapas e navegação por geolocalização estará disponível futuramente.',
+              buttonText: 'Entendido'
+            });
+          });
+        });
+
+        container.querySelectorAll('.btn-toggle-status').forEach(b => {
+          b.addEventListener('click', async () => {
+            const locId = b.dataset.id;
+            const statusAtual = b.dataset.ativo === 'true';
+
+            // Validação: não permitir desativar se for o único ponto ativo no sistema
+            if (statusAtual) {
+              const ativosRestantes = locaisCarregados.filter(l => l.ativo !== false && l.id !== locId);
+              if (ativosRestantes.length === 0) {
+                showAlertModal({
+                  title: 'Ação Não Permitida',
+                  message: 'Não é possível desativar este local. O sistema necessita de pelo menos um ponto de coleta ativo para receber ofertas de materiais.',
+                  buttonText: 'Entendido'
+                });
+                return;
+              }
+            }
+
+            try {
+              const { error } = await supabase
+                .from('local_retirada')
+                .update({ ativo: !statusAtual })
+                .eq('id', locId);
+
+              if (error) throw error;
+
+              statusMsg.className = 'status-message success';
+              statusMsg.textContent = `Ponto de coleta ${!statusAtual ? 'ativado' : 'desativado'} com sucesso!`;
+              carregarLocais();
+            } catch (err) {
+              statusMsg.className = 'status-message error';
+              statusMsg.textContent = 'Erro ao alterar status: ' + err.message;
+            }
+          });
+        });
+
+        container.querySelectorAll('.btn-excluir-local').forEach(b => {
+          b.addEventListener('click', () => {
+            const locId = b.dataset.id;
+            const nome = b.dataset.nome;
+            const targetLoc = locaisCarregados.find(l => l.id === locId);
+            const isAtivo = targetLoc?.ativo !== false;
+
+            // Validação: não permitir excluir se for o único ponto ativo
+            if (isAtivo) {
+              const outrosAtivos = locaisCarregados.filter(l => l.ativo !== false && l.id !== locId);
+              if (outrosAtivos.length === 0) {
+                showAlertModal({
+                  title: 'Ação Não Permitida',
+                  message: 'Não é possível excluir este local. O sistema necessita de pelo menos um ponto de coleta ativo para receber ofertas de materiais.',
+                  buttonText: 'Entendido'
+                });
+                return;
+              }
+            }
+
+            showConfirmModal({
+              title: 'Excluir Ponto de Coleta',
+              message: `Tem certeza que deseja excluir o local de coleta "${nome}"?`,
+              confirmText: 'Sim, Excluir',
+              confirmColor: '#c62828',
+              onConfirm: async () => {
+                try {
+                  const { error } = await supabase.from('local_retirada').delete().eq('id', locId);
+                  if (error) throw error;
+
+                  statusMsg.className = 'status-message success';
+                  statusMsg.textContent = 'Ponto de coleta excluído com sucesso.';
+                  carregarLocais();
+                } catch (err) {
+                  statusMsg.className = 'status-message error';
+                  statusMsg.textContent = 'Não foi possível excluir o local: ' + err.message;
+                }
+              }
+            });
+          });
+        });
+
+      } catch (err) {
+        console.error('Erro ao carregar locais:', err);
+        container.innerHTML = `<div class="status-message error">Erro ao carregar locais de coleta: ${err.message}</div>`;
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusMsg.className = 'status-message';
+
+      const locId = document.getElementById('local_id').value.trim();
+      const nome = document.getElementById('local_nome').value.trim();
+      const cep = document.getElementById('local_cep').value.trim();
+      const rua = document.getElementById('local_rua').value.trim();
+      const numero = document.getElementById('local_numero').value.trim();
+      const complemento = document.getElementById('local_complemento').value.trim() || null;
+      const bairro = document.getElementById('local_bairro').value.trim();
+      const cidade = document.getElementById('local_cidade').value.trim() || 'Franco da Rocha';
+      const ativo = document.getElementById('local_ativo').checked;
+
+      if (!nome || !rua || !numero || !bairro || !cidade) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = 'Por favor, preencha todos os campos obrigatórios (*).';
+        return;
+      }
+
+      btnSalvar.disabled = true;
+      btnSalvar.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...';
+
+      const payload = {
+        nome,
+        rua,
+        numero,
+        complemento,
+        bairro,
+        cidade,
+        estado: document.getElementById('local_estado')?.value.trim() || 'SP',
+        cep,
+        ativo
+      };
+
+      try {
+        if (locId) {
+          const { error } = await supabase
+            .from('local_retirada')
+            .update(payload)
+            .eq('id', locId);
+
+          if (error) throw error;
+
+          statusMsg.className = 'status-message success';
+          statusMsg.textContent = 'Local de coleta atualizado com sucesso!';
+        } else {
+          const { error } = await supabase
+            .from('local_retirada')
+            .insert([payload]);
+
+          if (error) throw error;
+
+          statusMsg.className = 'status-message success';
+          statusMsg.textContent = 'Novo ponto de coleta cadastrado com sucesso!';
+        }
+
+        fecharFormulario();
+        carregarLocais();
+      } catch (err) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = 'Erro ao salvar local: ' + err.message;
+      } finally {
+        btnSalvar.disabled = false;
+        btnSalvar.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar Local de Coleta';
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await protegerRota(['administrador']).catch(() => null);
+      carregarLocais();
+    });
+  </script>
+
+  <!-- Funcionalidade Futura: Modal Interativo do Google Maps (Código preservado e comentado)
+  <script type="module">
+    window.abrirModalMapa = function(nomePonto, enderecoCompleto) {
+      let modal = document.getElementById('modal-mapa');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modal-mapa';
+        modal.style.cssText = `
+          position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);
+          z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px;
+        `;
+        document.body.appendChild(modal);
+      }
+
+      const embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(enderecoCompleto)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+      const mapsExternalUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoCompleto)}`;
+
+      modal.innerHTML = `
+        <div style="background: white; border-radius: 20px; padding: 20px; max-width: 640px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="color: var(--verde-escuro, #1b6d24); margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-map-location-dot" style="color: #2e7d32;"></i> ${nomePonto}
+            </h3>
+            <button id="close-mapa-modal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">✕</button>
+          </div>
+
+          <div style="font-size: 0.88rem; color: #555; background: #f9fbf9; padding: 10px 14px; border-radius: 10px; border: 1px solid #e8f5e9;">
+            <i class="fa-solid fa-location-dot" style="color: #2e7d32;"></i> <strong>Endereço:</strong> ${enderecoCompleto}
+          </div>
+
+          <iframe 
+            width="100%" 
+            height="320" 
+            style="border: 0; border-radius: 12px;" 
+            loading="lazy" 
+            allowfullscreen 
+            src="${embedUrl}">
+          </iframe>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 4px;">
+            <a href="${mapsExternalUrl}" target="_blank" class="btn-secondary-pill" style="padding: 8px 16px; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; background: #ffffff; border: 1.5px solid #2e7d32; color: #2e7d32;">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir no Google Maps App
+            </a>
+            <button id="btn-fechar-mapa" class="btn-avancar" style="width: auto; padding: 8px 20px; font-size: 0.85rem;">
+              Fechar
+            </button>
+          </div>
+        </div>
+      `;
+
+      modal.style.display = 'flex';
+      const fechar = () => { modal.style.display = 'none'; };
+      modal.querySelector('#close-mapa-modal').addEventListener('click', fechar);
+      modal.querySelector('#btn-fechar-mapa').addEventListener('click', fechar);
+    };
+  </script>
+  -->
+</body>
+</html>

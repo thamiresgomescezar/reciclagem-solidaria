@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meus Relatórios — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="./dashboard-catador.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo Fixo no Topo -->
+        <aside class="left-panel">
+          <div class="links" style="margin-bottom: 0.5rem;">
+            <a href="./relatorios-catador.html" class="l1"><i class="fa-solid fa-chart-column"></i> Meus Relatórios</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 0.25rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Painel Principal de Relatórios do Catador -->
+        <main class="center-panel">
+          <div style="width: 100%; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.5rem; margin-top: 0;">
+              Meus Relatórios & Indicadores
+            </h1>
+            <p style="text-align: center; color: var(--cinza-texto-aux); font-size: 0.9rem; margin-bottom: 1.25rem;">
+              Resumo do seu trabalho no município: acompanhamento de materiais coletados, locais de retirada atendidos e histórico das suas coletas.
+            </p>
+
+            <div id="alert_container" class="status-message"></div>
+
+            <!-- Cards Sintéticos de Indicadores (KPIs) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px;" id="kpi_container">
+              <div style="background: white; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <i class="fa-solid fa-clipboard-check" style="color: var(--verde-escuro, #1b6d24); font-size: 1.2rem; margin-bottom: 4px;"></i>
+                <div style="font-size: 1.3rem; font-weight: 800; color: var(--verde-escuro, #1b6d24);" id="kpi_total_coletas">0</div>
+                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Coletas Atribuídas</div>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <i class="fa-solid fa-recycle" style="color: #0288d1; font-size: 1.2rem; margin-bottom: 4px;"></i>
+                <div style="font-size: 0.95rem; font-weight: 800; color: #0288d1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpi_top_material">-</div>
+                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Material Principal</div>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <i class="fa-solid fa-map-location-dot" style="color: #ed6c02; font-size: 1.2rem; margin-bottom: 4px;"></i>
+                <div style="font-size: 0.95rem; font-weight: 800; color: #ed6c02; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpi_top_ponto">-</div>
+                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Ponto Mais Buscado</div>
+              </div>
+              <div style="background: white; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.2rem; margin-bottom: 4px;"></i>
+                <div style="font-size: 1.3rem; font-weight: 800; color: #2e7d32;" id="kpi_taxa_conclusao">0%</div>
+                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Coletas Retiradas</div>
+              </div>
+            </div>
+
+            <!-- Abas de Navegação dos Relatórios do Catador -->
+            <div style="display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;" id="tabs_relatorios">
+              <button class="btn-tab active" data-tab="materiais"><i class="fa-solid fa-chart-pie"></i> Materiais Coletados</button>
+              <button class="btn-tab btn-secondary-pill" data-tab="pontos"><i class="fa-solid fa-map-location-dot"></i> Pontos de Coleta Mais Buscados</button>
+              <button class="btn-tab btn-secondary-pill" data-tab="status"><i class="fa-solid fa-list-check"></i> Status das Coletas</button>
+            </div>
+
+            <!-- Ação de Exportação CSV -->
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 14px;">
+              <button id="btn_exportar_csv" class="btn-secondary-pill" style="height: 38px; padding: 0 18px; font-size: 13px;">
+                <i class="fa-solid fa-file-excel" style="color: #2e7d32;"></i> Exportar Meus Dados em CSV
+              </button>
+            </div>
+
+            <!-- Conteúdo do Relatório Selecionado -->
+            <div id="relatorio_conteudo_container" style="background: white; border-radius: 16px; padding: 22px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+              <div style="text-align: center; padding: 30px; color: var(--cinza-texto-aux);">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando seus indicadores...
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module" src="../js/pages/relatoriosCatador.js"></script>
+</body>
+</html>

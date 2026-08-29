@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redefinir Senha — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <div class="top-bar">
+      <div></div>
+      <a href="./login.html" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Ir para o Login
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- Esquerda: Logo e Link -->
+        <aside class="left-panel">
+          <div class="links" style="margin-bottom: 0.5rem; margin-top: 0;">
+            <a href="./quem-somos.html" class="l1"><i class="fa-solid fa-leaf"></i> Quem somos</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 0.25rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- Centro: Formulário de Nova Senha -->
+        <main class="center-panel">
+          <div style="width: 100%; max-width: 440px; margin: 0 auto; padding-bottom: 2rem;">
+            <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.75rem; margin-top: 0;">
+              Criar Nova Senha
+            </h1>
+            <p style="text-align: center; color: #555; font-size: 0.9rem; font-weight: 600; margin-bottom: 1.5rem;">
+              Digite sua nova senha abaixo para redefinir seu acesso com segurança.
+            </p>
+
+            <form id="form_nova_senha" novalidate>
+              <div class="campo">
+                <label for="nova_senha">Nova Senha (mín. 6 caracteres):<span class="req">*</span></label>
+                <input type="password" id="nova_senha" class="input-underline" placeholder="••••••••" autocomplete="new-password" required>
+              </div>
+
+              <div class="campo" style="margin-top: 1rem;">
+                <label for="confirma_nova_senha">Confirme a Nova Senha:<span class="req">*</span></label>
+                <input type="password" id="confirma_nova_senha" class="input-underline" placeholder="••••••••" autocomplete="new-password" required>
+              </div>
+
+              <button type="submit" class="btn-avancar" id="btn_salvar_senha" style="margin-top: 1.5rem;">
+                <i class="fa-solid fa-key"></i> Salvar Nova Senha
+              </button>
+
+              <div id="statusMsg" class="status-message" style="margin-top: 1rem;"></div>
+
+              <p style="text-align: center; margin-top: 1.25rem; font-size: 0.9rem; font-weight: 600; color: var(--verde-escuro, #1b6d24);">
+                Lembrou sua senha? <a href="./login.html" style="color: #ff5252; font-weight: 800; text-decoration: underline;">Voltar ao Login</a>
+              </p>
+            </form>
+          </div>
+        </main>
+
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { supabase } from '../js/lib/supabaseClient.js';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('form_nova_senha');
+      const statusMsg = document.getElementById('statusMsg');
+      const btnSalvar = document.getElementById('btn_salvar_senha');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusMsg.className = 'status-message';
+
+        const novaSenha = document.getElementById('nova_senha').value;
+        const confirmaNovaSenha = document.getElementById('confirma_nova_senha').value;
+
+        if (!novaSenha || novaSenha.length < 6) {
+          statusMsg.className = 'status-message error';
+          statusMsg.textContent = 'A senha deve ter no mínimo 6 caracteres.';
+          return;
+        }
+
+        if (novaSenha !== confirmaNovaSenha) {
+          statusMsg.className = 'status-message error';
+          statusMsg.textContent = 'A confirmação de senha não confere.';
+          return;
+        }
+
+        try {
+          btnSalvar.disabled = true;
+          btnSalvar.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Atualizando...';
+
+          const { error } = await supabase.auth.updateUser({ password: novaSenha });
+
+          if (error) throw error;
+
+          statusMsg.className = 'status-message success';
+          statusMsg.textContent = 'Senha alterada com sucesso! Redirecionando para o login...';
+
+          // Faz logout da sessão temporária de recuperação para exigir login formal com a nova senha
+          await supabase.auth.signOut();
+
+          setTimeout(() => {
+            window.location.href = './login.html';
+          }, 1800);
+
+        } catch (err) {
+          console.error(err);
+          statusMsg.className = 'status-message error';
+          statusMsg.textContent = err.message || 'Erro ao redefinir a senha. O link pode ter expirado.';
+          btnSalvar.disabled = false;
+          btnSalvar.innerHTML = '<i class="fa-solid fa-key"></i> Salvar Nova Senha';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

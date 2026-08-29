@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inserir Material — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header com Botão de Voltar em Branco -->
+    <div class="top-bar">
+      <div></div>
+      <a href="#" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo e Navegação -->
+        <aside class="left-panel">
+          <div class="links">
+            <a href="./inserir-material.html" class="l1"><i class="fa-solid fa-circle-plus"></i> Inserir Material</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 0.5rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Formulário de Inserir Material Alinhado no Topo -->
+        <main class="center-panel">
+          <div style="width: 100%; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem; margin-top: 0;">
+              Inserir Material
+            </h1>
+
+            <form id="oferta-form" novalidate style="width: 100%;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="campo">
+                  <label for="cod_material">Tipo de Material Reciclável:<span class="req">*</span></label>
+                  <select id="cod_material" required>
+                    <option value="">-- Selecione o Tipo de Material --</option>
+                    <option value="1">Papel / Papelão</option>
+                    <option value="2">Plástico / PET</option>
+                    <option value="3">Vidro</option>
+                    <option value="4">Metal / Alumínio</option>
+                    <option value="5">Outros Resíduos Recicláveis</option>
+                  </select>
+                </div>
+
+                <div class="campo">
+                  <label for="quantidade">Quantidade Aproximada:<span class="req">*</span></label>
+                  <input type="text" id="quantidade" class="input-underline" placeholder="Ex: 2 sacos grandes, 15 kg, 3 caixas" required style="width: 100%;">
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 1rem;">
+                <div class="campo">
+                  <label for="foto">Foto do Material (Opcional):</label>
+                  <input type="file" id="foto" class="input-underline" accept="image/jpeg,image/png,image/webp" style="width: 100%;">
+                </div>
+
+                <div class="campo">
+                  <label for="local_retirada_id">Ponto de Coleta / Retirada:<span class="req">*</span></label>
+                  <select id="local_retirada_id" required>
+                    <option value="">-- Selecione o Ponto de Retirada --</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" id="btn-enviar" class="btn-avancar" style="margin-top: 1.5rem; width: 100%;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> CADASTRAR MATERIAL
+              </button>
+
+              <div id="feedback-msg" class="status-message" style="margin-top: 1rem;"></div>
+            </form>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module" src="../js/pages/inserirMaterial.js"></script>
+  <script type="module">
+    import { getPerfilAtual } from '../js/services/auth.js';
+    document.addEventListener('DOMContentLoaded', async () => {
+      const btnVoltarTop = document.getElementById('btn-voltar-top');
+      const perfil = await getPerfilAtual();
+      if (perfil?.tipo) {
+        btnVoltarTop.href = perfil.tipo === 'administrador' ? './dashboard-admin.html' : (perfil.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+      }
+    });
+  </script>
+</body>
+</html>

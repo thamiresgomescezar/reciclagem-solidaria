@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="#" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo e Navegação -->
+        <aside class="left-panel">
+          <div class="links">
+            <a href="./relatorios.html" class="l1"><i class="fa-solid fa-chart-column"></i> Relatórios & Impacto</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 0.25rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Painel Principal de Relatórios -->
+        <main class="center-panel">
+          <div style="width: 100%; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.5rem; margin-top: 0;">
+              Relatórios & Indicadores de Impacto
+            </h1>
+            <p style="text-align: center; color: var(--cinza-texto-aux); font-size: 0.9rem; margin-bottom: 1.5rem;">
+              Mapeamento real de descarte, rankings de engajamento e localização territorial dos locais de coleta.
+            </p>
+
+            <div id="alert_container" class="status-message"></div>
+
+            <!-- Abas de Navegação dos Relatórios -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px;" id="tabs_relatorios">
+              <button class="btn-tab active" data-tab="materiais" style="width: 100%; padding: 8px 10px; font-size: 0.82rem; white-space: nowrap; justify-content: center;">
+                <i class="fa-solid fa-chart-pie"></i> Volume por Material
+              </button>
+              <button class="btn-tab" data-tab="catadores" style="width: 100%; padding: 8px 10px; font-size: 0.82rem; white-space: nowrap; justify-content: center;">
+                <i class="fa-solid fa-trophy"></i> Ranking Catadores
+              </button>
+              <button class="btn-tab" data-tab="cidadaos" style="width: 100%; padding: 8px 10px; font-size: 0.82rem; white-space: nowrap; justify-content: center;">
+                <i class="fa-solid fa-medal"></i> Ranking Cidadãos
+              </button>
+              <button class="btn-tab" data-tab="geografico" style="width: 100%; padding: 8px 10px; font-size: 0.82rem; white-space: nowrap; justify-content: center;">
+                <i class="fa-solid fa-map-location-dot"></i> Mapeamento & Locais
+              </button>
+            </div>
+
+            <!-- Ação de Exportação CSV -->
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+              <button id="btn_exportar_csv" class="btn-secondary-pill" style="height: 38px; padding: 0 18px; font-size: 13px;">
+                <i class="fa-solid fa-file-excel" style="color: #2e7d32;"></i> Exportar Relatório em CSV
+              </button>
+            </div>
+
+            <!-- Conteúdo do Relatório Selecionado -->
+            <div id="relatorio_conteudo_container" style="background: white; border-radius: 16px; padding: 22px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+              <div style="text-align: center; padding: 30px; color: var(--cinza-texto-aux);">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando dados do relatório...
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module" src="../js/pages/relatorios.js"></script>
+  <script type="module">
+    import { getPerfilAtual } from '../js/services/auth.js';
+    document.addEventListener('DOMContentLoaded', async () => {
+      const btnVoltarTop = document.getElementById('btn-voltar-top');
+      const perfil = await getPerfilAtual();
+      if (perfil?.tipo) {
+        btnVoltarTop.href = perfil.tipo === 'administrador' ? './dashboard-admin.html' : (perfil.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+      }
+    });
+  </script>
+</body>
+</html>

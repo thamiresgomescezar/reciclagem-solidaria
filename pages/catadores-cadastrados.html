@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catadores Cadastrados — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="./dashboard-cidadao.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo e Navegação -->
+        <aside class="left-panel">
+          <div class="links">
+            <a href="./catadores-cadastrados.html" class="l1"><i class="fa-solid fa-sitemap"></i> Catadores Cadastrados</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 0.5rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Lista de Catadores Cadastrados -->
+        <main class="center-panel">
+          <div style="max-width: 680px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem;">
+              Catadores Cadastrados
+            </h1>
+
+            <div id="statusMsg" class="status-message"></div>
+
+            <!-- Filtros por Tipo de Cadastro / Acesso -->
+            <div style="display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap;" id="filtros_catadores">
+              <button class="btn-tab active" data-filtro="todos"><i class="fa-solid fa-users"></i> Todos</button>
+              <button class="btn-tab" data-filtro="com_app"><i class="fa-solid fa-mobile-screen"></i> Com Acesso ao App</button>
+              <button class="btn-tab" data-filtro="sem_app"><i class="fa-solid fa-user-tag"></i> Cadastro por Terceiros</button>
+            </div>
+
+            <div id="lista_catadores_rede" style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+              <div style="text-align: center; padding: 30px; color: var(--cinza-texto-aux);">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando catadores cadastrados...
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { supabase } from '../js/lib/supabaseClient.js';
+    import { getPerfilAtual } from '../js/services/auth.js';
+    import { showAlertModal } from '../js/lib/modal.js';
+
+    const container = document.getElementById('lista_catadores_rede');
+    const btnVoltarTop = document.getElementById('btn-voltar-top');
+    let perfilAtual = null;
+    let todosCatadores = [];
+    let filtroAtual = 'todos';
+
+    async function initPerfil() {
+      try {
+        perfilAtual = await getPerfilAtual().catch(() => null);
+        if (perfilAtual?.tipo && btnVoltarTop) {
+          btnVoltarTop.href = perfilAtual.tipo === 'administrador' ? './dashboard-admin.html' : (perfilAtual.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+        }
+      } catch (e) {}
+    }
+
+    if (btnVoltarTop) {
+      btnVoltarTop.addEventListener('click', (e) => {
+        if (perfilAtual?.tipo) {
+          e.preventDefault();
+          window.location.href = btnVoltarTop.href;
+        }
+      });
+    }
+
+    function renderizarCatadores(filtro) {
+      filtroAtual = filtro;
+      let filtrados = todosCatadores;
+
+      if (filtro === 'com_app') {
+        filtrados = todosCatadores.filter(c => Boolean(c.auth_user_id));
+      } else if (filtro === 'sem_app') {
+        filtrados = todosCatadores.filter(c => !c.auth_user_id);
+      }
+
+      if (filtrados.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 24px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">Nenhum catador encontrado para o filtro selecionado.</div>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      filtrados.forEach(cat => {
+        const card = document.createElement('div');
+        card.style.cssText = 'background: white; padding: 16px 20px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 3px 10px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;';
+        
+        const endStr = cat.sem_residencia ? 'Sem moradia' : `${cat.bairro || ''} ${cat.cidade ? '- ' + cat.cidade : ''}`.trim() || 'Não informado';
+        const temLoginApp = Boolean(cat.auth_user_id);
+
+        const badgeApp = temLoginApp
+          ? `<span style="font-size: 0.72rem; font-weight: 700; background: #e8f5e9; color: #1b6d24; border: 1px solid #c8e6c9; padding: 2px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;" title="Possui acesso ao aplicativo com login próprio"><i class="fa-solid fa-mobile-screen"></i> Com Acesso ao App</span>`
+          : `<span style="font-size: 0.72rem; font-weight: 700; background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; padding: 2px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;" title="Cadastrado por terceiros (sem conta ou aplicativo)"><i class="fa-solid fa-user-tag"></i> Cadastro por Terceiros (Sem App)</span>`;
+
+        const btnChat = temLoginApp
+          ? `<a href="./mensagens.html?destinatario=${cat.auth_user_id}" class="btn-tab active" style="padding: 6px 14px; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-comments"></i> Chat</a>`
+          : `<span class="btn-secondary-pill" style="padding: 6px 12px; font-size: 0.8rem; opacity: 0.55; cursor: not-allowed; background: #f5f5f5; color: #777; border-color: #ddd; display: inline-flex; align-items: center; gap: 6px;" title="Chat disponível apenas para catadores com cadastro e login no aplicativo"><i class="fa-solid fa-comment-slash"></i> Sem Chat</span>`;
+
+        const btnWhatsapp = `<button type="button" class="btn-secondary-pill btn-whatsapp-feature" style="padding: 6px 12px; font-size: 0.82rem; cursor: pointer; border: 1px solid #a5d6a7; background: #ffffff; color: var(--verde-escuro, #1b6d24); display: inline-flex; align-items: center; gap: 6px;"><i class="fa-brands fa-whatsapp" style="color: #25d366; font-size: 1rem;"></i> WhatsApp</button>`;
+
+        card.innerHTML = `
+          <div style="flex: 1; min-width: 240px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+              <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.05rem;"><i class="fa-solid fa-id-card"></i> ${cat.nome}</strong>
+              ${badgeApp}
+            </div>
+            <div style="font-size: 0.85rem; color: #555; margin-top: 4px;">
+              <i class="fa-solid fa-location-dot" style="color: #666; font-size: 11px;"></i> ${endStr}
+            </div>
+            <div style="font-size: 0.78rem; color: var(--cinza-texto-aux); margin-top: 2px;">
+              Telefone: ${cat.telefone || 'Não informado'}
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            ${btnWhatsapp}
+            ${btnChat}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // Event listener para botões do WhatsApp informando funcionalidade futura
+      document.querySelectorAll('.btn-whatsapp-feature').forEach(btn => {
+        btn.addEventListener('click', () => {
+          showAlertModal({
+            title: 'Funcionalidade Futura',
+            message: 'A integração direta com o WhatsApp estará disponível futuramente. No momento, utilize o telefone informado para contato convencional.',
+            buttonText: 'Entendido',
+            confirmColor: '#1b6d24'
+          });
+        });
+      });
+    }
+
+    async function carregarCatadores() {
+      try {
+        const { data: catadores, error } = await supabase
+          .from('catador')
+          .select('id, auth_user_id, nome, telefone, bairro, cidade, sem_residencia')
+          .order('nome', { ascending: true });
+
+        if (error) throw error;
+
+        todosCatadores = catadores || [];
+
+        if (todosCatadores.length === 0) {
+          container.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 24px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">Nenhum catador cadastrado no sistema ainda.</div>`;
+          return;
+        }
+
+        // Atualiza cache de nomes de catadores
+        try {
+          const cache = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
+          todosCatadores.forEach(c => {
+            if (c.auth_user_id && c.nome) cache[c.auth_user_id] = c.nome;
+            if (c.id && c.nome) cache[c.id] = c.nome;
+          });
+          localStorage.setItem('sys_user_names', JSON.stringify(cache));
+        } catch (e) {}
+
+        renderizarCatadores(filtroAtual);
+
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div class="status-message error">Erro ao carregar a lista de catadores.</div>`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initPerfil();
+      carregarCatadores();
+
+      document.querySelectorAll('#filtros_catadores button').forEach(b => {
+        b.addEventListener('click', () => {
+          document.querySelectorAll('#filtros_catadores button').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          renderizarCatadores(b.dataset.filtro);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

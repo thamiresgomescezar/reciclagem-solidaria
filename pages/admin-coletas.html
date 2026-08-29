@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Coletas (Admin) — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div class="web-container">
+    <div class="web-panel-left">
+      <button class="top-menu-btn" title="Menu">?</button>
+
+      <div style="margin-top: 40px; margin-bottom: 20px;">
+        <img src="../assets/prototypes/logo.jpg" alt="Logo" class="app-logo" style="max-width: 180px;">
+        <h3 style="color: var(--verde-escuro);">Painel Administrativo de Coletas</h3>
+        <p style="color: var(--cinza-texto-aux); font-size: 14px;">Gestão completa de todas as ofertas e retiradas do sistema.</p>
+      </div>
+
+      <div id="feedback-msg" class="feedback-msg"></div>
+
+      <div id="lista-todas-coletas" style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="text-align: center; padding: 40px; color: var(--cinza-texto-aux);">
+          Carregando todas as coletas...
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; font-size: 14px;">
+        <a href="#" id="btn-voltar" style="font-weight: bold; color: var(--verde-escuro);">? Voltar ao Dashboard Admin</a>
+      </div>
+    </div>
+
+    <div class="web-panel-right"></div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { proibirAcessoInvalido, redirecionarPorPerfil } from '../js/lib/routeGuard.js';
+    import { listarTodasColetasAdmin, confirmarRetirada, reabrirColeta, cancelarColeta } from '../js/services/coletas.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const perfil = await proibirAcessoInvalido(['administrador']);
+      if (!perfil) return;
+
+      const listaContainer = document.getElementById('lista-todas-coletas');
+      const feedbackMsg = document.getElementById('feedback-msg');
+      const btnVoltar = document.getElementById('btn-voltar');
+
+      btnVoltar.addEventListener('click', (e) => {
+        e.preventDefault();
+        redirecionarPorPerfil(perfil.tipo);
+      });
+
+      async function carregarLista() {
+        try {
+          const coletas = await listarTodasColetasAdmin();
+
+          if (!coletas || coletas.length === 0) {
+            listaContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--cinza-texto-aux);">Nenhuma coleta registrada no sistema.</div>`;
+            return;
+          }
+
+          listaContainer.innerHTML = '';
+          coletas.forEach(coleta => {
+            const card = document.createElement('div');
+            card.style.cssText = `
+              background: white;
+              border-radius: 12px;
+              padding: 14px;
+              border: 1px solid var(--cinza-borda);
+              font-size: 13px;
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+            `;
+
+            const tipoMaterial = coleta.materiais?.tipo || 'Material';
+            const statusNome = coleta.status?.status || 'desconhecido';
+            const cidadonome = coleta.cidadao?.nome || 'Anônimo';
+            const catadorNome = coleta.catador?.nome || 'Nenhum';
+
+            card.innerHTML = `
+              <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                <span style="color: var(--verde-escuro);">${tipoMaterial} — ${coleta.quantidade}</span>
+                <span style="background: var(--verde-fundo-1); padding: 2px 8px; border-radius: 6px;">${statusNome}</span>
+              </div>
+              <div> <strong>Doador:</strong> ${cidadonome} |  <strong>Catador:</strong> ${catadorNome}</div>
+              <div style="font-size: 11px; color: var(--cinza-texto-aux);">Criado em: ${new Date(coleta.criado_em).toLocaleString('pt-BR')}</div>
+
+              <div style="display: flex; gap: 6px; margin-top: 6px;">
+                <button class="btn-pill btn-admin-confirmar" data-id="${coleta.cod_coleta}" style="padding: 4px 8px; font-size: 11px;">Concluir</button>
+                <button class="btn-pill btn-secondary-pill btn-admin-reabrir" data-id="${coleta.cod_coleta}" style="padding: 4px 8px; font-size: 11px;">Reabrir</button>
+                <button class="btn-pill btn-secondary-pill btn-admin-cancelar" data-id="${coleta.cod_coleta}" style="padding: 4px 8px; font-size: 11px; border-color: #dc3545; color: #dc3545;">Cancelar</button>
+              </div>
+            `;
+
+            listaContainer.appendChild(card);
+          });
+
+          document.querySelectorAll('.btn-admin-confirmar').forEach(b => b.addEventListener('click', async (e) => {
+            await confirmarRetirada(e.target.getAttribute('data-id'));
+            carregarLista();
+          }));
+
+          document.querySelectorAll('.btn-admin-reabrir').forEach(b => b.addEventListener('click', async (e) => {
+            await reabrirColeta(e.target.getAttribute('data-id'));
+            carregarLista();
+          }));
+
+          document.querySelectorAll('.btn-admin-cancelar').forEach(b => b.addEventListener('click', async (e) => {
+            await cancelarColeta(e.target.getAttribute('data-id'));
+            carregarLista();
+          }));
+
+        } catch (err) {
+          console.error(err);
+          listaContainer.innerHTML = `<div class="feedback-msg error">Erro ao carregar coletas.</div>`;
+        }
+      }
+
+      await carregarLista();
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Status — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <div class="web-container">
+    <div class="web-panel-left" style="min-width: 450px;">
+      <button class="top-menu-btn" title="Menu">☰</button>
+
+      <div style="margin-top: 40px; margin-bottom: 20px;">
+        <img src="../assets/prototypes/logo.jpg" alt="Logo" class="app-logo" style="max-width: 180px;">
+        <h3 style="color: var(--verde-escuro);">Gestão de Status de Coleta</h3>
+        <p style="color: var(--cinza-texto-aux); font-size: 14px;">Controle dos estados possíveis para as ofertas do sistema.</p>
+      </div>
+
+      <div id="feedback-msg" class="feedback-msg"></div>
+
+      <form id="status-form" style="max-width: 380px; margin-bottom: 24px;">
+        <div class="form-group">
+          <label class="form-label" for="novo_status">Novo Nome de Status</label>
+          <input type="text" id="novo_status" class="input-pill" placeholder="Ex: em análise" required>
+        </div>
+        <button type="submit" id="btn-add-status" class="btn-pill">ADICIONAR STATUS</button>
+      </form>
+
+      <h4 style="color: var(--verde-escuro); margin-bottom: 12px;">Status Existentes</h4>
+      <div id="lista-status" style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="color: var(--cinza-texto-aux); font-size: 13px;">Carregando status...</div>
+      </div>
+
+      <div style="margin-top: 24px; font-size: 14px;">
+        <a href="#" id="btn-voltar" style="font-weight: bold; color: var(--verde-escuro);">← Voltar ao Dashboard Admin</a>
+      </div>
+    </div>
+
+    <div class="web-panel-right"></div>
+  </div>
+
+  <script type="module">
+    import { proibirAcessoInvalido, redirecionarPorPerfil } from '../js/lib/routeGuard.js';
+    import { supabase } from '../js/lib/supabaseClient.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const perfil = await proibirAcessoInvalido(['administrador']);
+      if (!perfil) return;
+
+      const form = document.getElementById('status-form');
+      const inputNovoStatus = document.getElementById('novo_status');
+      const listaContainer = document.getElementById('lista-status');
+      const feedbackMsg = document.getElementById('feedback-msg');
+      const btnVoltar = document.getElementById('btn-voltar');
+
+      btnVoltar.addEventListener('click', (e) => {
+        e.preventDefault();
+        redirecionarPorPerfil(perfil.tipo);
+      });
+
+      async function carregarStatus() {
+        const { data, error } = await supabase.from('status').select('*').order('cod_status', { ascending: true });
+        if (error) {
+          listaContainer.innerHTML = `<div class="feedback-msg error">Erro ao carregar status.</div>`;
+          return;
+        }
+
+        listaContainer.innerHTML = '';
+        data.forEach(item => {
+          const div = document.createElement('div');
+          div.style.cssText = 'background: white; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--cinza-borda); font-size: 14px; display: flex; justify-content: space-between; align-items: center;';
+          div.innerHTML = `<span>#${item.cod_status} — <strong>${item.status}</strong></span>`;
+          listaContainer.appendChild(div);
+        });
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const statusNome = inputNovoStatus.value.trim().toLowerCase();
+        if (!statusNome) return;
+
+        try {
+          const { error } = await supabase.from('status').insert([{ status: statusNome }]);
+          if (error) throw error;
+          feedbackMsg.textContent = 'Novo status adicionado!';
+          feedbackMsg.className = 'feedback-msg success';
+          inputNovoStatus.value = '';
+          carregarStatus();
+        } catch (err) {
+          feedbackMsg.textContent = err.message || 'Erro ao criar status.';
+          feedbackMsg.className = 'feedback-msg error';
+        }
+      });
+
+      await carregarStatus();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda & Horários — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="./dashboard-cidadao.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Link + Logo no Topo Fixo -->
+        <aside class="left-panel">
+          <div class="links" style="margin-bottom: 0.5rem;">
+            <a href="./agenda-horarios.html" class="l1" id="link_left_agenda"><i class="fa-solid fa-calendar-days"></i> Agenda & Horários</a>
+          </div>
+
+          <div class="logo-wrap">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Calendário Visual de Dias Cadastrados -->
+        <main class="center-panel" style="align-items: stretch; justify-content: flex-start;">
+          <div style="width: 100%; padding-bottom: 2rem;">
+            <h1 id="titulo_pagina_agenda" style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem;">
+              Agenda & Horários de Atendimento
+            </h1>
+
+            <!-- Calendário Visual de Dias Cadastrados -->
+            <div id="calendar-picker-box"></div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { getPerfilAtual } from '../js/services/auth.js';
+    import { listarAgendaPorLocal } from '../js/services/agenda.js';
+    import { getLocalRetiradaPadrao } from '../js/services/coletas.js';
+    import { renderCalendarGrid } from '../js/pages/calendarPicker.js';
+
+    const btnVoltarTop = document.getElementById('btn-voltar-top');
+    let perfilAtual = null;
+
+    async function atualizarBotaoVoltar() {
+      try {
+        perfilAtual = await getPerfilAtual().catch(() => null);
+        if (btnVoltarTop && perfilAtual?.tipo) {
+          const dest = perfilAtual.tipo === 'administrador' ? './dashboard-admin.html' : (perfilAtual.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+          btnVoltarTop.href = dest;
+        }
+      } catch (e) {}
+    }
+
+    if (btnVoltarTop) {
+      btnVoltarTop.addEventListener('click', (e) => {
+        if (perfilAtual?.tipo) {
+          e.preventDefault();
+          const dest = perfilAtual.tipo === 'administrador' ? './dashboard-admin.html' : (perfilAtual.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+          window.location.href = dest;
+        }
+      });
+    }
+
+    async function initPage() {
+      const container = document.getElementById('calendar-picker-box');
+      if (!container) return;
+
+      // Renderiza a grade imediatamente assim que o DOM está pronto para nunca ficar em branco
+      renderCalendarGrid('calendar-picker-box', { agendaData: [], isAdmin: false });
+
+      // Atualiza botão voltar em paralelo
+      atualizarBotaoVoltar();
+
+      try {
+        const localPadrao = await getLocalRetiradaPadrao().catch(() => ({ id: '11111111-1111-1111-1111-111111111111' }));
+        const agendaBanco = await listarAgendaPorLocal(localPadrao.id).catch(() => []);
+
+        renderCalendarGrid('calendar-picker-box', {
+          agendaData: agendaBanco,
+          isAdmin: perfilAtual?.tipo === 'administrador'
+        });
+      } catch (err) {
+        console.warn('Erro ao carregar dados da agenda:', err);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initPage);
+    } else {
+      initPage();
+    }
+  </script>
+</body>
+</html>

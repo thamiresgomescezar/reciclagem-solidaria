@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body style="background-color: var(--surface); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem;">
+  <div style="background: var(--branco); border-radius: 1.5rem; padding: 2.5rem; max-width: 420px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); text-align: center;">
+    <i class="fa-solid fa-recycle" style="font-size: 3rem; color: var(--verde-marca);"></i>
+    <h1 style="color: var(--verde-700); margin: 1rem 0 0.5rem;">Reciclagem Solidária</h1>
+    <p style="color: var(--cinza-texto-aux); margin-bottom: 1.5rem;">Página de teste — Fase 0</p>
+
+    <button class="btn-pill w-full" id="btnTeste">Testar conexão Supabase</button>
+    <div class="status-message" id="statusMsg"></div>
+  </div>
+
+  <script type="module">
+    import { supabase } from '../js/lib/supabaseClient.js';
+
+    const btn = document.getElementById('btnTeste');
+    const msg = document.getElementById('statusMsg');
+
+    btn.addEventListener('click', async () => {
+      msg.className = 'status-message';
+      msg.style.display = 'block';
+      msg.textContent = 'Verificando sessão...';
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        msg.className = 'status-message success';
+        msg.textContent = 'Supabase OK! Sessão: ' + (data.session ? 'ativa' : 'nenhuma');
+      } catch (e) {
+        msg.className = 'status-message error';
+        msg.textContent = 'Erro: ' + e.message;
+      }
+    });
+  </script>
+</body>
+</html>

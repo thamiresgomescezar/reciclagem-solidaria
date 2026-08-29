@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuários Cadastrados — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <a href="./dashboard-admin.html" id="btn-voltar-top" style="color: var(--branco, #ffffff); font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo e Navegação -->
+        <aside class="left-panel">
+          <div class="links">
+            <a href="./usuarios-cadastrados.html" class="l1"><i class="fa-solid fa-users"></i> Gestão de Usuários</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 2rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Lista de Usuários do Sistema -->
+        <main class="center-panel" style="align-items: stretch; justify-content: flex-start;">
+          <div style="max-width: 720px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem;">
+              Gestão de Usuários & Permissões
+            </h1>
+
+            <div id="statusMsg" class="status-message"></div>
+
+            <!-- Filtros por Tipo de Usuário -->
+            <div style="display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap;" id="filtros_usuarios">
+              <button class="btn-tab active" data-filtro="todos"><i class="fa-solid fa-users"></i> Todos</button>
+              <button class="btn-tab" data-filtro="catador"><i class="fa-solid fa-id-card"></i> Catadores</button>
+              <button class="btn-tab" data-filtro="cidadao"><i class="fa-solid fa-user"></i> Cidadãos</button>
+              <button class="btn-tab" data-filtro="administrador"><i class="fa-solid fa-user-shield"></i> Administradores</button>
+            </div>
+
+            <!-- Lista de Usuários -->
+            <div id="lista_usuarios_container" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="text-align: center; padding: 30px; color: var(--cinza-texto-aux);">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando usuários do sistema...
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+
+    <!-- Bottom Footer Bar -->
+    <div class="bottom-bar"></div>
+  </div>
+
+  <!-- Modal Completo de Edição de Usuário (Admin) -->
+  <div id="modal_editar_usuario" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2500; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: white; border-radius: 20px; max-width: 580px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.25); overflow: hidden;">
+      
+      <!-- Cabeçalho do Modal -->
+      <div style="padding: 18px 24px; background: var(--verde-escuro, #1b6d24); color: white; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-user-pen"></i> Editar Dados do Usuário
+        </h3>
+        <button type="button" id="btn_fechar_modal_edit_x" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Conteúdo do Formulário com Rolagem Suave -->
+      <div style="padding: 24px; overflow-y: auto; flex: 1;">
+        <form id="form_editar_usuario" novalidate>
+          <input type="hidden" id="edit_user_id">
+          <input type="hidden" id="edit_is_cidadao">
+
+          <h4 style="color: var(--verde-escuro, #1b6d24); font-size: 0.98rem; font-weight: 800; margin: 0 0 10px; border-bottom: 2px solid #a5d6a7; padding-bottom: 4px;">
+            Dados Pessoais & Situação
+          </h4>
+
+          <div class="campo">
+            <label for="edit_nome">Nome Completo:<span class="req">*</span></label>
+            <input type="text" id="edit_nome" class="input-underline" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="campo">
+              <label for="edit_email">E-mail (Login):</label>
+              <input type="email" id="edit_email" class="input-underline">
+              <small id="edit_email_hint" style="font-size: 0.75rem; color: #666; display: block; margin-top: 4px; line-height: 1.3;"></small>
+            </div>
+            <div class="campo">
+              <label for="edit_telefone">Telefone / WhatsApp:<span class="req">*</span></label>
+              <input type="tel" id="edit_telefone" class="input-underline" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
+            <div class="campo" id="box_edit_nivel_acesso">
+              <label for="edit_nivel_acesso">Perfil / Papel:</label>
+              <select id="edit_nivel_acesso" class="input-underline">
+                <option value="cidadao">Cidadão</option>
+                <option value="administrador">Administrador</option>
+                <option value="catador">Catador</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="edit_situacao">Situação da Conta:</label>
+              <select id="edit_situacao" class="input-underline">
+                <option value="ativo">Ativo</option>
+                <option value="desabilitado">Desabilitado</option>
+                <option value="bloqueado">Bloqueado</option>
+              </select>
+            </div>
+          </div>
+
+          <h4 style="color: var(--verde-escuro, #1b6d24); font-size: 0.98rem; font-weight: 800; margin: 18px 0 10px; border-bottom: 2px solid #a5d6a7; padding-bottom: 4px;">
+            Endereço Completo
+          </h4>
+
+          <div id="containerEnderecoModal"></div>
+
+          <div id="editStatusMsg" class="status-message" style="margin-top: 1rem;"></div>
+        </form>
+      </div>
+
+      <!-- Rodapé do Modal -->
+      <div style="padding: 14px 24px; background: #f9fbf9; border-top: 1px solid rgba(0,0,0,0.06); display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+        <button type="button" id="btn_cancelar_edit" class="btn-secondary-pill" style="font-size: 0.88rem; background: #ffffff;">
+          Cancelar
+        </button>
+        <button type="button" id="btn_salvar_edit" class="btn-avancar" style="width: auto; padding: 8px 24px; font-size: 0.88rem;">
+          <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { supabase } from '../js/lib/supabaseClient.js';
+    import { protegerRota } from '../js/lib/routeGuard.js';
+    import { showConfirmModal } from '../js/lib/modal.js';
+    import { renderEnderecoForm, lerDadosEndereco, preencherEndereco, validarEndereco } from '../js/pages/enderecoForm.js';
+
+    renderEnderecoForm('containerEnderecoModal');
+
+    const container = document.getElementById('lista_usuarios_container');
+    const statusMsg = document.getElementById('statusMsg');
+
+    // Elementos do Modal de Edição
+    const modalEdit = document.getElementById('modal_editar_usuario');
+    const btnFecharEditX = document.getElementById('btn_fechar_modal_edit_x');
+    const btnCancelarEdit = document.getElementById('btn_cancelar_edit');
+    const btnSalvarEdit = document.getElementById('btn_salvar_edit');
+    const editStatusMsg = document.getElementById('editStatusMsg');
+
+    let todosUsuarios = [];
+    let mainAdminId = null;
+    let filtroAtual = 'todos';
+    let usuarioEmEdicao = null;
+
+    function mostrarErro(msg) {
+      statusMsg.className = 'status-message error';
+      statusMsg.textContent = msg;
+      statusMsg.style.display = 'block';
+    }
+
+    function mostrarSucesso(msg) {
+      statusMsg.className = 'status-message success';
+      statusMsg.textContent = msg;
+      statusMsg.style.display = 'block';
+      setTimeout(() => { statusMsg.style.display = 'none'; }, 4000);
+    }
+
+    function fecharModalEdicao() {
+      if (modalEdit) modalEdit.style.display = 'none';
+      usuarioEmEdicao = null;
+    }
+
+    if (btnFecharEditX) btnFecharEditX.addEventListener('click', fecharModalEdicao);
+    if (btnCancelarEdit) btnCancelarEdit.addEventListener('click', fecharModalEdicao);
+
+    async function abrirModalEdicao(usuario) {
+      usuarioEmEdicao = usuario;
+      editStatusMsg.className = 'status-message';
+      editStatusMsg.textContent = '';
+      editStatusMsg.style.display = 'none';
+
+      document.getElementById('edit_user_id').value = usuario.id;
+      document.getElementById('edit_is_cidadao').value = usuario.isCidadaoTable ? 'true' : 'false';
+      document.getElementById('edit_nome').value = usuario.nome || '';
+      document.getElementById('edit_telefone').value = usuario.telefone || '';
+
+      const inputEmail = document.getElementById('edit_email');
+      const emailHint = document.getElementById('edit_email_hint');
+      const selNivel = document.getElementById('edit_nivel_acesso');
+      const selSituacao = document.getElementById('edit_situacao');
+
+      selSituacao.value = usuario.situacao || 'ativo';
+
+      const temLoginApp = usuario.isCidadaoTable || Boolean(usuario.auth_user_id || usuario.rawDados?.auth_user_id);
+
+      if (temLoginApp) {
+        inputEmail.value = usuario.email || '';
+        inputEmail.disabled = true;
+        inputEmail.readOnly = true;
+        inputEmail.style.opacity = '0.7';
+        inputEmail.style.backgroundColor = '#f0f0f0';
+        if (emailHint) emailHint.innerHTML = '<i class="fa-solid fa-lock" style="color: #666;"></i> E-mail vinculado ao login da conta do usuário no aplicativo.';
+      } else {
+        // Catador sem login próprio (cadastrado por terceiros)
+        const emailReal = (usuario.rawDados?.email && usuario.rawDados.email !== 'Catador Autônomo' && usuario.rawDados.email !== 'Sem e-mail cadastrado') ? usuario.rawDados.email : '';
+        inputEmail.value = emailReal;
+        inputEmail.disabled = false;
+        inputEmail.readOnly = false;
+        inputEmail.style.opacity = '1';
+        inputEmail.style.backgroundColor = 'transparent';
+        inputEmail.placeholder = 'catador@exemplo.com (Opcional)';
+        if (emailHint) emailHint.innerHTML = '<i class="fa-solid fa-lightbulb" style="color: #f59e0b;"></i> <b>Dica:</b> Ao definir um e-mail aqui, quando o catador criar uma conta no aplicativo com este mesmo e-mail, todo o histórico de coletas e dados será associado automaticamente!';
+      }
+
+      if (usuario.isMainAdmin) {
+        selNivel.value = 'administrador';
+        selNivel.disabled = true;
+        selSituacao.disabled = true;
+      } else if (usuario.isCidadaoTable) {
+        selNivel.value = usuario.tipo === 'administrador' ? 'administrador' : 'cidadao';
+        selNivel.disabled = false;
+        selSituacao.disabled = false;
+      } else {
+        selNivel.value = 'catador';
+        selNivel.disabled = true;
+        selSituacao.disabled = false;
+      }
+
+      preencherEndereco(usuario.rawDados || {});
+
+      if (modalEdit) modalEdit.style.display = 'flex';
+    }
+
+    if (btnSalvarEdit) {
+      btnSalvarEdit.addEventListener('click', async () => {
+        if (!usuarioEmEdicao) return;
+
+        const nome = document.getElementById('edit_nome').value.trim();
+        const email = document.getElementById('edit_email').value.trim();
+        const telefone = document.getElementById('edit_telefone').value.trim();
+        const situacao = document.getElementById('edit_situacao').value;
+        const nivelAcesso = document.getElementById('edit_nivel_acesso').value;
+        const isCidadaoTable = document.getElementById('edit_is_cidadao').value === 'true';
+        const userId = document.getElementById('edit_user_id').value;
+        const temLoginApp = isCidadaoTable || Boolean(usuarioEmEdicao.auth_user_id || usuarioEmEdicao.rawDados?.auth_user_id);
+
+        if (!nome) {
+          editStatusMsg.className = 'status-message error';
+          editStatusMsg.textContent = 'Informe o nome completo.';
+          editStatusMsg.style.display = 'block';
+          return;
+        }
+
+        const errEnd = validarEndereco();
+        if (errEnd) {
+          editStatusMsg.className = 'status-message error';
+          editStatusMsg.textContent = errEnd;
+          editStatusMsg.style.display = 'block';
+          return;
+        }
+
+        const end = lerDadosEndereco();
+
+        btnSalvarEdit.disabled = true;
+        btnSalvarEdit.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...';
+
+        try {
+          if (isCidadaoTable) {
+            const updatePayload = {
+              nome,
+              telefone,
+              situacao: usuarioEmEdicao.isMainAdmin ? 'ativo' : situacao,
+              rua: end.rua,
+              numero: end.numero,
+              complemento: end.complemento,
+              bairro: end.bairro,
+              cidade: end.cidade,
+              estado: end.estado,
+              cep: end.cep,
+              sem_residencia: end.sem_residencia
+            };
+
+            if (!usuarioEmEdicao.isMainAdmin) {
+              updatePayload.nivel_acesso = nivelAcesso === 'administrador' ? 'administrador' : 'cidadao';
+            }
+
+            const { error } = await supabase
+              .from('cidadao')
+              .update(updatePayload)
+              .eq('id', userId);
+
+            if (error) throw error;
+          } else {
+            // Tabela catador
+            const updatePayloadCat = {
+              nome,
+              telefone,
+              situacao,
+              rua: end.rua,
+              numero: end.numero,
+              complemento: end.complemento,
+              bairro: end.bairro,
+              cidade: end.cidade,
+              estado: end.estado,
+              cep: end.cep,
+              sem_residencia: end.sem_residencia
+            };
+
+            // Permite atualizar o e-mail se o catador ainda não possui login no app
+            if (!temLoginApp) {
+              updatePayloadCat.email = email ? email.toLowerCase() : null;
+            }
+
+            const { error } = await supabase
+              .from('catador')
+              .update(updatePayloadCat)
+              .eq('id', userId);
+
+            if (error) throw error;
+          }
+
+          fecharModalEdicao();
+          mostrarSucesso(`Dados do usuário "${nome}" atualizados com sucesso!`);
+          await carregarUsuarios();
+        } catch (err) {
+          editStatusMsg.className = 'status-message error';
+          editStatusMsg.textContent = 'Erro ao salvar alterações: ' + err.message;
+          editStatusMsg.style.display = 'block';
+        } finally {
+          btnSalvarEdit.disabled = false;
+          btnSalvarEdit.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar Alterações';
+        }
+      });
+    }
+
+    async function carregarUsuarios() {
+      try {
+        const [{ data: cidadaos, error: errCid }, { data: catadores, error: errCat }] = await Promise.all([
+          supabase.from('cidadao').select('*').order('criado_em', { ascending: true }),
+          supabase.from('catador').select('*').order('criado_em', { ascending: true })
+        ]);
+
+        if (errCid) throw errCid;
+
+        const admins = (cidadaos || []).filter(c => c.nivel_acesso === 'administrador');
+        mainAdminId = admins.length > 0 ? admins[0].id : null;
+
+        todosUsuarios = [];
+
+        if (cidadaos) {
+          cidadaos.forEach(c => {
+            todosUsuarios.push({
+              id: c.id,
+              nome: c.nome,
+              email: c.email || 'Não informado',
+              telefone: c.telefone || 'Não informado',
+              tipo: c.nivel_acesso === 'administrador' ? 'administrador' : 'cidadao',
+              situacao: c.situacao || 'ativo',
+              isCidadaoTable: true,
+              isMainAdmin: c.id === mainAdminId,
+              auth_user_id: c.id,
+              rawDados: c
+            });
+          });
+        }
+
+        if (catadores) {
+          catadores.forEach(cat => {
+            const temApp = Boolean(cat.auth_user_id);
+            todosUsuarios.push({
+              id: cat.id,
+              nome: cat.nome,
+              email: cat.email || (temApp ? 'Não informado' : 'Sem e-mail cadastrado'),
+              telefone: cat.telefone || 'Não informado',
+              tipo: 'catador',
+              situacao: cat.situacao || 'ativo',
+              isCidadaoTable: false,
+              isMainAdmin: false,
+              auth_user_id: cat.auth_user_id,
+              rawDados: cat
+            });
+          });
+        }
+
+        renderizarLista(filtroAtual);
+      } catch (err) {
+        console.error('Erro ao carregar usuários:', err);
+        container.innerHTML = `<div class="status-message error">Erro ao carregar usuários: ${err.message}</div>`;
+      }
+    }
+
+    function renderizarLista(filtro) {
+      filtroAtual = filtro;
+      const filtrados = filtro === 'todos' ? todosUsuarios : todosUsuarios.filter(u => u.tipo === filtro);
+
+      if (filtrados.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 24px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">Nenhum usuário encontrado para esta categoria.</div>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      filtrados.forEach(u => {
+        const item = document.createElement('div');
+        item.style.cssText = 'background: white; padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);';
+        
+        let iconClass = u.tipo === 'administrador' ? 'fa-user-shield' : (u.tipo === 'catador' ? 'fa-id-card' : 'fa-user');
+        let badgeColor = u.tipo === 'administrador' ? '#e53935' : (u.tipo === 'catador' ? '#1b6d24' : '#1976d2');
+
+        let situacaoBadge = '';
+        if (u.situacao === 'desabilitado') {
+          situacaoBadge = `<span style="font-size: 0.72rem; font-weight: 700; background: #fff3e0; color: #e65100; padding: 2px 8px; border-radius: 999px;">Desabilitado</span>`;
+        } else if (u.situacao === 'bloqueado') {
+          situacaoBadge = `<span style="font-size: 0.72rem; font-weight: 700; background: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 999px;">Bloqueado</span>`;
+        }
+
+        let mainAdminBadge = '';
+        if (u.isMainAdmin) {
+          mainAdminBadge = `
+            <span style="font-size: 0.75rem; font-weight: 800; background: #fff8e1; color: #b78103; border: 1px solid #ffe0b2; padding: 3px 10px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;" title="Administrador Principal">
+              <i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Admin Principal
+            </span>
+          `;
+        }
+
+        let appAccessBadge = '';
+        if (u.tipo === 'catador') {
+          appAccessBadge = u.auth_user_id
+            ? `<span style="font-size: 0.72rem; font-weight: 700; background: #e8f5e9; color: #1b6d24; border: 1px solid #c8e6c9; padding: 2px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-mobile-screen"></i> App</span>`
+            : `<span style="font-size: 0.72rem; font-weight: 700; background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; padding: 2px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-user-tag"></i> Sem App</span>`;
+        }
+
+        item.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 220px;">
+            <div style="width: 38px; height: 38px; border-radius: 50%; background: #e8f5e9; color: ${badgeColor}; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+              <i class="fa-solid ${iconClass}"></i>
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                <strong style="color: #172b16; font-size: 0.98rem;">${u.nome}</strong>
+                ${situacaoBadge}
+                ${appAccessBadge}
+                ${mainAdminBadge}
+              </div>
+              <div style="font-size: 0.8rem; color: #666; display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px;">
+                <span>${u.email}</span> | <span><i class="fa-solid fa-phone" style="font-size: 10px;"></i> ${u.telefone}</span>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 0.78rem; font-weight: 800; background: #e8f5e9; color: ${badgeColor}; padding: 4px 12px; border-radius: 999px; text-transform: uppercase;">
+              ${u.tipo}
+            </span>
+            <button class="btn-editar-usuario btn-secondary-pill" data-id="${u.id}" style="font-size: 0.8rem; padding: 6px 14px; background: #ffffff;">
+              <i class="fa-solid fa-pen-to-square"></i> Editar
+            </button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+
+      // Eventos dos Botões de Editar Usuário
+      document.querySelectorAll('.btn-editar-usuario').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.dataset.id;
+          const usuario = todosUsuarios.find(u => u.id === id);
+          if (usuario) {
+            abrirModalEdicao(usuario);
+          }
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const acesso = await protegerRota(['administrador']);
+      if (!acesso.permitido) return;
+
+      await carregarUsuarios();
+
+      document.querySelectorAll('#filtros_usuarios button').forEach(b => {
+        b.addEventListener('click', () => {
+          document.querySelectorAll('#filtros_usuarios button').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          renderizarLista(b.dataset.filtro);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

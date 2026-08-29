@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Cidadão — Reciclagem Solidária</title>
+  
+  <!-- Configurações de PWA e Atalho na Tela Inicial -->
+  <link rel="manifest" href="../manifest.json">
+  <link rel="icon" type="image/png" href="../assets/icon-192.png">
+  <link rel="apple-touch-icon" href="../assets/icon-192.png">
+  <meta name="theme-color" content="#1b6d24">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Reciclagem Solidária">
+  <meta name="application-name" content="Reciclagem Solidária">
+
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header com Botão de Sair em Branco -->
+    <div class="top-bar">
+      <div></div>
+      <button type="button" id="btn-logout-top" style="background: none; border: none; color: #ffffff !important; font-size: 0.9rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+        <i class="fa-solid fa-right-from-bracket" style="color: #ffffff;"></i> Sair do Sistema
+      </button>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo Fixo no Topo + Boas-Vindas -->
+        <aside class="left-panel">
+          <div class="links" style="margin-bottom: 0.5rem;">
+            <a href="./dashboard-cidadao.html" class="l1"><i class="fa-solid fa-user"></i> Cidadão Consciente</a>
+          </div>
+
+          <div class="logo-wrap">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+
+          <div style="background: var(--verde-escuro, #1b6d24); color: white; border-radius: 1rem; padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-top: auto; width: 100%; box-sizing: border-box; overflow: hidden;">
+            <div style="display: flex; align-items: center; gap: 0.6rem; min-width: 0; flex: 1;">
+              <i class="fa-solid fa-user" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+              <div style="min-width: 0; flex: 1;">
+                <div style="font-size: 0.75rem; font-weight: 500; opacity: 0.9;">Seja Bem-Vindo!</div>
+                <div style="font-size: 0.92rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Cidadão Consciente</div>
+                <div id="userEmailDisplay" style="font-size: 0.75rem; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
+              </div>
+            </div>
+            <a href="meu-perfil.html" title="Editar meus dados pessoais" style="color: white; font-size: 1.1rem; width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; text-decoration: none; transition: background 0.2s;">
+              <i class="fa-solid fa-gear"></i>
+            </a>
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Cartões Alinhados no Topo Padronizado -->
+        <main class="center-panel">
+          <div style="width: 100%; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.75rem; margin-top: 0;">
+              Suas Opções e Serviços
+            </h1>
+
+            <div class="proto-grid-3x3">
+              <!-- Linha 1: Operação e Coletas -->
+              <a class="proto-card-btn" href="inserir-material.html">
+                <i class="fa-solid fa-circle-plus"></i>
+                <span>Inserir Material</span>
+              </a>
+              <a class="proto-card-btn" href="minhas-ofertas.html">
+                <i class="fa-solid fa-clipboard-check"></i>
+                <span>Minhas Ofertas</span>
+              </a>
+              <a class="proto-card-btn" href="agenda-horarios.html">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Agenda & Horários</span>
+              </a>
+
+              <!-- Linha 2: Pessoas, Comunicação e Conteúdo -->
+              <a class="proto-card-btn" href="catadores-cadastrados.html">
+                <i class="fa-solid fa-sitemap"></i>
+                <span>Catadores Cadastrados</span>
+              </a>
+              <a class="proto-card-btn" href="mensagens.html">
+                <i class="fa-solid fa-comments"></i>
+                <span>Mensagens</span>
+              </a>
+              <a class="proto-card-btn" href="publicacoes.html">
+                <i class="fa-solid fa-bullhorn"></i>
+                <span>Publicações</span>
+              </a>
+
+              <!-- Linha 3: Institucional -->
+              <a class="proto-card-btn" href="quem-somos.html">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Quem Somos</span>
+              </a>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pop-up de Atalho na Tela Inicial -->
+  <div id="modal_atalho_login" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2500; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: white; border-radius: 20px; max-width: 520px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.25); overflow: hidden;">
+      
+      <!-- Cabeçalho -->
+      <div style="padding: 18px 24px; background: var(--verde-escuro, #1b6d24); color: white; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-mobile-screen-button"></i> Adicionar à Tela Inicial
+        </h3>
+        <button type="button" id="btn_fechar_modal_atalho_x" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Conteúdo -->
+      <div style="padding: 24px; font-size: 0.92rem; line-height: 1.6; color: #172b16;">
+        <p style="margin-top: 0; margin-bottom: 16px;">
+          Para acessar a plataforma com apenas 1 toque no seu celular, adicione o atalho à tela inicial:
+        </p>
+
+        <!-- Android -->
+        <div style="background: #f4f8f3; border: 1px solid #c8e6c9; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px;">
+          <strong style="color: var(--verde-escuro, #1b6d24); font-size: 0.95rem; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+            <i class="fa-brands fa-android" style="font-size: 1.1rem;"></i> No Android (Google Chrome):
+          </strong>
+          <ol style="margin: 0; padding-left: 20px; font-size: 0.88rem; color: #444;">
+            <li>Toque nos <strong>3 pontinhos</strong> (<i class="fa-solid fa-ellipsis-vertical"></i>) no canto superior direito do Chrome.</li>
+            <li>Selecione <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar aplicativo"</strong>.</li>
+            <li>Toque em <strong>"Adicionar"</strong> (ou <strong>"Instalar"</strong>) para confirmar.</li>
+          </ol>
+        </div>
+
+        <!-- iPhone -->
+        <div style="background: #f4f8f3; border: 1px solid #c8e6c9; border-radius: 12px; padding: 14px 16px;">
+          <strong style="color: var(--verde-escuro, #1b6d24); font-size: 0.95rem; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+            <i class="fa-brands fa-apple" style="font-size: 1.1rem;"></i> No iPhone (Safari):
+          </strong>
+          <ol style="margin: 0; padding-left: 20px; font-size: 0.88rem; color: #444;">
+            <li>Toque no botão <strong>Compartilhar</strong> (<i class="fa-solid fa-arrow-up-from-bracket"></i>) na barra inferior do Safari.</li>
+            <li>Role a lista e toque em <strong>"Adicionar à Tela de Início"</strong>.</li>
+            <li>Toque em <strong>"Adicionar"</strong> no canto superior direito para confirmar.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Rodapé -->
+      <div style="padding: 14px 24px; background: #f9fbf9; border-top: 1px solid rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <button type="button" id="btn_nunca_mais_modal_atalho" style="background: none; border: none; color: #888; font-size: 0.82rem; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 6px 0;">
+          Não exibir novamente
+        </button>
+
+        <button type="button" id="btn_fechar_modal_atalho_ok" class="btn-avancar" style="width: auto; padding: 8px 22px; font-size: 0.88rem;">
+          <i class="fa-solid fa-check"></i> Entendi
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { protegerRota } from '../js/lib/routeGuard.js';
+    import { logout, getPerfilAtual } from '../js/services/auth.js';
+    import { showConfirmModal } from '../js/lib/modal.js';
+
+    const btnLogoutTop = document.getElementById('btn-logout-top');
+    const modalAtalhoLogin = document.getElementById('modal_atalho_login');
+    const btnFecharAtalhoX = document.getElementById('btn_fechar_modal_atalho_x');
+    const btnFecharAtalhoOk = document.getElementById('btn_fechar_modal_atalho_ok');
+    const btnNuncaMaisAtalho = document.getElementById('btn_nunca_mais_modal_atalho');
+
+    function isMobileDevice() {
+      return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent) || 
+             (window.innerWidth <= 900 && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+    }
+
+    function verificarExibicaoModalAtalho() {
+      const acabouDeLogar = sessionStorage.getItem('reciclagem_acabou_de_logar');
+      const nuncaExibirAtalho = localStorage.getItem('reciclagem_atalho_nunca_exibir');
+
+      // Só exibe automaticamente após o login se o acesso for por celular/mobile
+      if (acabouDeLogar === 'true' && nuncaExibirAtalho !== 'true' && isMobileDevice()) {
+        sessionStorage.removeItem('reciclagem_acabou_de_logar');
+        if (modalAtalhoLogin) modalAtalhoLogin.style.display = 'flex';
+      } else {
+        if (modalAtalhoLogin) modalAtalhoLogin.style.display = 'none';
+        sessionStorage.removeItem('reciclagem_acabou_de_logar');
+      }
+    }
+
+    function fecharModalAtalhoTemporario() {
+      if (modalAtalhoLogin) modalAtalhoLogin.style.display = 'none';
+    }
+
+    function nuncaMaisExibirModalAtalho() {
+      localStorage.setItem('reciclagem_atalho_nunca_exibir', 'true');
+      if (modalAtalhoLogin) modalAtalhoLogin.style.display = 'none';
+    }
+
+    function verificarReativacaoConta() {
+      if (sessionStorage.getItem('reciclagem_conta_reativada') === 'true') {
+        sessionStorage.removeItem('reciclagem_conta_reativada');
+        showConfirmModal({
+          title: 'Conta Reativada com Sucesso!',
+          message: 'Sua conta estava desabilitada e foi reativada automaticamente com o seu login. Seja muito bem-vindo(a) de volta à plataforma Reciclagem Solidária!',
+          confirmText: 'Continuar',
+          confirmColor: '#1b6d24',
+          cancelText: 'Fechar'
+        });
+      }
+    }
+
+    if (btnFecharAtalhoX) btnFecharAtalhoX.addEventListener('click', fecharModalAtalhoTemporario);
+    if (btnFecharAtalhoOk) btnFecharAtalhoOk.addEventListener('click', fecharModalAtalhoTemporario);
+    if (btnNuncaMaisAtalho) btnNuncaMaisAtalho.addEventListener('click', nuncaMaisExibirModalAtalho);
+
+    if (btnLogoutTop) {
+      btnLogoutTop.addEventListener('click', async () => {
+        await logout();
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const acesso = await protegerRota(['cidadao']);
+      if (!acesso.permitido) return;
+
+      verificarReativacaoConta();
+      verificarExibicaoModalAtalho();
+
+      const perfil = await getPerfilAtual();
+      if (perfil) {
+        const email = perfil.dados?.email || perfil.user?.email || '';
+        const el = document.getElementById('userEmailDisplay');
+        if (el) {
+          el.textContent = email;
+          el.title = email;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

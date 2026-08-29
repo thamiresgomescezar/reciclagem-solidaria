@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Mensagens — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <button type="button" class="menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <a href="./dashboard-catador.html" id="btn-voltar-top" style="color: var(--branco, #ffffff); font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo e Navegação -->
+        <aside class="left-panel">
+          <div class="links">
+            <a href="./mensagens.html" class="l1"><i class="fa-solid fa-comments"></i> Mensagens Chat</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 2rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Chat em Tempo Real -->
+        <main class="center-panel" style="align-items: stretch; justify-content: flex-start;">
+          <div style="max-width: 680px; width: 100%; height: 100%; display: flex; flex-direction: column; margin: 0 auto; padding-bottom: 1rem;">
+            <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.75rem;">
+              Central de Mensagens & Comunicação
+            </h1>
+
+            <div id="statusMsg" class="status-message"></div>
+
+            <!-- Seletor de Destinatário / Conversas Ativas -->
+            <div style="background: white; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08); margin-bottom: 0.75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+              <label id="lbl_destinatario" for="select_destinatario" style="font-size: 0.88rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); display: block; margin-bottom: 6px;">
+                <i class="fa-solid fa-comments"></i> Conversa Ativa:
+              </label>
+              <select id="select_destinatario">
+                <option value="">-- Carregando conversa --</option>
+              </select>
+            </div>
+
+            <!-- Área de Histórico de Mensagens -->
+            <div id="chat_messages_box" style="flex: 1; min-height: 280px; max-height: 380px; overflow-y: auto; background: white; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08); padding: 16px; margin-bottom: 0.75rem; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+              <div style="text-align: center; color: var(--cinza-texto-aux); margin: auto;">
+                Por favor, selecione uma conversa para visualizar o histórico de mensagens.
+              </div>
+            </div>
+
+            <!-- Form de Envio -->
+            <form id="form_send_message" style="display: flex; gap: 10px; align-items: center;" novalidate>
+              <input type="text" id="input_msg_text" class="input-underline" placeholder="Digite sua mensagem aqui..." style="flex: 1;" required autocomplete="off" disabled>
+              <button type="submit" id="btn_enviar_msg" class="btn-avancar" style="width: auto; padding: 10px 24px;" disabled>
+                <i class="fa-solid fa-paper-plane"></i> ENVIAR
+              </button>
+            </form>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+
+    <!-- Bottom Footer Bar -->
+    <div class="bottom-bar"></div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { supabase } from '../js/lib/supabaseClient.js';
+    import { getPerfilAtual } from '../js/services/auth.js';
+    import { showAlertModal } from '../js/lib/modal.js';
+
+    const box = document.getElementById('chat_messages_box');
+    const form = document.getElementById('form_send_message');
+    const input = document.getElementById('input_msg_text');
+    const selectDest = document.getElementById('select_destinatario');
+    const lblDest = document.getElementById('lbl_destinatario');
+    const btnEnviar = document.getElementById('btn_enviar_msg');
+    const statusMsg = document.getElementById('statusMsg');
+    const btnVoltarTop = document.getElementById('btn-voltar-top');
+
+    let perfilAtual = null;
+    let destinatarioId = null;
+
+    // Inicialização instantânea quando a URL possui o parâmetro destinatario
+    const initialUrlParams = new URLSearchParams(window.location.search);
+    const initialDestParam = initialUrlParams.get('destinatario');
+
+    if (initialDestParam) {
+      const cacheNames = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
+      const cachedNome = cacheNames[initialDestParam];
+      const nomeExib = (cachedNome && typeof cachedNome === 'string' && !cachedNome.toLowerCase().includes('erro')) 
+        ? `Conversa com ${cachedNome}` 
+        : 'Carregando conversa...';
+      
+      selectDest.innerHTML = `<option value="${initialDestParam}" selected>${nomeExib}</option>`;
+      destinatarioId = initialDestParam;
+      input.disabled = false;
+      btnEnviar.disabled = false;
+      input.removeAttribute('disabled');
+      btnEnviar.removeAttribute('disabled');
+      input.placeholder = "Digite sua mensagem aqui...";
+    }
+
+    if (btnVoltarTop) {
+      btnVoltarTop.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetDashboard = perfilAtual?.tipo === 'administrador' 
+          ? './dashboard-admin.html' 
+          : (perfilAtual?.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+        if (document.referrer && document.referrer.includes(window.location.host)) {
+          window.history.back();
+        } else {
+          window.location.href = targetDashboard;
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        perfilAtual = await getPerfilAtual();
+      } catch (e) {
+        perfilAtual = null;
+      }
+
+      const targetDashboard = perfilAtual?.tipo === 'administrador' 
+        ? './dashboard-admin.html' 
+        : (perfilAtual?.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+      if (btnVoltarTop) btnVoltarTop.href = targetDashboard;
+
+      await carregarContatos();
+    });
+
+    async function carregarContatos() {
+      try {
+        let currentUserId = perfilAtual?.user?.id || perfilAtual?.dados?.id || perfilAtual?.id || null;
+        if (!currentUserId) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) currentUserId = session.user.id;
+        }
+
+        if (!currentUserId) {
+          selectDest.innerHTML = '<option value="">-- Sessão não encontrada --</option>';
+          box.innerHTML = '<div style="text-align: center; color: var(--cinza-texto-aux); margin: auto;">Faça login para acessar o chat.</div>';
+          return;
+        }
+
+        // Verificação robusta de tipo de perfil para Catador
+        let eCatador = perfilAtual?.tipo === 'catador';
+        if (!eCatador && currentUserId) {
+          try {
+            const { data: catCheck } = await supabase
+              .from('catador')
+              .select('id')
+              .eq('auth_user_id', currentUserId)
+              .maybeSingle();
+            if (catCheck) {
+              eCatador = true;
+              if (perfilAtual) perfilAtual.tipo = 'catador';
+            }
+          } catch (e) {}
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const destParam = urlParams.get('destinatario');
+
+        if (eCatador) {
+          if (lblDest) lblDest.innerHTML = '<i class="fa-solid fa-comments"></i> Conversa Ativa:';
+
+          const idsEnvolvidos = new Set();
+
+          // Para Catador: busca cidadãos que disponibilizaram coletas (ofertas abertas ou agendadas)
+          try {
+            const { data: coletasData } = await supabase
+              .from('coleta')
+              .select('cidadao_id');
+
+            if (coletasData) {
+              coletasData.forEach(c => {
+                if (c.cidadao_id) idsEnvolvidos.add(c.cidadao_id);
+              });
+            }
+          } catch (e) {
+            console.warn('Erro ao carregar ofertas de cidadãos:', e);
+          }
+
+          // Para Catador: busca mensagens onde o catador participou
+          try {
+            const { data: msgs } = await supabase
+              .from('mensagens')
+              .select('remetente_id, destinatario_id')
+              .or(`remetente_id.eq.${currentUserId},destinatario_id.eq.${currentUserId}`);
+
+            if (msgs) {
+              msgs.forEach(m => {
+                if (m.remetente_id && m.remetente_id !== currentUserId) idsEnvolvidos.add(m.remetente_id);
+                if (m.destinatario_id && m.destinatario_id !== currentUserId) idsEnvolvidos.add(m.destinatario_id);
+              });
+            }
+          } catch (e) {
+            console.warn('Erro ao carregar mensagens:', e);
+          }
+
+          if (destParam) idsEnvolvidos.add(destParam);
+
+          if (idsEnvolvidos.size === 0) {
+            selectDest.innerHTML = '<option value="">Nenhuma conversa ativa no momento</option>';
+            box.innerHTML = `
+              <div style="text-align: center; color: #555; padding: 24px; margin: auto;">
+                <i class="fa-regular fa-comments" style="font-size: 2.5rem; color: var(--verde-escuro, #1b6d24); margin-bottom: 12px; display: block;"></i>
+                <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin-bottom: 6px;">Nenhuma conversa ativa no momento</h4>
+                <p style="font-size: 0.88rem; color: #666; max-width: 440px; margin: 0 auto 14px;">
+                  Você ainda não possui histórico de conversas nem coletas agendadas. Para tirar dúvidas sobre uma coleta, acesse <b>Materiais Disponíveis</b> ou <b>Minhas Coletas</b> e clique em <b>Tirar Dúvidas com Ofertante</b>.
+                </p>
+                <a href="./catador-materiais.html" class="btn-avancar" style="display: inline-flex; width: auto; padding: 10px 20px; text-decoration: none; font-size: 0.88rem;">
+                  <i class="fa-solid fa-recycle"></i> Ver Materiais Disponíveis
+                </a>
+              </div>
+            `;
+            return;
+          }
+
+          // Busca dados dos usuários envolvidos (usando RPC buscar_ofertante ou fallback direct)
+          const arrayIds = Array.from(idsEnvolvidos);
+          let cidadaosData = [];
+          try {
+            const { data: rpcRes, error: rpcErr } = await supabase.rpc('buscar_ofertante', { p_ids: arrayIds });
+            if (!rpcErr && rpcRes && rpcRes.length > 0) {
+              cidadaosData = rpcRes;
+            } else {
+              const { data: directCid } = await supabase.from('cidadao').select('id, nome').in('id', arrayIds);
+              cidadaosData = directCid || [];
+            }
+          } catch (e) {
+            try {
+              const { data: directCid } = await supabase.from('cidadao').select('id, nome').in('id', arrayIds);
+              cidadaosData = directCid || [];
+            } catch (e2) {}
+          }
+
+          const nomesMap = {};
+          (cidadaosData || []).forEach(c => { 
+            const nomeExib = (c.nome && c.nome.trim() !== '' && !c.nome.toLowerCase().includes('erro')) ? c.nome : 'Cidadão Doador';
+            nomesMap[c.id] = nomeExib; 
+          });
+
+          // Se destParam foi fornecido e o nome ainda não foi mapeado, realiza busca dedicada
+          if (destParam && !nomesMap[destParam]) {
+            try {
+              const { data: singleCid } = await supabase.from('cidadao').select('nome').eq('id', destParam).maybeSingle();
+              if (singleCid && singleCid.nome && singleCid.nome.trim() !== '' && !singleCid.nome.toLowerCase().includes('erro')) {
+                nomesMap[destParam] = singleCid.nome;
+              } else {
+                nomesMap[destParam] = 'Cidadão Doador';
+              }
+            } catch (e) {
+              nomesMap[destParam] = 'Cidadão Doador';
+            }
+          }
+
+          selectDest.innerHTML = '<option value="">-- Selecione uma Conversa --</option>';
+          arrayIds.forEach(id => {
+            const nomeContato = nomesMap[id] || 'Cidadão Doador';
+            const opt = document.createElement('option');
+            opt.value = id;
+            opt.textContent = `Conversa com ${nomeContato}`;
+            selectDest.appendChild(opt);
+          });
+
+          // Garante que a opção do destParam esteja na lista caso não estivesse
+          if (destParam && !Array.from(selectDest.options).some(o => o.value === destParam)) {
+            const opt = document.createElement('option');
+            opt.value = destParam;
+            opt.textContent = `Conversa com ${nomesMap[destParam] || 'Cidadão Doador'}`;
+            selectDest.appendChild(opt);
+          }
+
+          if (destParam) {
+            selectDest.value = destParam;
+          }
+          atualizarDestinatarioSelecionado();
+
+        } else {
+          // Visão Cidadão: seleciona apenas Catadores cadastrados
+          if (lblDest) lblDest.innerHTML = '<i class="fa-solid fa-id-card"></i> Selecionar Catador:<span class="req">*</span>';
+
+          const { data: catadores } = await supabase
+            .from('catador')
+            .select('id, auth_user_id, nome, telefone')
+            .order('nome', { ascending: true });
+
+          selectDest.innerHTML = '<option value="">-- Selecione um Catador para Conversar --</option>';
+
+          const catadoresComApp = (catadores || []).filter(c => Boolean(c.auth_user_id));
+          const catadoresSemApp = (catadores || []).filter(c => !c.auth_user_id);
+
+          if (catadoresComApp.length > 0) {
+            const optGroupComApp = document.createElement('optgroup');
+            optGroupComApp.label = 'Catadores com Acesso ao App (Chat Disponível)';
+            catadoresComApp.forEach(c => {
+              if (c.auth_user_id !== currentUserId) {
+                const opt = document.createElement('option');
+                opt.value = c.auth_user_id;
+                opt.dataset.catadorId = c.id;
+                opt.dataset.authUserId = c.auth_user_id;
+                opt.dataset.nome = c.nome;
+                opt.dataset.telefone = c.telefone || '';
+                opt.dataset.temApp = 'true';
+                opt.textContent = c.nome;
+                optGroupComApp.appendChild(opt);
+              }
+            });
+            selectDest.appendChild(optGroupComApp);
+          }
+
+          if (catadoresSemApp.length > 0) {
+            const optGroupSemApp = document.createElement('optgroup');
+            optGroupSemApp.label = 'Catadores Cadastrados por Terceiros (Sem App)';
+            catadoresSemApp.forEach(c => {
+              const opt = document.createElement('option');
+              opt.value = `SEM_APP_${c.id}`;
+              opt.dataset.catadorId = c.id;
+              opt.dataset.authUserId = '';
+              opt.dataset.nome = c.nome;
+              opt.dataset.telefone = c.telefone || '';
+              opt.dataset.temApp = 'false';
+              opt.textContent = c.nome;
+              optGroupSemApp.appendChild(opt);
+            });
+            selectDest.appendChild(optGroupSemApp);
+          }
+
+          if (destParam) {
+            let opt = Array.from(selectDest.options).find(o => 
+              o.value === destParam || 
+              o.dataset.catadorId === destParam || 
+              o.dataset.authUserId === destParam ||
+              o.value === `SEM_APP_${destParam}`
+            );
+            if (opt) {
+              selectDest.value = opt.value;
+            } else {
+              try {
+                const { data: catByPk } = await supabase.from('catador').select('id, auth_user_id, nome, telefone').or(`id.eq.${destParam},auth_user_id.eq.${destParam}`).maybeSingle();
+                if (catByPk) {
+                  const temApp = Boolean(catByPk.auth_user_id);
+                  const targetVal = temApp ? catByPk.auth_user_id : `SEM_APP_${catByPk.id}`;
+                  let existingOpt = Array.from(selectDest.options).find(o => o.value === targetVal);
+                  if (!existingOpt) {
+                    existingOpt = document.createElement('option');
+                    existingOpt.value = targetVal;
+                    existingOpt.dataset.catadorId = catByPk.id;
+                    existingOpt.dataset.authUserId = catByPk.auth_user_id || '';
+                    existingOpt.dataset.nome = catByPk.nome;
+                    existingOpt.dataset.telefone = catByPk.telefone || '';
+                    existingOpt.dataset.temApp = temApp ? 'true' : 'false';
+                    existingOpt.textContent = `${catByPk.nome}${temApp ? '' : ' (Sem App)'}`;
+                    selectDest.appendChild(existingOpt);
+                  }
+                  selectDest.value = targetVal;
+                }
+              } catch (e) {}
+            }
+          }
+          atualizarDestinatarioSelecionado();
+        }
+
+      } catch (err) {
+        console.error('Erro ao carregar contatos:', err);
+        selectDest.innerHTML = '<option value="">Erro ao carregar contatos</option>';
+        atualizarDestinatarioSelecionado();
+      }
+    }
+
+    selectDest.addEventListener('change', atualizarDestinatarioSelecionado);
+
+    function atualizarDestinatarioSelecionado() {
+      const selectedOption = selectDest.selectedOptions[0];
+      const temApp = selectedOption ? selectedOption.dataset.temApp !== 'false' : true;
+      const nomeContato = selectedOption ? (selectedOption.dataset.nome || selectedOption.textContent) : 'Catador';
+      const telContato = selectedOption ? selectedOption.dataset.telefone : '';
+
+      destinatarioId = selectDest.value || null;
+
+      if (!destinatarioId) {
+        input.disabled = true;
+        btnEnviar.disabled = true;
+        input.setAttribute('disabled', 'true');
+        btnEnviar.setAttribute('disabled', 'true');
+        input.value = '';
+        input.placeholder = 'Selecione uma conversa para enviar mensagens...';
+        box.innerHTML = `
+          <div style="text-align: center; color: var(--cinza-texto-aux); margin: auto; padding: 20px;">
+            <i class="fa-regular fa-comments" style="font-size: 2.2rem; display: block; margin-bottom: 8px; color: var(--verde-escuro, #1b6d24);"></i>
+            Por favor, selecione uma conversa no campo acima para enviar mensagens.
+          </div>
+        `;
+      } else if (!temApp || destinatarioId.startsWith('SEM_APP_')) {
+        // Catador sem login no aplicativo
+        input.disabled = true;
+        btnEnviar.disabled = true;
+        input.setAttribute('disabled', 'true');
+        btnEnviar.setAttribute('disabled', 'true');
+        input.value = '';
+        input.placeholder = 'Chat indisponível: este catador não possui aplicativo.';
+        box.innerHTML = `
+          <div style="text-align: center; color: #555; padding: 24px 16px; margin: auto; max-width: 460px;">
+            <div style="width: 54px; height: 54px; border-radius: 50%; background: #fff3e0; color: #e65100; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.6rem; border: 1px solid #ffe0b2;">
+              <i class="fa-solid fa-user-slash"></i>
+            </div>
+            <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin-bottom: 8px;">Chat Indisponível pelo Aplicativo</h4>
+            <p style="font-size: 0.9rem; color: #555; line-height: 1.5; margin-bottom: 14px;">
+              O catador <strong>${nomeContato.replace('[Catador] ', '').replace(' (Sem login no app)', '')}</strong> foi registrado por terceiros e ainda não possui login ou aplicativo instalado para receber mensagens.
+            </p>
+            ${telContato ? `
+              <div style="background: #f9fbf9; border: 1px solid #c8e6c9; border-radius: 10px; padding: 10px 14px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--verde-escuro, #1b6d24); font-weight: 700;">
+                <i class="fa-solid fa-phone"></i> Contato Telefônico: ${telContato}
+              </div>
+            ` : '<div style="font-size: 0.82rem; color: #888;">Nenhum telefone informado no cadastro deste catador.</div>'}
+          </div>
+        `;
+      } else {
+        input.disabled = false;
+        btnEnviar.disabled = false;
+        input.removeAttribute('disabled');
+        btnEnviar.removeAttribute('disabled');
+        input.placeholder = 'Digite sua mensagem aqui...';
+        input.focus();
+        carregarMensagens();
+      }
+    }
+
+    let channelMensagens = null;
+
+    function assinarMensagensEmTempoReal(currentUserId) {
+      if (channelMensagens) supabase.removeChannel(channelMensagens);
+
+      channelMensagens = supabase
+        .channel('mensagens-realtime')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens' }, (payload) => {
+          const msg = payload.new;
+          if (destinatarioId && (
+            (msg.remetente_id === currentUserId && msg.destinatario_id === destinatarioId) ||
+            (msg.remetente_id === destinatarioId && msg.destinatario_id === currentUserId)
+          )) {
+            carregarMensagens();
+          }
+        })
+        .subscribe();
+    }
+
+    async function carregarMensagens() {
+      let currentUserId = perfilAtual?.user?.id || perfilAtual?.dados?.id || perfilAtual?.id || null;
+      if (!currentUserId) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) currentUserId = session.user.id;
+      }
+
+      if (!currentUserId || !destinatarioId) return;
+
+      box.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); margin: auto;"><i class="fa-solid fa-circle-notch fa-spin"></i> Carregando mensagens...</div>`;
+
+      try {
+        const { data, error } = await supabase
+          .from('mensagens')
+          .select('*')
+          .or(`remetente_id.eq.${currentUserId},destinatario_id.eq.${currentUserId}`)
+          .order('enviado_em', { ascending: true });
+
+        if (error) {
+          console.warn('Erro ao carregar mensagens:', error);
+          box.innerHTML = `<div class="status-message error">Erro ao carregar mensagens: ${error.message}</div>`;
+          return;
+        }
+
+        const mensagensFiltradas = (data || []).filter(
+          m => (m.remetente_id === currentUserId && m.destinatario_id === destinatarioId) ||
+               (m.remetente_id === destinatarioId && m.destinatario_id === currentUserId)
+        );
+
+        renderizarMensagens(mensagensFiltradas, currentUserId);
+        assinarMensagensEmTempoReal(currentUserId);
+      } catch (err) {
+        console.error(err);
+        box.innerHTML = `<div class="status-message error">Erro ao carregar mensagens.</div>`;
+      }
+    }
+
+    function renderizarMensagens(data, currentUserId) {
+      if (!data || data.length === 0) {
+        box.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); margin: auto;"><i class="fa-regular fa-comments" style="font-size: 1.5rem; display: block; margin-bottom: 6px;"></i>Nenhuma mensagem trocada com este contato ainda. Escreva uma mensagem abaixo para iniciar a conversa!</div>`;
+        return;
+      }
+
+      box.innerHTML = '';
+      data.forEach(m => {
+        const eMinha = m.remetente_id === currentUserId;
+        const msgDiv = document.createElement('div');
+        msgDiv.style.cssText = `max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; margin-${eMinha ? 'left' : 'right'}: auto; background: ${eMinha ? '#e8f5e9' : '#f0f0f0'}; color: #172b16; border: 1px solid ${eMinha ? '#a5d6a7' : '#e0e0e0'};`;
+        
+        const horaStr = m.enviado_em || m.criado_em ? new Date(m.enviado_em || m.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora';
+
+        msgDiv.innerHTML = `
+          <div>${m.conteudo}</div>
+          <div style="font-size: 0.7rem; color: #777; text-align: right; margin-top: 4px;">${horaStr}</div>
+        `;
+        box.appendChild(msgDiv);
+      });
+
+      box.scrollTop = box.scrollHeight;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusMsg.className = 'status-message';
+
+      const txt = input.value.trim();
+      if (!txt) return;
+
+      let currentUserId = perfilAtual?.user?.id || perfilAtual?.dados?.id || perfilAtual?.id || null;
+      if (!currentUserId) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) currentUserId = session.user.id;
+      }
+
+      if (!destinatarioId) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = 'Por favor, selecione um destinatário antes de enviar.';
+        return;
+      }
+
+      btnEnviar.disabled = true;
+
+      try {
+        const { error } = await supabase.from('mensagens').insert([{
+          remetente_id: currentUserId,
+          destinatario_id: destinatarioId,
+          conteudo: txt
+        }]);
+
+        if (error) throw error;
+
+        input.value = '';
+        carregarMensagens();
+      } catch (err) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = 'Erro ao enviar mensagem: ' + err.message;
+      } finally {
+        btnEnviar.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

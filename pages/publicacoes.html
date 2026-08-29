@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Publicações & Campanhas — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="./dashboard-cidadao.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo e Navegação -->
+        <aside class="left-panel">
+          <div class="links">
+            <a href="./publicacoes.html" class="l1"><i class="fa-solid fa-bullhorn"></i> Publicações</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 0.5rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Feed de Publicações + Painel de Nova Publicação (Admin) -->
+        <main class="center-panel">
+          <div style="max-width: 660px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem;">
+              Campanhas & Informativos Educativos
+            </h1>
+
+            <div id="statusMsg" class="status-message"></div>
+
+            <!-- Formulário de Nova Publicação (Exibido para Admin) -->
+            <div id="painel_nova_pub" style="display: none; background: white; padding: 20px; border-radius: 16px; border: 1.5px solid #a5d6a7; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
+              <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.1rem; font-weight: 800; margin-bottom: 0.75rem;">
+                <i class="fa-solid fa-pen-to-square"></i> Criar Nova Publicação (Admin)
+              </h3>
+              <form id="form_nova_pub" novalidate>
+                <div class="campo">
+                  <label for="pub_titulo">Título da Campanha:<span class="req">*</span></label>
+                  <input type="text" id="pub_titulo" class="input-underline" placeholder="Ex: Coleta Seletiva de Vidros na Fatec" required>
+                </div>
+                <div class="campo">
+                  <label for="pub_conteudo">Conteúdo / Descrição:<span class="req">*</span></label>
+                  <textarea id="pub_conteudo" class="input-underline" style="width: 100%; min-height: 110px; resize: vertical; box-sizing: border-box;" placeholder="Escreva os detalhes da campanha ou orientação..." required></textarea>
+                </div>
+                <button type="submit" class="btn-avancar" id="btn_postar" style="margin-top: 0.75rem;">
+                  <i class="fa-solid fa-paper-plane"></i> Publicar Campanha
+                </button>
+              </form>
+            </div>
+
+            <!-- Lista Dinâmica de Publicações -->
+            <div id="lista_publicacoes_feed" style="display: flex; flex-direction: column; gap: 1rem;">
+              <div style="text-align: center; padding: 30px; color: var(--cinza-texto-aux);">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando publicações...
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { supabase } from '../js/lib/supabaseClient.js';
+    import { getPerfilAtual } from '../js/services/auth.js';
+
+    const feed = document.getElementById('lista_publicacoes_feed');
+    const painelNova = document.getElementById('painel_nova_pub');
+    const formNova = document.getElementById('form_nova_pub');
+    const statusMsg = document.getElementById('statusMsg');
+    const btnVoltarTop = document.getElementById('btn-voltar-top');
+    const btnPostar = document.getElementById('btn_postar');
+
+    let perfilAtual = null;
+
+    function renderCards(data) {
+      if (!data || data.length === 0) {
+        feed.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 24px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">Nenhuma publicação cadastrada no momento.</div>`;
+        return;
+      }
+
+      feed.innerHTML = '';
+      data.forEach(pub => {
+        const card = document.createElement('div');
+        card.style.cssText = 'background: white; padding: 20px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.03);';
+        
+        const autorNome = pub.autor_nome || 'Administração';
+
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+            <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem;">${pub.titulo}</strong>
+            ${perfilAtual?.tipo === 'administrador' ? `
+              <button class="btn-deletar-pub" data-id="${pub.id}" style="background: none; border: none; color: #c62828; cursor: pointer; font-size: 1rem; padding: 4px;" title="Excluir"><i class="fa-solid fa-trash-can"></i></button>
+            ` : ''}
+          </div>
+          <p style="font-size: 0.95rem; color: #172b16; white-space: pre-wrap; line-height: 1.5; margin: 4px 0;">${pub.conteudo}</p>
+          <div style="font-size: 0.8rem; color: var(--cinza-texto-aux); margin-top: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; border-top: 1px solid #f0f0f0; padding-top: 8px;">
+            <span style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--verde-escuro, #1b6d24);">
+              <i class="fa-solid fa-user-shield"></i> Publicado por: <span style="color: #333;">${autorNome}</span>
+            </span>
+            <span style="display: inline-flex; align-items: center; gap: 4px;">
+              <i class="fa-regular fa-clock"></i> ${new Date(pub.criado_em).toLocaleDateString('pt-BR')} às ${new Date(pub.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+        `;
+        feed.appendChild(card);
+      });
+
+      document.querySelectorAll('.btn-deletar-pub').forEach(b => {
+        b.addEventListener('click', async () => {
+          if (!confirm('Deseja realmente remover esta publicação?')) return;
+          const id = b.dataset.id;
+          await supabase.from('publicacoes').delete().eq('id', id);
+          carregarPublicacoes();
+        });
+      });
+    }
+
+    async function carregarPublicacoes() {
+      // Exibe cache se existir
+      try {
+        const cached = sessionStorage.getItem('cache_publicacoes');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.length > 0) renderCards(parsed);
+        }
+      } catch (e) {}
+
+      try {
+        const [{ data: pubs, error }, { data: usuarios }] = await Promise.all([
+          supabase.from('publicacoes').select('*').order('criado_em', { ascending: false }),
+          supabase.from('cidadao').select('id, auth_user_id, nome')
+        ]);
+
+        if (error) throw error;
+
+        const mapaAutores = {};
+        (usuarios || []).forEach(u => {
+          if (u.auth_user_id) mapaAutores[u.auth_user_id] = u.nome;
+          if (u.id) mapaAutores[u.id] = u.nome;
+        });
+
+        (pubs || []).forEach(p => {
+          p.autor_nome = mapaAutores[p.autor_id] || 'Administração';
+        });
+
+        renderCards(pubs || []);
+
+        try {
+          sessionStorage.setItem('cache_publicacoes', JSON.stringify(pubs || []));
+        } catch (e) {}
+
+      } catch (err) {
+        console.error(err);
+        if (!feed.children.length) {
+          feed.innerHTML = `<div class="status-message error">Erro ao carregar publicações.</div>`;
+        }
+      }
+    }
+
+    // Inicialização imediata
+    carregarPublicacoes();
+
+    async function initPerfil() {
+      try {
+        perfilAtual = await getPerfilAtual().catch(() => null);
+        if (perfilAtual?.tipo) {
+          btnVoltarTop.href = perfilAtual.tipo === 'administrador' ? './dashboard-admin.html' : (perfilAtual.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+          if (perfilAtual.tipo === 'administrador' && painelNova) {
+            painelNova.style.display = 'block';
+          }
+        }
+      } catch (e) {}
+    }
+
+    initPerfil();
+
+    if (btnVoltarTop) {
+      btnVoltarTop.addEventListener('click', (e) => {
+        if (perfilAtual?.tipo) {
+          e.preventDefault();
+          window.location.href = btnVoltarTop.href;
+        }
+      });
+    }
+
+    formNova.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusMsg.className = 'status-message';
+
+      const titulo = document.getElementById('pub_titulo').value.trim();
+      const conteudo = document.getElementById('pub_conteudo').value.trim();
+
+      if (!titulo || !conteudo) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = 'Preencha o título e o conteúdo da publicação.';
+        return;
+      }
+
+      btnPostar.disabled = true;
+      btnPostar.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Publicando...';
+
+      try {
+        const currentUserId = perfilAtual?.user?.id || (await supabase.auth.getSession()).data.session?.user?.id;
+        const { error } = await supabase.from('publicacoes').insert([{
+          titulo,
+          conteudo,
+          autor_id: currentUserId
+        }]);
+
+        if (error) throw error;
+
+        document.getElementById('pub_titulo').value = '';
+        document.getElementById('pub_conteudo').value = '';
+        statusMsg.className = 'status-message success';
+        statusMsg.textContent = 'Campanha publicada com sucesso!';
+        carregarPublicacoes();
+      } catch (err) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = 'Erro ao publicar: ' + err.message;
+      } finally {
+        btnPostar.disabled = false;
+        btnPostar.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publicar Campanha';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html><html lang="pt-BR" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Cadastro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style data-purpose="custom-fonts">
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+    body {
+      font-family: 'Nunito', sans-serif;
+    }
+  </style>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'eco-green': '#E2F3E2',
+            'eco-dark-green': '#51A36B',
+            'eco-header': '#76D07F',
+            'eco-red': '#D32F2F',
+            'eco-border': '#93C59F'
+          },
+          backgroundImage: {
+            'eco-pattern': "url('https://placehold.co/400x800/E2F3E2/E2F3E2?text=Background+Pattern')" // Replace with actual pattern if needed
+          }
+        }
+      }
+    }
+  </script>
+<link data-snapdom="injected-import" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet"></head>
+<body class="min-h-screen flex flex-col relative overflow-hidden" style="background-color: #f5fbef;">
+<!-- BEGIN: Header Section -->
+<header class="bg-eco-header text-white pt-2 pb-6 px-4 rounded-b-[50%_20%] relative z-10 shadow-sm">
+<div class="flex justify-between items-center max-w-md mx-auto">
+<div class="flex items-center space-x-1 text-sm font-semibold">
+<i class="fas fa-signal"></i>
+<i class="fas fa-wifi"></i>
+</div>
+<div class="text-center">
+<div class="text-lg font-bold leading-tight">10:23</div>
+<div class="text-xs">sábado</div>
+</div>
+<div class="text-sm">
+<i class="fas fa-battery-full"></i>
+</div>
+</div>
+</header>
+<!-- END: Header Section -->
+<!-- BEGIN: Main Content Section -->
+<main class="flex-grow px-4 pt-6 pb-20 overflow-y-auto z-10 relative">
+<div class="max-w-md mx-auto">
+<h1 class="text-2xl font-extrabold text-eco-dark-green text-center mb-6">Cadastro</h1>
+<form class="space-y-4">
+<!-- Nome Field -->
+<div>
+<label class="block text-eco-dark-green font-bold mb-1" for="nome">
+            Nome:<span class="text-eco-red">*</span>
+</label>
+<input class="w-full bg-transparent border-0 border-b-2 border-eco-border focus:ring-0 focus:border-eco-dark-green px-0 py-1 text-eco-dark-green placeholder-eco-border font-semibold" id="nome" type="text">
+</div>
+<!-- E-mail Field -->
+<div>
+<label class="block text-eco-dark-green font-bold mb-1" for="email">
+            Seu melhor e-mail:<span class="text-eco-red">*</span>
+</label>
+<input class="w-full bg-transparent border-0 border-b-2 border-eco-border focus:ring-0 focus:border-eco-dark-green px-0 py-1 text-eco-dark-green placeholder-eco-border font-semibold" id="email" type="email">
+</div>
+<!-- Repeat E-mail Field -->
+<div>
+<label class="block text-eco-dark-green font-bold mb-1" for="repeat-email">
+            Repita seu e-mail:<span class="text-eco-red">*</span>
+</label>
+<input class="w-full bg-transparent border-0 border-b-2 border-eco-border focus:ring-0 focus:border-eco-dark-green px-0 py-1 text-eco-dark-green placeholder-eco-border font-semibold" id="repeat-email" type="email">
+</div>
+<!-- Telefone Field -->
+<div>
+<label class="block text-eco-dark-green font-bold mb-1 flex items-center" for="telefone">
+            Telefone<span class="text-eco-red mr-2">*</span>
+<i class="fab fa-whatsapp text-green-500 text-lg"></i>
+</label>
+<input class="w-full bg-transparent border-0 focus:ring-0 px-0 py-1 text-eco-dark-green font-bold placeholder-eco-border/70" id="telefone" placeholder="(00) 00000-0000" type="tel">
+</div>
+<!-- Endereço Field -->
+<div>
+<label class="block text-eco-dark-green font-bold mb-1" for="endereco">
+            Endereço:<span class="text-eco-red">*</span>
+</label>
+<input class="w-full bg-transparent border-0 border-b-2 border-eco-border focus:ring-0 focus:border-eco-dark-green px-0 py-1 text-eco-dark-green placeholder-eco-border font-semibold" id="endereco" type="text">
+</div>
+<!-- Password Field -->
+<div>
+<label class="block text-eco-dark-green font-bold mb-1" for="senha">
+            Crie uma senha com 6 digitos:<span class="text-eco-red">*</span>
+</label>
+<div class="flex space-x-2 text-eco-dark-green text-xs pt-2 pb-1">
+<i class="fas fa-diamond"></i>
+<i class="fas fa-diamond"></i>
+<i class="fas fa-diamond"></i>
+<i class="fas fa-diamond"></i>
+<i class="fas fa-diamond"></i>
+<i class="fas fa-diamond"></i>
+</div>
+<!-- Hidden real input for semantics, though UI uses diamonds -->
+<input class="sr-only" id="senha" type="password">
+</div>
+<!-- Confirm Password Field -->
+<div>
+<label class="block text-eco-dark-green font-bold mb-1" for="confirm-senha">
+            Confirme sua senha:<span class="text-eco-red">*</span>
+</label>
+<div class="flex space-x-2 text-eco-dark-green text-xs pt-2 pb-1">
+<i class="fas fa-diamond"></i>
+<i class="fas fa-diamond"></i>
+<i class="fas fa-diamond"></i>
+<i class="fas fa-diamond"></i>
+<i class="fas fa-diamond"></i>
+<i class="fas fa-diamond"></i>
+</div>
+<input class="sr-only" id="confirm-senha" type="password">
+</div>
+<!-- Option Selection -->
+<div class="pt-6 text-center">
+<p class="text-eco-dark-green font-bold text-lg mb-4">
+            Selecione uma opção:<span class="text-eco-red">*</span>
+</p>
+<div class="flex justify-center space-x-8">
+<label class="flex flex-col items-center cursor-pointer group">
+<input class="sr-only peer" name="user_type" type="radio" value="catador">
+<div class="flex items-center space-x-2 text-eco-dark-green font-bold text-lg peer-checked:opacity-100 opacity-70 transition-opacity">
+<i class="fas fa-leaf text-xl transform -rotate-45"></i>
+<span class="">Catador</span>
+</div>
+</label>
+<label class="flex flex-col items-center cursor-pointer group">
+<input class="sr-only peer" name="user_type" type="radio" value="cidadao">
+<div class="flex items-center space-x-2 text-eco-dark-green font-bold text-lg peer-checked:opacity-100 opacity-70 transition-opacity">
+<i class="fas fa-leaf text-xl transform -rotate-45"></i>
+<span class="leading-tight text-left">Cidadão<br>Consciente</span>
+</div>
+</label>
+</div>
+<div class="mt-8 px-4">
+<button class="w-full login-button text-white text-xl font-bold py-4 rounded-xl shadow-md hover:opacity-90 transition-opacity" style="background: linear-gradient(180deg, #81c784, #4caf50);" type="submit">Avançar</button>
+</div></div>
+</form>
+</div>
+</main>
+<!-- END: Main Content Section -->
+<!-- BEGIN: Bottom Navigation -->
+<footer class="bg-white rounded-t-3xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] fixed bottom-0 w-full z-20 py-4 px-6">
+<nav class="flex justify-around items-center max-w-md mx-auto text-eco-dark-green">
+<a aria-label="Home" class="p-2 hover:bg-eco-green rounded-full transition-colors" href="#">
+<i class="fas fa-leaf text-3xl transform -rotate-45"></i>
+</a>
+<a aria-label="Recycle" class="p-2 hover:bg-eco-green rounded-full transition-colors" href="#">
+<i class="fas fa-recycle text-4xl"></i>
+</a>
+<a aria-label="Menu" class="p-2 hover:bg-eco-green rounded-full transition-colors" href="#">
+<div class="space-y-1.5 w-8">
+<div class="h-1.5 bg-eco-dark-green rounded-full"></div>
+<div class="h-1.5 bg-eco-dark-green rounded-full"></div>
+<div class="h-1.5 bg-eco-dark-green rounded-full"></div>
+</div>
+</a>
+</nav>
+</footer>
+<!-- END: Bottom Navigation -->
+
+
+</body></html>

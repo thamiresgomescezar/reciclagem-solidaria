@@ -1,0 +1,259 @@
+/* ==========================================================
+   SISTEMA RECICLAGEM SOLIDÁRIA — DESIGN TOKENS
+   ========================================================== */
+
+:root {
+  /* Cores da marca */
+  --verde-marca:      #33cc33;
+  --verde-botao:      #7ccf75;
+  --verde-fundo-1:    #e3f4e2; /* fundo exato do novo logo (RGB 227, 244, 226) */
+  --verde-fundo-2:    #ecf8ec;
+  --verde-fundo-3:    #e5f6e4;
+  --branco:           #ffffff;
+  --cinza-texto-aux:  #8a8a8a;
+
+  /* Variações verdes */
+  --verde-50:         #f5fbee;
+  --verde-100:        #e3f4e2;
+  --verde-200:        #d0ebc0;
+  --verde-300:        #addb95;
+  --verde-400:        #83c464;
+  --verde-500:        #4caf50;
+  --verde-600:        #3f933f;
+  --verde-700:        #347535;
+  --verde-800:        #2c5d2d;
+  --verde-900:        #254c27;
+  --verde-950:        #112913;
+
+  /* Superfícies */
+  --surface:          #e3f4e2;
+  --surface-dim:      #c7dec6;
+
+  /* Raios */
+  --raio-pilula:      999px;
+
+  /* Tipografia */
+  --font-family:      'Plus Jakarta Sans', 'Nunito', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--verde-fundo-1);
+  color: var(--verde-950);
+}
+
+/* ==========================================================
+   CARTOES DO DASHBOARD (Protótipo Imagem 1)
+   ========================================================== */
+.proto-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .proto-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .proto-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.proto-card {
+  background-color: var(--branco);
+  border-radius: 1.25rem;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  min-height: 120px;
+}
+
+.proto-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.09);
+}
+
+.proto-card i {
+  font-size: 2.25rem;
+  color: var(--verde-800);
+  margin-bottom: 0.75rem;
+}
+
+.proto-card .proto-card-title {
+  color: var(--verde-800);
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+/* ==========================================================
+   NAVEGAÇÃO / GAVETA SIDEBAR (Protótipo Imagem 2)
+   ========================================================== */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  display: block;
+  opacity: 1;
+}
+
+.sidebar-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: auto;
+  height: 100vh;
+  width: 300px;
+  bottom: 0;
+  width: 280px;
+  background-color: var(--branco);
+  z-index: 1001;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
+}
+
+.sidebar-drawer.active {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--verde-200);
+}
+
+.sidebar-header h2 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--verde-800);
+}
+
+.sidebar-header button {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--verde-700);
+  cursor: pointer;
+}
+
+.sidebar-nav-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar-nav-item a {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  color: var(--verde-800);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border-radius: 0.75rem;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.sidebar-nav-item a i {
+  font-size: 1.25rem;
+  color: var(--verde-800);
+  width: 24px;
+  text-align: center;
+}
+
+.sidebar-nav-item a:hover,
+.sidebar-nav-item a.active {
+  background-color: var(--verde-100);
+  color: var(--verde-900);
+}
+
+/* ==========================================================
+   COMPONENTES REUTILIZÁVEIS E FORMULÁRIOS
+   ========================================================== */
+.btn-pill {
+  background-color: var(--verde-botao);
+  color: var(--branco);
+  font-weight: 700;
+  border: none;
+  border-radius: var(--raio-pilula);
+  padding: 12px 40px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s, transform 0.2s;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.btn-pill:hover {
+  background-color: var(--verde-600);
+  transform: translateY(-1px);
+}
+
+.btn-pill:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status-message {
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  margin-bottom: 12px;
+  display: none;
+}
+
+.status-message.error {
+  display: block;
+  background-color: #fdecea;
+  color: #c62828;
+  border: 1px solid #f5c6cb;
+}
+
+.status-message.success {
+  display: block;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}

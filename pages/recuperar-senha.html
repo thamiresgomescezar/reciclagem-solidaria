@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperar Acesso — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="./login.html" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Login
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo Fixo no Topo -->
+        <aside class="left-panel">
+          <div class="links" style="margin-bottom: 0.5rem;">
+            <a href="./login.html" class="l1"><i class="fa-solid fa-key"></i> Recuperar Acesso</a>
+          </div>
+
+          <div class="logo-wrap">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Formulário de Recuperação -->
+        <main class="center-panel">
+          <div style="width: 100%;">
+            <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1rem;">
+              Recuperar Acesso
+            </h1>
+            <p style="text-align: center; color: var(--cinza-texto-aux); font-size: 0.9rem; margin-bottom: 1.5rem;">
+              Informe seu e-mail cadastrado para receber as instruções de redefinição de senha.
+            </p>
+
+            <form id="form_recuperar" novalidate style="max-width: 440px; margin: 0 auto;">
+              <div class="campo">
+                <label for="email">E-mail Cadastrado:<span class="req">*</span></label>
+                <input type="email" id="email" class="input-underline" placeholder="seuemail@exemplo.com" autocomplete="email" required>
+              </div>
+
+              <button type="submit" class="btn-avancar" id="btn_enviar" style="margin-top: 1.25rem;">
+                <i class="fa-solid fa-paper-plane"></i> ENVIAR INSTRUÇÕES
+              </button>
+
+              <div id="statusMsg" class="status-message" style="margin-top: 1rem;"></div>
+
+              <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; font-weight: 600;">
+                Lembrou sua senha? <a href="./login.html" style="color: var(--verde-escuro, #1b6d24); font-weight: 800; text-decoration: underline;">Voltar para o Login</a>
+              </p>
+            </form>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { supabase } from '../js/lib/supabaseClient.js';
+
+    const form = document.getElementById('form_recuperar');
+    const statusMsg = document.getElementById('statusMsg');
+    const btn = document.getElementById('btn_enviar');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusMsg.className = 'status-message';
+
+      const email = document.getElementById('email').value.trim();
+      if (!email) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = 'Por favor, informe seu e-mail.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...';
+
+      try {
+        const redirectTarget = `${window.location.origin}${window.location.pathname.includes('/pages/') ? '' : '/pages'}/nova-senha.html`;
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: redirectTarget
+        });
+
+        if (error) throw error;
+
+        statusMsg.className = 'status-message success';
+        statusMsg.textContent = 'Enviamos as instruções de recuperação para o seu e-mail! Verifique sua caixa de entrada e spam.';
+      } catch (err) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = 'Erro ao solicitar recuperação: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ENVIAR INSTRUÇÕES';
+      }
+    });
+  </script>
+</body>
+</html>

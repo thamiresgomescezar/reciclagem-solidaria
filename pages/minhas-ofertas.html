@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minhas Ofertas — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="./dashboard-cidadao.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo e Navegação -->
+        <aside class="left-panel">
+          <div class="links">
+            <a href="./minhas-ofertas.html" class="l1" id="link_left_minhas_coletas"><i class="fa-solid fa-recycle"></i> Minhas Ofertas</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 0.5rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Histórico do Usuário Simplificado -->
+        <main class="center-panel">
+          <div style="max-width: 620px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
+            
+            <!-- Cabeçalho Simplificado com Ação Direta -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px solid #a5d6a7; padding-bottom: 1rem;">
+              <div>
+                <h1 id="titulo_minhas_coletas" style="font-size: 1.75rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin: 0;">
+                  Minhas Ofertas de Reciclagem
+                </h1>
+                <p id="subtitulo_minhas_coletas" style="font-size: 0.88rem; color: #555; margin-top: 2px; margin-bottom: 0;">
+                  Acompanhamento e histórico dos seus materiais disponibilizados
+                </p>
+              </div>
+
+              <a href="./inserir-material.html" id="btn_top_acao" class="btn-avancar" style="width: auto; padding: 8px 18px; font-size: 0.88rem; text-decoration: none; border-radius: 8px;">
+                <i class="fa-solid fa-plus"></i> Nova Oferta
+              </a>
+            </div>
+
+            <div id="feedback-msg" class="status-message"></div>
+
+            <!-- Lista de Coletas / Ofertas -->
+            <div id="lista-minhas-coletas" style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="text-align: center; padding: 30px; color: #666; font-size: 0.95rem;">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando suas ofertas...
+              </div>
+            </div>
+
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module" src="../js/pages/minhasColetas.js"></script>
+  <script type="module">
+    import { getPerfilAtual } from '../js/services/auth.js';
+    async function initVoltar() {
+      const btnVoltarTop = document.getElementById('btn-voltar-top');
+      if (!btnVoltarTop) return;
+      try {
+        const perfil = await getPerfilAtual();
+        if (perfil?.tipo) {
+          btnVoltarTop.href = perfil.tipo === 'administrador' ? './dashboard-admin.html' : (perfil.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+        }
+      } catch (e) {}
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initVoltar);
+    } else {
+      initVoltar();
+    }
+  </script>
+</body>
+</html>

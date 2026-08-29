@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acesso Negado — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background-color: var(--surface, #f5fbef);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      padding: 1rem;
+    }
+    .card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 2.5rem;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    }
+    .card .ico {
+      font-size: 4rem;
+      color: #ff5252;
+      margin-bottom: 1rem;
+    }
+    .card h1 {
+      color: var(--verde-800, #2c5d2d);
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin: 0 0 0.5rem;
+    }
+    .card p {
+      color: var(--cinza-texto-aux, #8a8a8a);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .btn-voltar {
+      display: inline-block;
+      background: linear-gradient(180deg, #81c784, #4caf50);
+      color: white;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 36px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .btn-voltar:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <i class="fa-solid fa-ban ico"></i>
+    <h1>Acesso Negado</h1>
+    <p>Você não tem permissão para acessar esta página. Se acredita que isso é um erro, contate a administração.</p>
+    <a href="login.html" class="btn-voltar">Voltar ao Login</a>
+  </div>
+</body>
+</html>

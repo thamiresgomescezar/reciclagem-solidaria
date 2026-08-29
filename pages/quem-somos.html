@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quem Somos — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="#" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo Fixo no Topo -->
+        <aside class="left-panel">
+          <div class="links" style="margin-bottom: 0.5rem;">
+            <a href="./quem-somos.html" class="l1"><i class="fa-solid fa-circle-info"></i> Quem Somos</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 0.25rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Sobre o Projeto & ODS ONU -->
+        <main class="center-panel">
+          <div style="max-width: 660px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.5rem;">
+              Quem Somos — Reciclagem Solidária
+            </h1>
+
+            <!-- Sobre o Projeto -->
+            <div style="background: white; padding: 24px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.06); margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+              <h4 style="color: var(--verde-escuro, #1b6d24); margin-bottom: 10px; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-leaf"></i> Sobre a Plataforma
+              </h4>
+              <p style="font-size: 0.95rem; color: #172b16; line-height: 1.6; margin-bottom: 1rem;">
+                O projeto <strong>Reciclagem Solidária</strong> começou como uma iniciativa acadêmica da <strong>Fatec Franco da Rocha</strong> com o propósito de integrar tecnologia social e sustentabilidade ambiental à gestão de resíduos sólidos recicláveis.
+              </p>
+              <p style="font-size: 0.95rem; color: #172b16; line-height: 1.6;">
+                A plataforma conecta diretamente cidadãos e geradores de materiais a catadores autônomos e parceiros, promovendo a inclusão produtiva, a valorização do trabalho dos profissionais da reciclagem, o descarte consciente e a economia circular.
+              </p>
+            </div>
+
+            <!-- ODS ONU -->
+            <div style="background: white; padding: 24px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+              <h4 style="color: var(--verde-escuro, #1b6d24); margin-bottom: 14px; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-earth-americas"></i> Objetivos de Desenvolvimento Sustentável (ONU)
+              </h4>
+              
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
+                <div style="background: #ffebee; border-radius: 12px; padding: 14px 10px; border: 1px solid #ffcdd2;">
+                  <span style="display: inline-block; background: #e53935; color: white; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;">ODS 1</span>
+                  <strong style="color: #b71c1c; font-size: 13px; display: block;">Erradicação da Pobreza</strong>
+                  <span style="font-size: 11px; color: #555; display: block; margin-top: 4px;">Geração de renda para catadores autônomos</span>
+                </div>
+                <div style="background: #e8f5e9; border-radius: 12px; padding: 14px 10px; border: 1px solid #c8e6c9;">
+                  <span style="display: inline-block; background: #2e7d32; color: white; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;">ODS 8</span>
+                  <strong style="color: #1b5e20; font-size: 13px; display: block;">Trabalho Decente</strong>
+                  <span style="font-size: 11px; color: #555; display: block; margin-top: 4px;">Inclusão e segurança operacional</span>
+                </div>
+                <div style="background: #fff8e1; border-radius: 12px; padding: 14px 10px; border: 1px solid #ffecb3;">
+                  <span style="display: inline-block; background: #f57f17; color: white; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;">ODS 12</span>
+                  <strong style="color: #e65100; font-size: 13px; display: block;">Consumo Sustentável</strong>
+                  <span style="font-size: 11px; color: #555; display: block; margin-top: 4px;">Destinação correta de recicláveis</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { getPerfilAtual } from '../js/services/auth.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const btnVoltarTop = document.getElementById('btn-voltar-top');
+      const perfil = await getPerfilAtual().catch(() => null);
+      if (perfil?.tipo) {
+        btnVoltarTop.href = perfil.tipo === 'administrador' ? './dashboard-admin.html' : (perfil.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+        btnVoltarTop.innerHTML = '<i class="fa-solid fa-arrow-left"></i> Voltar ao Painel';
+      } else {
+        btnVoltarTop.href = './login.html';
+        btnVoltarTop.innerHTML = '<i class="fa-solid fa-arrow-left"></i> Voltar ao Login';
+      }
+    });
+  </script>
+</body>
+</html>

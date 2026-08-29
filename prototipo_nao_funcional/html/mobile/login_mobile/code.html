@@ -1,0 +1,97 @@
+<!DOCTYPE html><html lang="pt-BR" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Login Screen</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style data-purpose="custom-styles">
+    body {
+      background-color: #f5fbef; /* surface color from design system */
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    .header-curve {
+      background: linear-gradient(135deg, #a5d6a7, #4caf50); /* Custom color #4caf50 */
+      border-bottom-left-radius: 50% 20%;
+      border-bottom-right-radius: 50% 20%;
+    }
+
+    .input-field {
+      border: none;
+      border-bottom: 2px solid #4caf50;
+      background: transparent;
+      outline: none;
+    }
+
+    .login-button {
+      background: linear-gradient(180deg, #81c784, #4caf50);
+    }
+  </style>
+<script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              green: {
+                light: '#81c784',
+                DEFAULT: '#4caf50',
+                dark: '#388e3c',
+                text: '#2e7d32'
+              }
+            },
+            surface: '#f5fbef',
+            'surface-container-low': '#f0f6ea',
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-surface min-h-screen flex flex-col relative overflow-hidden" style="background-color: rgb(245, 251, 239);"><div class="header-curve absolute top-0 left-0 w-full h-32 z-0" style="background: rgb(118, 208, 127);"></div>
+<!-- BEGIN: TopBar -->
+<header class="pt-2 pb-6 px-4 relative z-10 bg-transparent text-white"><div class="flex justify-between items-center max-w-md mx-auto"><div class="flex items-center space-x-1 text-sm font-semibold"><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 20v-6h2v6h-2zm-4 0v-10h2v10H8zm-4 0v-4h2v4H4zm12 0v-14h2v14h-2zm4 0v-18h2v18h-2z"></path></svg><svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21l-12-18h24z"></path></svg></div><div class="text-center text-white"><div class="text-lg font-bold leading-tight">10:23</div><div class="text-xs">sábado</div></div><div class="text-sm"><svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M17 6h-2V4H9v2H7c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"></path></svg></div></div></header>
+<!-- END: TopBar -->
+<!-- BEGIN: MainContent -->
+<main class="flex-grow px-6 pt-8 pb-24 overflow-y-auto z-10 relative max-w-md mx-auto w-full bg-surface" style="background-color: rgb(245, 251, 239);"><h1 class="text-2xl font-bold text-brand-green-dark text-center mb-8">Login</h1>
+<!-- User Input -->
+<div class="mb-6"><label class="block text-brand-green-dark font-semibold mb-1 text-sm" for="username">Usuário:<span class="text-red-500">*</span></label><input class="w-full bg-transparent border-0 border-b-2 border-brand-green focus:ring-0 focus:border-brand-green-dark px-0 py-2 text-brand-green-dark placeholder-gray-400 font-medium text-base" id="username" placeholder="Seu usuário" type="text"></div>
+<!-- Password Input -->
+<div class="mb-4"><label class="block text-brand-green-dark font-semibold mb-1 text-sm" for="password">Senha:<span class="text-red-500">*</span></label><input class="w-full bg-transparent border-0 border-b-2 border-brand-green focus:ring-0 focus:border-brand-green-dark px-0 py-2 text-brand-green-dark placeholder-gray-400 font-medium text-base" id="password" placeholder="Sua senha" type="password"></div>
+<!-- Forgot Password Link -->
+<div class="mb-8 text-right">
+<a class="text-brand-green-text font-semibold text-sm hover:underline" href="#">Esqueci minha senha</a>
+</div>
+<!-- reCAPTCHA Mockup -->
+<div class="border border-gray-300 rounded-lg p-3 flex items-center justify-between bg-white mb-8 shadow-sm">
+<div class="flex items-center space-x-3 text-gray-700 font-medium">
+<!-- Checkbox mockup -->
+<div class="w-6 h-6 border-2 border-gray-400 rounded-sm flex items-center justify-center bg-white cursor-pointer hover:border-gray-500">
+</div>
+<span class="">Eu não sou um robô</span>
+</div>
+<div class="flex flex-col items-center">
+<img alt="Captcha Logo" class="h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDNmHDOTxhIVRnh8YIrkjTFzUSv5i3FD6zYPhpVrpxQFuJWeceF1Y_TVyJwmYxy-7tx3xNTDJxZQkXql6HDPLErFtwno3jGcU4ebDBXdk7A4foVWiEPpiKdSscM1FxoBd761xWR6sZWnaypErCdjaIbb2yJLSukF2K6mtrud0kEFVh7ibFpO76RonB38Oq-pNdQRvbp0nlu9ZXoIE-6J2PHQTKZnX8KQksZdc5vsRZuJTq5MVQphKiHA">
+</div>
+</div>
+<!-- Login Button -->
+<button class="w-full text-white text-lg font-bold py-3 rounded-xl shadow-md hover:bg-brand-green-dark transition-colors mb-8 mt-2" style="background: linear-gradient(rgb(129, 199, 132), rgb(76, 175, 80));">Login</button>
+<!-- Signup Link -->
+<div class="text-center text-sm font-semibold text-brand-green-dark leading-relaxed">
+<p class="">Ainda não tem login?</p>
+<p class="">Realize seu cadastro relatando <a class="text-red-500 hover:underline font-bold" href="#">aqui!</a></p>
+</div>
+</main>
+<!-- END: MainContent -->
+<!-- BEGIN: BottomNavigationBar -->
+<footer class="bg-white rounded-t-3xl shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.1)] fixed bottom-0 w-full z-20 py-3 px-6 bg-surface-container-lowest"><nav class="flex justify-around items-center max-w-md mx-auto text-brand-green-dark"><a aria-label="Home" class="p-3 hover:bg-surface-container-low rounded-xl transition-colors flex flex-col items-center" href="#"><span class="material-symbols-outlined text-brand-green-dark text-2xl">eco</span></a><a aria-label="Recycle" class="p-3 hover:bg-surface-container-low rounded-xl transition-colors flex flex-col items-center" href="#"><span class="material-symbols-outlined text-brand-green-dark text-3xl">recycling</span></a><a aria-label="Menu" class="p-3 hover:bg-surface-container-low rounded-xl transition-colors flex flex-col items-center" href="#"><span class="material-symbols-outlined text-brand-green-dark text-2xl">menu</span></a></nav></footer>
+<!-- END: BottomNavigationBar -->
+
+
+
+
+</body></html>

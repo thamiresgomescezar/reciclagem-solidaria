@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Privacidade — Reciclagem Solidária</title>
+  <!-- T8.4 — Termo de política de privacidade -->
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      background-color: var(--surface, #f5fbef);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .header-wave {
+      background-color: #7bcc7f;
+      color: white;
+      padding: 0.5rem 1rem 1.5rem;
+      border-bottom-left-radius: 50% 20%;
+      border-bottom-right-radius: 50% 20%;
+      position: relative;
+      z-index: 10;
+      text-align: center;
+    }
+    .back-btn { position: absolute; left: 1rem; top: 1.5rem; background: none; border: none; color: white; font-size: 1.3rem; cursor: pointer; }
+    .header-wave h1 { font-size: 1.6rem; font-weight: 800; margin: 0.25rem 0; }
+    main { flex: 1; padding: 1.25rem 1rem 2rem; max-width: 700px; width: 100%; margin: 0 auto; }
+    .conteudo {
+      background: white;
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      line-height: 1.7;
+      color: #333;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .conteudo h2 { color: #3d7940; font-weight: 800; margin: 1rem 0 0.5rem; font-size: 1.15rem; }
+    .conteudo h2:first-child { margin-top: 0; }
+    .conteudo p { margin-bottom: 0.75rem; }
+    .conteudo ul { padding-left: 1.25rem; margin-bottom: 0.75rem; }
+    .conteudo li { margin-bottom: 0.25rem; }
+  </style>
+</head>
+<body>
+  <header class="header-wave">
+    <button class="back-btn" type="button" onclick="history.back()" aria-label="Voltar"><i class="fa-solid fa-arrow-left"></i></button>
+    <h1>Política de Privacidade</h1>
+  </header>
+
+  <main>
+    <div class="conteudo">
+      <h2>1. Dados coletados</h2>
+      <p>
+        O sistema <strong>Reciclagem Solidária</strong> coleta os seguintes dados
+        dos usuários cadastrados:
+      </p>
+      <ul>
+        <li>Nome completo;</li>
+        <li>E-mail (utilizado como login);</li>
+        <li>Telefone para contato;</li>
+        <li>Endereço (rua, número, complemento, bairro, cidade, estado, CEP) ou a opção "Sem moradia";</li>
+        <li>Fotos de materiais recicláveis enviadas nas ofertas de coleta.</li>
+      </ul>
+
+      <h2>2. Como os dados são utilizados</h2>
+      <p>
+        Os dados são utilizados exclusivamente para:
+      </p>
+      <ul>
+        <li>Autenticação e controle de acesso por perfil (Administrador, Cidadão Consciente, Catador);</li>
+        <li>Comunicação entre os participantes para agendamento de coletas;</li>
+        <li>Geração de relatórios geográficos e de desempenho (dados agregados);</li>
+        <li>Gestão institucional da coleta seletiva na Fatec Franco da Rocha.</li>
+      </ul>
+
+      <h2>3. Compartilhamento</h2>
+      <p>
+        Os dados sensíveis (endereço completo, e-mail) são visíveis apenas ao
+        próprio usuário e aos administradores. O diretório público de catadores
+        expõe apenas nome e telefone. Nenhum dado é vendido ou compartilhado
+        com terceiros fora do contexto acadêmico-institucional.
+      </p>
+
+      <h2>4. Armazenamento e segurança</h2>
+      <p>
+        As senhas são armazenadas de forma segura pelo Supabase Auth (hash),
+        nunca em texto puro. O acesso aos dados é controlado por políticas de
+        segurança (RLS) no banco de dados.
+      </p>
+
+      <h2>5. Cookies</h2>
+      <p>
+        O sistema pode utilizar cookies para manter a sessão de navegação,
+        respeitando as configurações do navegador.
+      </p>
+
+      <h2>6. Contato</h2>
+      <p>
+        Para dúvidas sobre esta política, contate a administração da
+        Fatec Franco da Rocha.
+      </p>
+    </div>
+  </main>
+</body>
+</html>

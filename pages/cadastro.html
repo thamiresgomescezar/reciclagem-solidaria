@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro — Reciclagem Solidária</title>
+  
+  <!-- Configurações de PWA, Ícone e Nome do App -->
+  <link rel="manifest" href="../manifest.json">
+  <link rel="icon" type="image/png" href="../assets/icon-192.png">
+  <link rel="apple-touch-icon" href="../assets/icon-192.png">
+  <meta name="theme-color" content="#1b6d24">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Reciclagem Solidária">
+  <meta name="application-name" content="Reciclagem Solidária">
+
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header com Botão de Voltar em Branco à Direita -->
+    <div class="top-bar">
+      <div></div>
+      <a href="./login.html" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Login
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Link + Logo no Topo Fixo -->
+        <aside class="left-panel">
+          <div class="links" style="margin-bottom: 0.5rem; margin-top: 0;">
+            <a href="./cadastro.html" class="l1"><i class="fa-solid fa-user-plus"></i> Criar Nova Conta</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 0.25rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Formulário Completo de Cadastro -->
+        <main class="center-panel">
+          <div style="width: 100%; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem; margin-top: 0;">
+              Criar Conta
+            </h1>
+
+            <form id="form_cadastro" novalidate>
+              
+              <!-- Seleção do Tipo de Perfil (Visível em Desktop e Mobile) -->
+              <div class="campo" style="margin-bottom: 1.25rem;">
+                <label style="font-size: 0.95rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin-bottom: 0.5rem; display: block;">
+                  Selecione seu perfil:<span class="req">*</span>
+                </label>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;" id="perfil_selector_container">
+                  <label class="perfil-card-option" id="opt_cidadao" style="background: #e8f5e9; border: 2px solid var(--verde-escuro, #1b6d24); padding: 12px 14px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(27,109,36,0.1);">
+                    <input type="radio" name="tipo_perfil" value="cidadao" checked style="accent-color: var(--verde-escuro, #1b6d24); width: 18px; height: 18px; cursor: pointer;">
+                    <div style="display: flex; flex-direction: column;">
+                      <span style="color: var(--verde-escuro, #1b6d24); font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-user"></i> Cidadão
+                      </span>
+                      <span style="font-size: 0.75rem; color: #555; font-weight: 600;">Disponibilizar materiais</span>
+                    </div>
+                  </label>
+
+                  <label class="perfil-card-option" id="opt_catador" style="background: #f9fbf9; border: 1.5px solid #c8e6c9; padding: 12px 14px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s ease;">
+                    <input type="radio" name="tipo_perfil" value="catador" style="accent-color: var(--verde-escuro, #1b6d24); width: 18px; height: 18px; cursor: pointer;">
+                    <div style="display: flex; flex-direction: column;">
+                      <span style="color: #444; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-id-card"></i> Catador
+                      </span>
+                      <span style="font-size: 0.75rem; color: #555; font-weight: 600;">Recolher recicláveis</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="campo">
+                <label for="nome">Nome Completo:<span class="req">*</span></label>
+                <input type="text" id="nome" class="input-underline" placeholder="Seu nome completo" required>
+              </div>
+
+              <div class="campo">
+                <label for="email">E-mail (Login):<span class="req">*</span></label>
+                <input type="email" id="email" class="input-underline" placeholder="seuemail@exemplo.com" autocomplete="email" required>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="campo">
+                  <label for="telefone">Telefone / WhatsApp:<span class="req">*</span></label>
+                  <input type="tel" id="telefone" class="input-underline" placeholder="(11) 99999-9999" required>
+                </div>
+                <div></div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="campo">
+                  <label for="senha">Crie senha (mín. 6 dígitos):<span class="req">*</span></label>
+                  <input type="password" id="senha" class="input-underline" placeholder="••••••••" autocomplete="new-password" required>
+                </div>
+                <div class="campo">
+                  <label for="confirma_senha">Confirme sua senha:<span class="req">*</span></label>
+                  <input type="password" id="confirma_senha" class="input-underline" placeholder="••••••••" autocomplete="new-password" required>
+                </div>
+              </div>
+
+              <!-- Subformulário de Endereço Dinâmico -->
+              <h4 style="color: var(--verde-escuro, #1b6d24); margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1rem; font-weight: 800; border-bottom: 2px solid #a5d6a7; padding-bottom: 4px;">
+                Endereço de Referência
+              </h4>
+              <div id="subform_endereco_container"></div>
+
+              <div style="margin: 1.25rem 0;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: #172b16; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="checkbox" id="aceita_termos" required style="accent-color: var(--verde-escuro, #1b6d24); width: 16px; height: 16px;">
+                  <span>Li e aceito a <button type="button" id="btn_abrir_politica" style="background: none; border: none; padding: 0; color: var(--verde-escuro, #1b6d24); font-weight: 800; font-family: inherit; font-size: inherit; text-decoration: underline; cursor: pointer;">Política de Privacidade</button>.</span>
+                </label>
+              </div>
+
+              <button type="submit" class="btn-avancar" id="btn_cadastrar" style="margin-top: 0.5rem;">
+                <i class="fa-solid fa-user-plus"></i> Realizar Cadastro
+              </button>
+
+              <div id="statusMsg" class="status-message" style="margin-top: 1rem;"></div>
+
+              <p style="text-align: center; margin-top: 1.25rem; font-size: 0.9rem; font-weight: 600; color: var(--verde-escuro, #1b6d24);">
+                Já possui conta? <a href="./login.html" style="color: #ff5252; font-weight: 800; text-decoration: underline;">Faça Login!</a>
+              </p>
+            </form>
+          </div>
+        </main>
+
+        <!-- Right Panel Decorativo Padrão -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pop-up da Política de Privacidade -->
+  <div id="modal_privacidade" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2000; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: white; border-radius: 20px; max-width: 640px; width: 100%; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.25); overflow: hidden;">
+      
+      <!-- Cabeçalho do Modal -->
+      <div style="padding: 18px 24px; background: var(--verde-escuro, #1b6d24); color: white; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-shield-halved"></i> Política de Privacidade & Termos de Uso
+        </h3>
+        <button type="button" id="btn_fechar_modal_top" style="background: none; border: none; color: white; font-size: 1.25rem; cursor: pointer;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Corpo do Modal com Scroll -->
+      <div style="padding: 24px; overflow-y: auto; font-size: 0.9rem; line-height: 1.6; color: #172b16;">
+        <h4 style="color: var(--verde-escuro, #1b6d24); margin-bottom: 8px; font-size: 1rem; font-weight: 800;">
+          1. Proteção de Dados e Privacidade
+        </h4>
+        <p style="margin-bottom: 14px;">
+          A plataforma <strong>Reciclagem Solidária</strong> garante o sigilo e a proteção dos dados pessoais de todos os cidadãos e catadores cadastrados, em estrita conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei nº 13.709/2018).
+        </p>
+
+        <h4 style="color: var(--verde-escuro, #1b6d24); margin-bottom: 8px; font-size: 1rem; font-weight: 800;">
+          2. Mapeamento Solidário e Inclusão Social
+        </h4>
+        <p style="margin-bottom: 14px;">
+          A opção de cadastro "Sem moradia" (Mapeamento Solidário) visa assegurar o acesso e a inclusão cidadã aos catadores em situação de vulnerabilidade social, permitindo o recebimento de chamados de coleta com dignidade e sem discriminação.
+        </p>
+
+        <h4 style="color: var(--verde-escuro, #1b6d24); margin-bottom: 8px; font-size: 1rem; font-weight: 800;">
+          3. Finalidade e Uso dos Dados
+        </h4>
+        <p style="margin-bottom: 14px;">
+          Os dados coletados (nome, contato e endereço de referência) são utilizados exclusivamente para operacionalizar o agendamento de coletas de materiais recicláveis, o contato direto interno e a exibição estatística anonimizada de dados de impacto socioambiental.
+        </p>
+
+        <h4 style="color: var(--verde-escuro, #1b6d24); margin-bottom: 8px; font-size: 1rem; font-weight: 800;">
+          4. Compromisso do Usuário
+        </h4>
+        <p style="margin-bottom: 0;">
+          Ao se cadastrar, o usuário compromete-se a fornecer informações verdadeiras e utilizar os serviços da plataforma de forma ética e respeitosa aos demais membros da comunidade.
+        </p>
+      </div>
+
+      <!-- Rodapé do Modal com Botão de Confirmação -->
+      <div style="padding: 16px 24px; background: #f4f8f3; border-top: 1px solid rgba(0,0,0,0.08); display: flex; justify-content: flex-end;">
+        <button type="button" id="btn_aceitar_modal" class="btn-avancar" style="width: auto; padding: 10px 24px;">
+          <i class="fa-solid fa-check"></i> Li e Aceito os Termos
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal Pop-up para E-mail Já Cadastrado -->
+  <div id="modal_usuario_existente" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2050; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: white; border-radius: 20px; max-width: 460px; width: 100%; padding: 26px 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+      <div style="width: 64px; height: 64px; background: #e8f5e9; border-radius: 50%; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.85rem;">
+        <i class="fa-solid fa-user-check"></i>
+      </div>
+
+      <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.3rem; font-weight: 800; margin-bottom: 10px;">
+        E-mail Já Cadastrado!
+      </h3>
+
+      <p style="color: #444; font-size: 0.95rem; line-height: 1.5; margin-bottom: 22px;">
+        Este e-mail já possui uma conta ativa no sistema <strong>Reciclagem Solidária</strong>. Deseja fazer login para acessar seu painel?
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <a href="./login.html" class="btn-avancar" style="text-decoration: none; justify-content: center; width: 100%;">
+          <i class="fa-solid fa-right-to-bracket"></i> Ir para a Tela de Login
+        </a>
+        <button type="button" id="btn_fechar_duplicado" class="btn-secondary-pill" style="width: 100%; justify-content: center; height: 42px; font-size: 0.9rem;">
+          Usar Outro E-mail
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pop-up para Cadastro Realizado com Sucesso -->
+  <div id="modal_cadastro_sucesso" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 2060; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: white; border-radius: 20px; max-width: 480px; width: 100%; padding: 26px 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+      <div style="width: 64px; height: 64px; background: #e8f5e9; border-radius: 50%; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.85rem;">
+        <i class="fa-solid fa-envelope-circle-check"></i>
+      </div>
+
+      <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.3rem; font-weight: 800; margin-bottom: 10px;">
+        Conta Criada com Sucesso!
+      </h3>
+
+      <p style="color: #444; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
+        Seu cadastro foi realizado com sucesso na plataforma <strong>Reciclagem Solidária</strong>! Você já pode fazer login para acessar seu painel.
+      </p>
+
+      <a href="./login.html" class="btn-avancar" style="text-decoration: none; justify-content: center; width: 100%;">
+        <i class="fa-solid fa-right-to-bracket"></i> Ir para a Tela de Login
+      </a>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { cadastrarCidadao, cadastrarCatador } from '../js/services/auth.js';
+    import { renderEnderecoForm, lerDadosEndereco, validarEndereco } from '../js/pages/enderecoForm.js';
+
+    renderEnderecoForm('subform_endereco_container');
+
+    const form = document.getElementById('form_cadastro');
+    const statusMsg = document.getElementById('statusMsg');
+    const btnCadastrar = document.getElementById('btn_cadastrar');
+
+    // Alternância visual dos cards de perfil
+    const radioPerfils = document.querySelectorAll('input[name="tipo_perfil"]');
+    const optCidadao = document.getElementById('opt_cidadao');
+    const optCatador = document.getElementById('opt_catador');
+
+    function updatePerfilCards() {
+      const selected = document.querySelector('input[name="tipo_perfil"]:checked')?.value;
+      if (selected === 'catador') {
+        if (optCatador) {
+          optCatador.style.background = '#e8f5e9';
+          optCatador.style.border = '2px solid var(--verde-escuro, #1b6d24)';
+          optCatador.style.boxShadow = '0 2px 6px rgba(27,109,36,0.1)';
+          const spanTitle = optCatador.querySelector('span');
+          if (spanTitle) spanTitle.style.color = 'var(--verde-escuro, #1b6d24)';
+        }
+        if (optCidadao) {
+          optCidadao.style.background = '#f9fbf9';
+          optCidadao.style.border = '1.5px solid #c8e6c9';
+          optCidadao.style.boxShadow = 'none';
+          const spanTitle = optCidadao.querySelector('span');
+          if (spanTitle) spanTitle.style.color = '#444';
+        }
+      } else {
+        if (optCidadao) {
+          optCidadao.style.background = '#e8f5e9';
+          optCidadao.style.border = '2px solid var(--verde-escuro, #1b6d24)';
+          optCidadao.style.boxShadow = '0 2px 6px rgba(27,109,36,0.1)';
+          const spanTitle = optCidadao.querySelector('span');
+          if (spanTitle) spanTitle.style.color = 'var(--verde-escuro, #1b6d24)';
+        }
+        if (optCatador) {
+          optCatador.style.background = '#f9fbf9';
+          optCatador.style.border = '1.5px solid #c8e6c9';
+          optCatador.style.boxShadow = 'none';
+          const spanTitle = optCatador.querySelector('span');
+          if (spanTitle) spanTitle.style.color = '#444';
+        }
+      }
+    }
+
+    radioPerfils.forEach(r => r.addEventListener('change', updatePerfilCards));
+
+    // Elementos do Modal Pop-up da Política de Privacidade
+    const modalPrivacidade = document.getElementById('modal_privacidade');
+    const btnAbrirPolitica = document.getElementById('btn_abrir_politica');
+    const btnFecharModalTop = document.getElementById('btn_fechar_modal_top');
+    const btnAceitarModal = document.getElementById('btn_aceitar_modal');
+    const checkboxAceita = document.getElementById('aceita_termos');
+
+    // Elementos do Modal Pop-up de E-mail Já Cadastrado
+    const modalExistente = document.getElementById('modal_usuario_existente');
+    const btnFecharDuplicado = document.getElementById('btn_fechar_duplicado');
+
+    // Elementos do Modal Pop-up de Sucesso no Cadastro
+    const modalSucesso = document.getElementById('modal_cadastro_sucesso');
+
+    if (btnAbrirPolitica && modalPrivacidade) {
+      btnAbrirPolitica.addEventListener('click', (e) => {
+        e.preventDefault();
+        modalPrivacidade.style.display = 'flex';
+      });
+    }
+
+    if (btnFecharModalTop && modalPrivacidade) {
+      btnFecharModalTop.addEventListener('click', () => {
+        modalPrivacidade.style.display = 'none';
+      });
+    }
+
+    if (btnAceitarModal && modalPrivacidade) {
+      btnAceitarModal.addEventListener('click', () => {
+        if (checkboxAceita) checkboxAceita.checked = true;
+        modalPrivacidade.style.display = 'none';
+      });
+    }
+
+    if (btnFecharDuplicado && modalExistente) {
+      btnFecharDuplicado.addEventListener('click', () => {
+        modalExistente.style.display = 'none';
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+          emailInput.focus();
+          emailInput.select();
+        }
+      });
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusMsg.className = 'status-message';
+
+      const nome = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const telefone = document.getElementById('telefone').value.trim();
+      const senha = document.getElementById('senha').value;
+      const confirmaSenha = document.getElementById('confirma_senha').value;
+      const aceitaTermos = document.getElementById('aceita_termos').checked;
+      const tipoPerfil = document.querySelector('input[name="tipo_perfil"]:checked')?.value || 'cidadao';
+
+      if (!nome || !email || !telefone || !senha) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = 'Preencha todos os campos obrigatórios (*).';
+        return;
+      }
+
+      if (senha.length < 6) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = 'A senha deve ter no mínimo 6 caracteres.';
+        return;
+      }
+
+      if (senha !== confirmaSenha) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = 'A confirmação de senha não confere.';
+        return;
+      }
+
+      if (!aceitaTermos) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = 'Você deve aceitar a Política de Privacidade para se cadastrar.';
+        return;
+      }
+
+      const errEnd = validarEndereco();
+      if (errEnd) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = errEnd;
+        return;
+      }
+
+      const end = lerDadosEndereco();
+      btnCadastrar.disabled = true;
+      btnCadastrar.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Cadastrando...';
+
+      try {
+        const dadosCompletos = {
+          nome,
+          email,
+          telefone,
+          senha,
+          rua: end.rua,
+          numero: end.numero,
+          complemento: end.complemento,
+          bairro: end.bairro,
+          cidade: end.cidade,
+          estado: end.estado,
+          cep: end.cep,
+          sem_residencia: end.sem_residencia
+        };
+
+        const res = tipoPerfil === 'catador' ? await cadastrarCatador(dadosCompletos) : await cadastrarCidadao(dadosCompletos);
+
+        if (!res.ok) {
+          const msgErro = res.erro || 'Erro ao realizar cadastro.';
+          if (msgErro.includes('já está cadastrado') || msgErro.includes('already registered') || msgErro.includes('User already registered')) {
+            if (modalExistente) {
+              modalExistente.style.display = 'flex';
+            } else {
+              statusMsg.className = 'status-message error';
+              statusMsg.textContent = msgErro;
+            }
+            btnCadastrar.disabled = false;
+            btnCadastrar.innerHTML = '<i class="fa-solid fa-user-plus"></i> Realizar Cadastro';
+            return;
+          }
+          throw new Error(msgErro);
+        }
+
+        statusMsg.className = 'status-message success';
+        statusMsg.textContent = 'Cadastro realizado com sucesso!';
+
+        if (modalSucesso) {
+          modalSucesso.style.display = 'flex';
+        } else {
+          setTimeout(() => {
+            window.location.href = './login.html';
+          }, 1500);
+        }
+
+      } catch (err) {
+        statusMsg.className = 'status-message error';
+        statusMsg.textContent = err.message;
+        btnCadastrar.disabled = false;
+        btnCadastrar.innerHTML = '<i class="fa-solid fa-user-plus"></i> Realizar Cadastro';
+      }
+    });
+  </script>
+</body>
+</html>

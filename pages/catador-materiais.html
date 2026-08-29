@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Materiais Disponíveis — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <button type="button" class="menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <a href="./dashboard-catador.html" id="btn-voltar-top" style="color: var(--branco, #ffffff); font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo e Navegação -->
+        <aside class="left-panel">
+          <div class="links">
+            <a href="./catador-materiais.html" class="l1"><i class="fa-solid fa-recycle"></i> Materiais Disponíveis</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 2rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Coletas Disponíveis em Tempo Real -->
+        <main class="center-panel" style="align-items: stretch; justify-content: flex-start;">
+          <div style="max-width: 680px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1rem;">
+              Materiais Disponíveis para Coleta
+            </h1>
+
+            <div id="feedback-msg" class="status-message"></div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <span style="font-size: 14px; font-weight: 700; color: var(--verde-escuro, #1b6d24);">Ofertas em Aberto</span>
+              <span id="realtime-badge" style="font-size: 11px; background: #e8f5e9; color: #2e7d32; padding: 4px 12px; border-radius: 12px; border: 1px solid #c8e6c9; font-weight: 700;">
+                <i class="fa-solid fa-signal"></i> Realtime Ativo
+              </span>
+            </div>
+
+            <!-- Lista de Cards de Coletas -->
+            <div id="lista-coletas" style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="text-align: center; padding: 40px; color: var(--cinza-texto-aux);">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando ofertas disponíveis...
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+
+    <!-- Bottom Footer Bar -->
+    <div class="bottom-bar"></div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module" src="../js/pages/catadorMateriais.js"></script>
+</body>
+</html>

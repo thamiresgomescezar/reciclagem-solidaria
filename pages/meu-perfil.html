@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu Perfil — Reciclagem Solidária | Fatec Franco da Rocha</title>
+  
+  <!-- Configurações de PWA e Ícones -->
+  <link rel="manifest" href="../manifest.json">
+  <link rel="icon" type="image/png" href="../assets/icon-192.png">
+  <link rel="apple-touch-icon" href="../assets/icon-192.png">
+  <meta name="theme-color" content="#1b6d24">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Reciclagem Solidária">
+  <meta name="application-name" content="Reciclagem Solidária">
+
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="#" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo e Navegação -->
+        <aside class="left-panel">
+          <div class="links">
+            <a href="./meu-perfil.html" class="l1"><i class="fa-solid fa-user-gear"></i> Meu Perfil</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 0.25rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Formulário Completo de Atualização de Perfil, Senha, Notificações e Encerramento -->
+        <main class="center-panel">
+          <div style="max-width: 540px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem; margin-top: 0;">
+              Editar Meu Perfil
+            </h1>
+
+            <form id="form_perfil" novalidate>
+              <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; border-bottom: 2px solid #a5d6a7; padding-bottom: 4px;">
+                Informações Pessoais
+              </h3>
+
+              <div class="campo">
+                <label for="perfil_nome">Nome Completo:<span class="req">*</span></label>
+                <input type="text" id="perfil_nome" class="input-underline" required>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="campo">
+                  <label for="perfil_email">E-mail (Login):</label>
+                  <input type="email" id="perfil_email" class="input-underline" readonly disabled style="opacity: 0.7; background-color: #f0f0f0;">
+                </div>
+                <div class="campo">
+                  <label for="perfil_telefone">Telefone / WhatsApp:<span class="req">*</span></label>
+                  <input type="tel" id="perfil_telefone" class="input-underline" required>
+                </div>
+              </div>
+
+              <!-- Subformulário de Endereço Completo -->
+              <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.1rem; font-weight: 800; margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 2px solid #a5d6a7; padding-bottom: 4px;">
+                Endereço de Referência
+              </h3>
+              <div id="containerEndereco"></div>
+
+              <!-- Alteração de Senha de Acesso -->
+              <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.1rem; font-weight: 800; margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 2px solid #a5d6a7; padding-bottom: 4px;">
+                Alterar Senha de Acesso (Opcional)
+              </h3>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="campo">
+                  <label for="nova_senha">Nova Senha:</label>
+                  <input type="password" id="nova_senha" class="input-underline" placeholder="Deixe em branco para manter a atual">
+                </div>
+                <div class="campo">
+                  <label for="conf_nova_senha">Confirmar Nova Senha:</label>
+                  <input type="password" id="conf_nova_senha" class="input-underline" placeholder="Confirme a nova senha">
+                </div>
+              </div>
+
+              <button type="submit" class="btn-avancar" id="btn_salvar" style="margin-top: 1.5rem;">
+                <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
+              </button>
+
+              <div id="statusMsg" class="status-message" style="margin-top: 1rem;"></div>
+            </form>
+
+            <!-- Preferências de Notificação (Exibido para Catadores) -->
+            <div id="secao_notificacoes_perfil" style="display: none; margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #a5d6a7;">
+              <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-bell"></i> Notificações de Novas Ofertas
+              </h3>
+              <p style="font-size: 0.85rem; color: #555; margin-bottom: 0.5rem; line-height: 1.4;">
+                Configure o recebimento de notificações na tela sempre que novos materiais forem disponibilizados ou reabertos.
+              </p>
+              <div style="font-size: 0.78rem; color: #444; background: #e8f5e9; padding: 8px 12px; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid var(--verde-escuro, #1b6d24); display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-circle-info" style="color: var(--verde-escuro, #1b6d24);"></i>
+                <span><strong>Dica:</strong> Para receber os avisos de novas ofertas, mantenha-se conectado (ao terminar de usar, basta fechar o navegador sem clicar em "Sair do Sistema").</span>
+              </div>
+
+              <div style="background: #f8faf8; border: 1.5px solid #c8e6c9; border-radius: 12px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                  <div style="font-weight: 800; font-size: 0.95rem;" id="txt_status_notif_perfil">Status: Desativado</div>
+                  <div style="font-size: 0.78rem; color: #666; margin-top: 2px;" id="desc_status_notif_perfil">Você não receberá avisos automáticos na tela.</div>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <button type="button" id="btn_toggle_notif_perfil" class="btn-avancar" style="width: auto; padding: 8px 18px; font-size: 0.85rem; border-radius: 999px;">
+                    Ativar Notificações
+                  </button>
+                </div>
+              </div>
+              <div id="feedback_notif_perfil" style="display: none; font-size: 0.85rem; margin-top: 8px; padding: 8px 12px; border-radius: 8px;"></div>
+            </div>
+
+            <!-- Atalho na Tela Inicial -->
+            <div style="margin-top: 1.5rem; background: #e8f5e9; border: 1.5px solid #a5d6a7; border-radius: 12px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <strong style="color: var(--verde-escuro, #1b6d24); font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-mobile-screen-button"></i> Atalho na Tela Inicial
+                </strong>
+                <p style="margin: 2px 0 0; font-size: 0.82rem; color: #555;">
+                  Acesse a plataforma com 1 toque na tela inicial do seu celular.
+                </p>
+              </div>
+              <button type="button" id="btn_abrir_guia_atalho_perfil" class="btn-secondary-pill" style="font-size: 0.85rem; background: #ffffff;">
+                Como Adicionar
+              </button>
+            </div>
+
+            <!-- Desativação da Conta -->
+            <div id="container_encerramento_conta" style="margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px dashed #ef9a9a;">
+              <h3 style="color: #c62828; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem;">
+                Desativar Conta
+              </h3>
+              <p style="font-size: 0.85rem; color: #666; margin-bottom: 1rem; line-height: 1.4;">
+                Ao desativar a sua conta, o seu acesso à plataforma será pausado e você não receberá notificações. O seu histórico de coletas permanece seguro e você poderá reativar seu perfil a qualquer momento fazendo o login novamente.
+              </p>
+
+              <button type="button" id="btn-encerrar-conta" class="btn-secondary-pill" style="color: #c62828; border-color: #ef9a9a; background-color: #ffebee; font-weight: 700; width: 100%; justify-content: center;">
+                <i class="fa-solid fa-user-slash"></i> Desativar Minha Conta
+              </button>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel">
+          <h2 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; margin-top: 0;">Perfil Ativo</h2>
+          <div id="perfilTipoBadge" style="background: rgba(0,0,0,0.35); padding: 12px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; width: 100%;">
+            Carregando perfil...
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { getPerfilAtual } from '../js/services/auth.js';
+    import { supabase } from '../js/lib/supabaseClient.js';
+    import { renderEnderecoForm, lerDadosEndereco, preencherEndereco, validarEndereco } from '../js/pages/enderecoForm.js';
+    import { showConfirmModal, showAlertModal } from '../js/lib/modal.js';
+    import { abrirModalInstrucoesAtalho } from '../js/lib/navMenu.js';
+    import { 
+      getStatusNotificacao, 
+      solicitarPermissaoNotificacao, 
+      desativarNotificacoes, 
+      dispararNotificacao 
+    } from '../js/lib/pwa.js';
+
+    renderEnderecoForm('containerEndereco');
+
+    const form = document.getElementById('form_perfil');
+    const statusMsg = document.getElementById('statusMsg');
+    const btnSalvar = document.getElementById('btn_salvar');
+    const btnEncerrar = document.getElementById('btn-encerrar-conta');
+    const btnVoltarTop = document.getElementById('btn-voltar-top');
+    const perfilTipoBadge = document.getElementById('perfilTipoBadge');
+    const btnGuiaAtalhoPerfil = document.getElementById('btn_abrir_guia_atalho_perfil');
+
+    if (btnGuiaAtalhoPerfil) {
+      btnGuiaAtalhoPerfil.addEventListener('click', () => {
+        abrirModalInstrucoesAtalho();
+      });
+    }
+
+    // Elementos de Notificação no Perfil
+    const secaoNotifPerfil = document.getElementById('secao_notificacoes_perfil');
+    const txtStatusNotif = document.getElementById('txt_status_notif_perfil');
+    const descStatusNotif = document.getElementById('desc_status_notif_perfil');
+    const btnToggleNotif = document.getElementById('btn_toggle_notif_perfil');
+    const feedbackNotif = document.getElementById('feedback_notif_perfil');
+
+    let perfilAtual = null;
+    let isMainAdmin = false;
+
+    function atualizarPainelNotificacoesPerfil() {
+      const status = getStatusNotificacao();
+      if (status === 'granted') {
+        txtStatusNotif.innerHTML = '<span style="color: #1b6d24;"><i class="fa-solid fa-circle-check"></i> Status: Ativado</span>';
+        descStatusNotif.textContent = 'Você receberá avisos automáticos sempre que houver novas ofertas de materiais.';
+        btnToggleNotif.textContent = 'Desativar Avisos';
+        btnToggleNotif.style.background = '#ffebee';
+        btnToggleNotif.style.color = '#c62828';
+        btnToggleNotif.style.border = '1px solid #ef9a9a';
+        btnToggleNotif.style.boxShadow = 'none';
+      } else {
+        txtStatusNotif.innerHTML = '<span style="color: #666;"><i class="fa-solid fa-circle-xmark"></i> Status: Desativado</span>';
+        descStatusNotif.textContent = 'Você não receberá avisos automáticos de novas ofertas.';
+        btnToggleNotif.textContent = 'Ativar Notificações';
+        btnToggleNotif.style.background = 'linear-gradient(180deg, #81c784, #4caf50)';
+        btnToggleNotif.style.color = '#ffffff';
+        btnToggleNotif.style.border = 'none';
+        btnToggleNotif.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.25)';
+      }
+    }
+
+    window.addEventListener('notificacao-status-alterado', () => {
+      atualizarPainelNotificacoesPerfil();
+    });
+
+    if (btnToggleNotif) {
+      btnToggleNotif.addEventListener('click', async () => {
+        const status = getStatusNotificacao();
+        if (status === 'granted') {
+          desativarNotificacoes();
+          atualizarPainelNotificacoesPerfil();
+          feedbackNotif.style.display = 'block';
+          feedbackNotif.style.background = '#f5f5f5';
+          feedbackNotif.style.color = '#555';
+          feedbackNotif.textContent = 'Notificações desativadas para esta conta.';
+          setTimeout(() => { feedbackNotif.style.display = 'none'; }, 4000);
+        } else {
+          btnToggleNotif.disabled = true;
+          btnToggleNotif.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Solicitando...';
+          const res = await solicitarPermissaoNotificacao();
+          btnToggleNotif.disabled = false;
+          atualizarPainelNotificacoesPerfil();
+          if (res.ok) {
+            feedbackNotif.style.display = 'block';
+            feedbackNotif.style.background = '#e8f5e9';
+            feedbackNotif.style.color = '#1b6d24';
+            feedbackNotif.innerHTML = '<i class="fa-solid fa-circle-check"></i> Notificações ativadas com sucesso!';
+            setTimeout(() => { feedbackNotif.style.display = 'none'; }, 4000);
+          } else {
+            feedbackNotif.style.display = 'block';
+            feedbackNotif.style.background = '#ffebee';
+            feedbackNotif.style.color = '#c62828';
+            feedbackNotif.textContent = res.erro || 'Permissão não concedida.';
+            setTimeout(() => { feedbackNotif.style.display = 'none'; }, 4000);
+          }
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      perfilAtual = await getPerfilAtual();
+      if (!perfilAtual) {
+        window.location.href = './login.html';
+        return;
+      }
+
+      const d = perfilAtual.dados || {};
+      const elNome = document.getElementById('perfil_nome');
+      const elEmail = document.getElementById('perfil_email');
+      const elTel = document.getElementById('perfil_telefone');
+
+      if (elNome) elNome.value = d.nome || '';
+      if (elEmail) elEmail.value = d.email || perfilAtual.user?.email || '';
+      if (elTel) elTel.value = d.telefone || '';
+
+      preencherEndereco(d);
+
+      const targetDashboard = perfilAtual.tipo === 'administrador' ? './dashboard-admin.html' : (perfilAtual.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+      if (btnVoltarTop) btnVoltarTop.href = targetDashboard;
+
+      if (perfilAtual.tipo === 'catador') {
+        if (secaoNotifPerfil) secaoNotifPerfil.style.display = 'block';
+        atualizarPainelNotificacoesPerfil();
+      }
+
+      if (perfilAtual.tipo === 'administrador') {
+        try {
+          const { data: admins } = await supabase
+            .from('cidadao')
+            .select('id, criado_em')
+            .eq('nivel_acesso', 'administrador')
+            .order('criado_em', { ascending: true });
+
+          const mainAdminId = (admins && admins.length > 0) ? admins[0].id : null;
+          isMainAdmin = perfilAtual.user.id === mainAdminId;
+
+          const containerEncerramento = document.getElementById('container_encerramento_conta');
+          if (isMainAdmin && containerEncerramento) {
+            containerEncerramento.innerHTML = `
+              <h3 style="color: #b78103; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem;">
+                Encerramento da Conta
+              </h3>
+              <div style="background: #fff8e1; color: #856404; border: 1px solid #ffe0b2; padding: 12px 16px; border-radius: 10px; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-crown" style="color: #f59e0b; font-size: 1.1rem; flex-shrink: 0;"></i>
+                <span>Você é o Administrador Principal do sistema e a sua conta não pode ser desativada.</span>
+              </div>
+            `;
+          }
+        } catch (e) {
+          console.warn('Erro ao consultar admin principal:', e);
+        }
+      }
+
+      if (perfilTipoBadge) {
+        perfilTipoBadge.innerHTML = `
+          <i class="fa-solid fa-user-check"></i> Perfil: <strong>${(perfilAtual.tipo || 'Cidadão').toUpperCase()}</strong> ${isMainAdmin ? '(ADMIN PRINCIPAL)' : ''}
+        `;
+      }
+    });
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusMsg.className = 'status-message';
+
+        const nome = document.getElementById('perfil_nome').value.trim();
+        const telefone = document.getElementById('perfil_telefone').value.trim();
+        const novaSenha = document.getElementById('nova_senha').value;
+        const confNovaSenha = document.getElementById('conf_nova_senha').value;
+
+        if (!nome) {
+          statusMsg.className = 'status-message error';
+          statusMsg.textContent = 'Informe seu nome completo.';
+          return;
+        }
+
+        if (novaSenha) {
+          if (novaSenha.length < 6) {
+            statusMsg.className = 'status-message error';
+            statusMsg.textContent = 'A nova senha deve ter no mínimo 6 caracteres.';
+            return;
+          }
+          if (novaSenha !== confNovaSenha) {
+            statusMsg.className = 'status-message error';
+            statusMsg.textContent = 'A confirmação de senha não confere.';
+            return;
+          }
+        }
+
+        const errEnd = validarEndereco();
+        if (errEnd) {
+          statusMsg.className = 'status-message error';
+          statusMsg.textContent = errEnd;
+          return;
+        }
+
+        const end = lerDadosEndereco();
+        btnSalvar.disabled = true;
+        btnSalvar.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...';
+
+        try {
+          const tabela = perfilAtual.tipo === 'catador' ? 'catador' : 'cidadao';
+          const campoId = perfilAtual.tipo === 'catador' ? 'auth_user_id' : 'id';
+
+          const { error } = await supabase
+            .from(tabela)
+            .update({
+              nome,
+              telefone,
+              rua: end.rua,
+              numero: end.numero,
+              complemento: end.complemento,
+              bairro: end.bairro,
+              cidade: end.cidade,
+              estado: end.estado,
+              cep: end.cep,
+              sem_residencia: end.sem_residencia
+            })
+            .eq(campoId, perfilAtual.user.id);
+
+          if (error) throw error;
+
+          if (novaSenha) {
+            const { error: pwdErr } = await supabase.auth.updateUser({ password: novaSenha });
+            if (pwdErr) throw pwdErr;
+            document.getElementById('nova_senha').value = '';
+            document.getElementById('conf_nova_senha').value = '';
+          }
+
+          statusMsg.className = 'status-message success';
+          statusMsg.textContent = 'Dados do perfil e senha alterados com sucesso!';
+        } catch (err) {
+          statusMsg.className = 'status-message error';
+          statusMsg.textContent = 'Erro ao salvar alterações: ' + err.message;
+        } finally {
+          btnSalvar.disabled = false;
+          btnSalvar.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar Alterações';
+        }
+      });
+    }
+
+    if (btnEncerrar) {
+      btnEncerrar.addEventListener('click', () => {
+        if (isMainAdmin) {
+          statusMsg.className = 'status-message error';
+          statusMsg.textContent = 'O Administrador Principal do sistema não pode desativar a própria conta.';
+          return;
+        }
+
+        showConfirmModal({
+          title: 'Desativar Conta',
+          message: 'Deseja desativar sua conta? Você poderá reativá-la a qualquer momento fazendo login novamente com seu e-mail e senha.',
+          confirmText: 'Sim, Desativar Conta',
+          confirmColor: '#ef5350',
+          onConfirm: async () => {
+            btnEncerrar.disabled = true;
+            btnEncerrar.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Desativando conta...';
+
+            try {
+              const tabela = perfilAtual.tipo === 'catador' ? 'catador' : 'cidadao';
+              const campoId = perfilAtual.tipo === 'catador' ? 'auth_user_id' : 'id';
+
+              const { error } = await supabase
+                .from(tabela)
+                .update({ situacao: 'desabilitado' })
+                .eq(campoId, perfilAtual.user.id);
+
+              if (error) throw error;
+
+              await supabase.auth.signOut();
+
+              showAlertModal({
+                title: 'Conta Desativada com Sucesso',
+                message: 'Sua conta foi desativada. O seu histórico de coletas permanece seguro e, quando desejar retornar, basta fazer login com seu e-mail e senha para reativá-la de forma automática.',
+                buttonText: 'Ir para o Login',
+                confirmColor: '#1b6d24',
+                onOk: () => {
+                  window.location.href = './login.html';
+                }
+              });
+            } catch (err) {
+              statusMsg.className = 'status-message error';
+              statusMsg.textContent = 'Erro ao desativar conta: ' + err.message;
+              btnEncerrar.disabled = false;
+              btnEncerrar.innerHTML = '<i class="fa-solid fa-user-slash"></i> Desativar Minha Conta';
+            }
+          }
+        });
+      });
+    }
+  </script>
+</body>
+</html>

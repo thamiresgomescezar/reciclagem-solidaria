@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Status — Reciclagem Solidária</title>
+  <!-- T4.5 — CRUD de status (admin) -->
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--surface, #f5fbef);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .header-wave {
+      background-color: #7bcc7f;
+      color: white;
+      padding: 0.5rem 1rem 1.5rem;
+      border-bottom-left-radius: 50% 20%;
+      border-bottom-right-radius: 50% 20%;
+      position: relative;
+      z-index: 10;
+      text-align: center;
+    }
+    .back-btn { position: absolute; left: 1rem; top: 1.5rem; background: none; border: none; color: white; font-size: 1.3rem; cursor: pointer; }
+    .header-wave h1 { font-size: 1.6rem; font-weight: 800; margin: 0.25rem 0; }
+    main { flex: 1; padding: 1.25rem 1rem 2rem; max-width: 560px; width: 100%; margin: 0 auto; }
+    .status-message { margin-bottom: 0.75rem; }
+    .form-row { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .form-row input {
+      flex: 1;
+      border: none;
+      border-bottom: 2px solid var(--verde-300, #addb95);
+      padding: 8px 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 600;
+      color: var(--verde-700, #347535);
+      outline: none;
+      background: transparent;
+    }
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .btn-primary { background: linear-gradient(180deg, #81c784, #4caf50); color: white; }
+    .btn-danger { background: #c62828; color: white; }
+    .btn:hover { opacity: 0.9; }
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      border-radius: 0.75rem;
+      padding: 0.6rem 1rem;
+      margin-bottom: 0.5rem;
+      box-shadow: 0 2px 4px -1px rgba(0,0,0,0.1);
+      font-weight: 700;
+      color: var(--verde-800, #2c5d2d);
+    }
+    .status-item .del { background: none; border: none; color: #c62828; cursor: pointer; font-size: 1rem; }
+  </style>
+</head>
+<body>
+  <header class="header-wave">
+    <button class="back-btn" type="button" onclick="history.back()" aria-label="Voltar"><i class="fa-solid fa-arrow-left"></i></button>
+    <h1>Gestão de Status</h1>
+  </header>
+
+  <main>
+    <div class="status-message" id="statusMsg"></div>
+    <div class="form-row">
+      <input type="text" id="inputNovoStatus" placeholder="Novo status (ex.: aguardando)">
+      <button class="btn btn-primary" id="btnAdicionar">Adicionar</button>
+    </div>
+    <div id="listaStatus"></div>
+  </main>
+
+  <script type="module">
+    import { protegerRota } from '../js/lib/routeGuard.js';
+    import { supabase } from '../js/lib/supabaseClient.js';
+
+    const acesso = await protegerRota(['administrador']);
+    if (!acesso.permitido) throw new Error('redirecionando');
+
+    const statusMsg = document.getElementById('statusMsg');
+    const lista = document.getElementById('listaStatus');
+    const inputNovo = document.getElementById('inputNovoStatus');
+    const btnAdicionar = document.getElementById('btnAdicionar');
+
+    const mostrarErro = (m) => { statusMsg.className = 'status-message error'; statusMsg.textContent = m; };
+    const mostrarOk = (m) => { statusMsg.className = 'status-message success'; statusMsg.textContent = m; };
+
+    async function carregar() {
+      const { data, error } = await supabase.from('status').select('*').order('cod_status');
+      if (error) {
+        mostrarErro('Erro ao carregar: ' + error.message);
+        return;
+      }
+      if (!data.length) {
+        lista.innerHTML = '<p style="color: var(--cinza-texto-aux);">Nenhum status cadastrado.</p>';
+        return;
+      }
+      lista.innerHTML = data.map((s) => `
+        <div class="status-item">
+          <span>${s.status}</span>
+          <button class="del" data-id="${s.cod_status}" aria-label="Excluir"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `).join('');
+
+      lista.querySelectorAll('.del').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const { error } = await supabase.from('status').delete().eq('cod_status', btn.dataset.id);
+          if (error) {
+            mostrarErro('Erro ao excluir: ' + error.message);
+            return;
+          }
+          mostrarOk('Status excluído.');
+          carregar();
+        });
+      });
+    }
+
+    btnAdicionar.addEventListener('click', async () => {
+      const valor = inputNovo.value.trim();
+      if (!valor) return mostrarErro('Informe o nome do status.');
+      const { error } = await supabase.from('status').insert({ status: valor });
+      if (error) {
+        mostrarErro('Erro ao adicionar: ' + error.message);
+        return;
+      }
+      mostrarOk('Status adicionado!');
+      inputNovo.value = '';
+      carregar();
+    });
+
+    carregar();
+  </script>
+</body>
+</html>

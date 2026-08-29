@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tipos de Materiais — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="./dashboard-admin.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo e Navegação -->
+        <aside class="left-panel">
+          <div class="links">
+            <a href="./gestao-materiais.html" class="l1"><i class="fa-solid fa-boxes-stacked"></i> Tipos de Materiais</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 1rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Gestão de Tipos de Materiais -->
+        <main class="center-panel" style="align-items: stretch; justify-content: flex-start;">
+          <div style="max-width: 680px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.5rem;">
+              Catálogo de Tipos de Materiais
+            </h1>
+            <p style="font-size: 0.9rem; color: var(--cinza-texto-aux, #666); text-align: center; margin-bottom: 1.25rem;">
+              Cadastre e gerencie os tipos de recicláveis aceitos na plataforma. Novos materiais ficam imediatamente disponíveis para ofertas.
+            </p>
+
+            <div id="statusMsg" class="status-message"></div>
+
+            <!-- Botão de Ação / Barra de Controle -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px;">
+              <span style="font-size: 14px; font-weight: 700; color: var(--verde-escuro, #1b6d24);">
+                <i class="fa-solid fa-list-check"></i> Tipos Cadastrados (<span id="total_materiais_count">0</span>)
+              </span>
+              <button type="button" id="btn_toggle_form" class="btn-tab active" style="font-size: 0.85rem; padding: 6px 16px;">
+                <i class="fa-solid fa-plus"></i> Novo Tipo de Material
+              </button>
+            </div>
+
+            <!-- Caixa do Formulário de Cadastro / Edição -->
+            <div id="box_form_material" style="background: white; padding: 20px; border-radius: 16px; border: 1.5px solid #a5d6a7; margin-bottom: 1.5rem; box-shadow: 0 4px 14px rgba(0,0,0,0.05); display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e8f5e9; padding-bottom: 8px;">
+                <h3 id="form_title" style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; font-weight: 800; margin: 0;">
+                  <i class="fa-solid fa-circle-plus"></i> Cadastrar Novo Tipo de Material
+                </h3>
+                <button type="button" id="btn_cancelar_form" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #666;" title="Fechar formulário">✕</button>
+              </div>
+
+              <form id="form_material" novalidate>
+                <input type="hidden" id="edit_cod_material" value="">
+
+                <div class="campo" style="margin-bottom: 1.25rem;">
+                  <label for="input_tipo_material" style="font-weight: 700; color: #2e532b; font-size: 0.9rem;">
+                    Nome do Tipo de Material:<span class="req">*</span>
+                  </label>
+                  <input type="text" id="input_tipo_material" class="input-underline" placeholder="Ex.: Óleo Usado, Eletrônicos, Baterias, Têxtil..." required style="width: 100%; box-sizing: border-box;">
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                  <button type="button" id="btn_cancelar_acao" class="btn-secondary-pill" style="padding: 8px 18px; font-weight: 700; font-size: 0.85rem;">
+                    Cancelar
+                  </button>
+                  <button type="submit" id="btn_salvar_material" class="btn-avancar" style="margin-top: 0; padding: 8px 22px; font-size: 0.85rem; width: auto;">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar Material
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Lista de Materiais Cadastrados -->
+            <div id="lista_materiais_container" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="text-align: center; padding: 30px; color: var(--cinza-texto-aux);">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando tipos de materiais...
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+
+    <!-- Bottom Footer Bar -->
+    <div class="bottom-bar"></div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
+  <script type="module">
+    import { protegerRota } from '../js/lib/routeGuard.js';
+    import { listarTiposMaterial, adicionarTipoMaterial, editarTipoMaterial, excluirTipoMaterial } from '../js/services/materiais.js';
+    import { showConfirmModal } from '../js/lib/modal.js';
+
+    const container = document.getElementById('lista_materiais_container');
+    const statusMsg = document.getElementById('statusMsg');
+    const boxForm = document.getElementById('box_form_material');
+    const formTitle = document.getElementById('form_title');
+    const formMaterial = document.getElementById('form_material');
+    const inputTipo = document.getElementById('input_tipo_material');
+    const editCod = document.getElementById('edit_cod_material');
+    const btnToggleForm = document.getElementById('btn_toggle_form');
+    const btnCancelarForm = document.getElementById('btn_cancelar_form');
+    const btnCancelarAcao = document.getElementById('btn_cancelar_acao');
+    const totalCountEl = document.getElementById('total_materiais_count');
+
+    function mostrarErro(msg) {
+      statusMsg.className = 'status-message error';
+      statusMsg.textContent = msg;
+      statusMsg.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function mostrarSucesso(msg) {
+      statusMsg.className = 'status-message success';
+      statusMsg.textContent = msg;
+      statusMsg.style.display = 'block';
+      setTimeout(() => { statusMsg.style.display = 'none'; }, 4000);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function abrirFormCadastro() {
+      editCod.value = '';
+      inputTipo.value = '';
+      formTitle.innerHTML = '<i class="fa-solid fa-circle-plus"></i> Cadastrar Novo Tipo de Material';
+      boxForm.style.display = 'block';
+      inputTipo.focus();
+    }
+
+    function abrirFormEdicao(mat) {
+      editCod.value = mat.cod_material;
+      inputTipo.value = mat.tipo;
+      formTitle.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Editar Tipo de Material (#${mat.cod_material})`;
+      boxForm.style.display = 'block';
+      inputTipo.focus();
+      boxForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function fecharForm() {
+      boxForm.style.display = 'none';
+      editCod.value = '';
+      inputTipo.value = '';
+    }
+
+    async function carregarMateriais() {
+      try {
+        const materiais = await listarTiposMaterial(true);
+        totalCountEl.textContent = materiais ? materiais.length : 0;
+
+        if (!materiais || materiais.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; color: var(--cinza-texto-aux); padding: 30px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">
+              Nenhum tipo de material cadastrado no banco de dados.
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = '';
+        materiais.forEach(mat => {
+          const item = document.createElement('div');
+          item.style.cssText = 'background: white; padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);';
+
+          const coletasQtd = mat.total_coletas || 0;
+
+          item.innerHTML = `
+            <div style="flex: 1; min-width: 200px;">
+              <strong style="color: #172b16; font-size: 1.05rem; display: block;">${mat.tipo}</strong>
+              <span style="font-size: 0.8rem; color: #666; display: inline-flex; align-items: center; gap: 6px; margin-top: 2px;">
+                Código: <strong>#${mat.cod_material}</strong> • 
+                <span style="color: ${coletasQtd > 0 ? '#1b6d24' : '#888'}; font-weight: ${coletasQtd > 0 ? '700' : '500'};">
+                  ${coletasQtd} ${coletasQtd === 1 ? 'oferta vinculada' : 'ofertas vinculadas'}
+                </span>
+              </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button class="btn-editar" data-id="${mat.cod_material}" data-tipo="${mat.tipo}" style="padding: 7px 14px; font-size: 0.82rem; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; border-radius: 999px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;" title="Editar nome deste material">
+                <i class="fa-solid fa-pen"></i> Editar
+              </button>
+              <button class="btn-excluir" data-id="${mat.cod_material}" data-tipo="${mat.tipo}" data-coletas="${coletasQtd}" style="padding: 7px 14px; font-size: 0.82rem; background: #ffebee; color: #c62828; border: 1.5px solid #ffcdd2; border-radius: 999px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;" title="Excluir este tipo de material">
+                <i class="fa-solid fa-trash"></i> Excluir
+              </button>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+
+        // Eventos de Edição
+        document.querySelectorAll('.btn-editar').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.dataset.id;
+            const tipo = e.currentTarget.dataset.tipo;
+            abrirFormEdicao({ cod_material: id, tipo });
+          });
+        });
+
+        // Eventos de Exclusão
+        document.querySelectorAll('.btn-excluir').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.dataset.id;
+            const tipo = e.currentTarget.dataset.tipo;
+            const coletas = parseInt(e.currentTarget.dataset.coletas, 10) || 0;
+
+            if (coletas > 0) {
+              showConfirmModal({
+                title: 'Material em Uso',
+                message: `O tipo de material "${tipo}" possui ${coletas} oferta(s) vinculada(s) no sistema e não pode ser excluído para não corromper o histórico das coletas.`,
+                confirmText: 'Entendi',
+                confirmColor: '#1b6d24',
+                cancelText: 'Fechar',
+                onConfirm: () => {}
+              });
+              return;
+            }
+
+            showConfirmModal({
+              title: 'Excluir Tipo de Material',
+              message: `Tem certeza que deseja excluir o tipo de material "${tipo}" do catálogo?`,
+              confirmText: 'Sim, Excluir',
+              confirmColor: '#c62828',
+              onConfirm: async () => {
+                const res = await excluirTipoMaterial(id);
+                if (res.ok) {
+                  mostrarSucesso(`Tipo de material "${tipo}" excluído com sucesso!`);
+                  await carregarMateriais();
+                } else {
+                  mostrarErro(res.erro || 'Erro ao excluir tipo de material.');
+                }
+              }
+            });
+          });
+        });
+
+      } catch (err) {
+        console.error('Erro ao carregar materiais:', err);
+        container.innerHTML = `<div class="status-message error">Erro ao carregar materiais: ${err.message}</div>`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const acesso = await protegerRota(['administrador']);
+      if (!acesso.permitido) return;
+
+      btnToggleForm.addEventListener('click', abrirFormCadastro);
+      btnCancelarForm.addEventListener('click', fecharForm);
+      btnCancelarAcao.addEventListener('click', fecharForm);
+
+      formMaterial.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const tipoValor = inputTipo.value.trim();
+        const idEdit = editCod.value;
+
+        if (!tipoValor) {
+          mostrarErro('Informe o nome do tipo de material.');
+          return;
+        }
+
+        const btnSalvar = document.getElementById('btn_salvar_material');
+        btnSalvar.disabled = true;
+        btnSalvar.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando...';
+
+        try {
+          let res;
+          if (idEdit) {
+            res = await editarTipoMaterial(idEdit, tipoValor);
+          } else {
+            res = await adicionarTipoMaterial(tipoValor);
+          }
+
+          if (res.ok) {
+            mostrarSucesso(idEdit ? 'Tipo de material atualizado com sucesso!' : `Novo material "${tipoValor}" cadastrado com sucesso!`);
+            fecharForm();
+            await carregarMateriais();
+          } else {
+            mostrarErro(res.erro || 'Erro ao salvar tipo de material.');
+          }
+        } catch (err) {
+          mostrarErro(err.message || 'Erro ao processar solicitação.');
+        } finally {
+          btnSalvar.disabled = false;
+          btnSalvar.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Salvar Material';
+        }
+      });
+
+      await carregarMateriais();
+    });
+  </script>
+</body>
+</html>

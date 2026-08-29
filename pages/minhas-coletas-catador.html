@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minhas Coletas (Catador) — Reciclagem Solidária</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body style="background-color: var(--verde-fundo-2);">
+
+  <div class="mobile-view" style="max-width: 600px;">
+    <div style="background-color: var(--verde-fundo-1); padding: 20px; text-align: center; border-bottom: 1px solid var(--cinza-borda);">
+      <img src="../assets/prototypes/logo.jpg" alt="Logo" class="app-logo" style="max-width: 140px; margin-bottom: 8px;">
+      <h3 style="color: var(--verde-escuro);">Minhas Coletas Agendadas</h3>
+      <p style="font-size: 13px; color: var(--cinza-texto-aux);">Materiais sob sua responsabilidade de recolhimento</p>
+    </div>
+
+    <div class="mobile-content" style="justify-content: flex-start; padding-top: 16px;">
+      <div id="feedback-msg" class="feedback-msg"></div>
+      <div id="lista-minhas-coletas-catador" style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="text-align: center; padding: 40px; color: var(--cinza-texto-aux);">
+          Carregando suas coletas agendadas...
+        </div>
+      </div>
+    </div>
+
+    <nav class="mobile-nav">
+      <a href="./catador-materiais.html" class="mobile-nav-item">
+        <span>♻️</span>
+        <span style="font-size: 11px;">Ofertas</span>
+      </a>
+      <a href="./minhas-coletas-catador.html" class="mobile-nav-item" style="font-weight: bold;">
+        <span></span>
+        <span style="font-size: 11px;">Minhas Coletas</span>
+      </a>
+      <a href="#" id="btn-logout" class="mobile-nav-item">
+        <span></span>
+        <span style="font-size: 11px;">Sair</span>
+      </a>
+    </nav>
+  </div>
+
+  <script type="module">
+    import { proibirAcessoInvalido } from '../js/lib/routeGuard.js';
+    import { listarMinhasColetasCatador } from '../js/services/coletas.js';
+    import { logout } from '../js/services/auth.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const perfil = await proibirAcessoInvalido(['catador', 'administrador']);
+      if (!perfil) return;
+
+      const listaContainer = document.getElementById('lista-minhas-coletas-catador');
+      const btnLogout = document.getElementById('btn-logout');
+
+      if (btnLogout) {
+        btnLogout.addEventListener('click', async (e) => {
+          e.preventDefault();
+          await logout();
+          window.location.href = './login.html';
+        });
+      }
+
+      try {
+        const coletas = await listarMinhasColetasCatador();
+
+        if (!coletas || coletas.length === 0) {
+          listaContainer.innerHTML = `
+            <div style="text-align: center; padding: 30px; background: white; border-radius: 16px; border: 1px dashed var(--cinza-borda);">
+              <p style="font-size: 20px;"></p>
+              <p style="font-weight: 600; color: var(--verde-escuro);">Você não possui coletas agendadas no momento</p>
+              <p style="font-size: 13px; color: var(--cinza-texto-aux); margin-top: 4px;">Acesse a aba "Ofertas" para agendar a retirada de novos materiais.</p>
+            </div>
+          `;
+          return;
+        }
+
+        listaContainer.innerHTML = '';
+        coletas.forEach(coleta => {
+          const card = document.createElement('div');
+          card.style.cssText = `
+            background: white;
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid var(--cinza-borda);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          `;
+
+          const tipoMaterial = coleta.materiais?.tipo || 'Material';
+          const doadorNome = coleta.cidadao?.nome || 'Cidadão';
+          const doadorTel = coleta.cidadao?.telefone || 'Não informado';
+          const statusNome = coleta.status?.status || 'agendado';
+
+          card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong style="color: var(--verde-escuro); font-size: 16px;">${tipoMaterial} (${coleta.quantidade})</strong>
+              <span style="font-size: 11px; font-weight: bold; background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 12px; text-transform: uppercase;">
+                ${statusNome}
+              </span>
+            </div>
+
+            <div style="font-size: 13px; color: var(--cinza-texto); background: #f9fbf9; padding: 10px; border-radius: 8px; margin-top: 4px;">
+              <p><strong> Local:</strong> ${coleta.local_retirada?.nome || 'Fatec Franco da Rocha'}</p>
+              <p style="margin-top: 4px;"><strong> Doador:</strong> ${doadorNome}</p>
+            </div>
+
+            <a href="./mensagens.html?coleta=${coleta.cod_coleta}" class="btn-pill" style="text-align: center; font-size: 13px; padding: 8px; margin-top: 6px;">
+               CONTATAR DOADOR
+            </a>
+          `;
+
+          listaContainer.appendChild(card);
+        });
+
+      } catch (err) {
+        console.error(err);
+        listaContainer.innerHTML = `<div class="feedback-msg error">Erro ao carregar coletas agendadas.</div>`;
+      }
+    });
+  </script>
+</body>
+</html>
+
