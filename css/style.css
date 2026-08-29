@@ -324,6 +324,31 @@ a:hover {
   box-shadow: 0 4px 10px rgba(27, 109, 36, 0.25);
 }
 
+/* Botões de Seleção de Dias da Semana (Toggle Dinâmico Instantâneo) */
+#weekdays-group .btn-tab:not(.active) {
+  background-color: #fce8e6 !important;
+  color: #c62828 !important;
+  border-color: #f5c2c7 !important;
+  box-shadow: none !important;
+}
+
+#weekdays-group .btn-tab:not(.active):hover {
+  background-color: #fad2cf !important;
+  color: #b71c1c !important;
+  border-color: #f1aeb5 !important;
+}
+
+#weekdays-group .btn-tab.active {
+  background-color: #1b6d24 !important;
+  color: #ffffff !important;
+  border-color: #1b6d24 !important;
+}
+
+#weekdays-group .btn-tab.active:hover {
+  background-color: #14551c !important;
+  border-color: #14551c !important;
+}
+
 .btn-secondary-pill {
   background-color: #e8f5e9;
   color: var(--verde-escuro, #1b6d24);
@@ -684,8 +709,28 @@ option:disabled {
     grid-template-columns: 1fr !important;
   }
 
-  /* Preserva o grid de 7 colunas do calendário no mobile */
+  /* Preserva o grid de 7 colunas do calendário no mobile com enquadramento perfeito */
   #calendar_days_grid, .calendar-header-grid, .calendar-days-grid {
     grid-template-columns: repeat(7, 1fr) !important;
+    gap: 2px !important;
+  }
+
+  .calendar-day-cell {
+    height: 48px !important;
+    padding: 2px 0px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+  }
+
+  .calendar-day-cell .day-status-label {
+    font-size: 7.5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    letter-spacing: -0.4px !important;
+    margin-top: 1px !important;
+    display: block !important;
+    width: 100% !important;
+    text-align: center !important;
   }
 }

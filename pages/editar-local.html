@@ -162,7 +162,7 @@
   <script type="module">
     import { supabase } from '../js/lib/supabaseClient.js';
     import { protegerRota } from '../js/lib/routeGuard.js';
-    import { showConfirmModal } from '../js/lib/modal.js';
+    import { showConfirmModal, showAlertModal } from '../js/lib/modal.js';
 
     const container = document.getElementById('lista_locais_container');
     const boxForm = document.getElementById('box_form_local');
@@ -297,18 +297,18 @@
               <div>${statusBadge}</div>
             </div>
 
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; padding-top: 10px; border-top: 1px solid #f0f0f0;">
-              <button type="button" class="btn-abrir-mapa btn-secondary-pill" data-nome="${local.nome}" data-endereco="${mapsQuery}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer;">
-                <i class="fa-solid fa-map-location-dot"></i> Ver no Mapa
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; padding-top: 10px; border-top: 1px solid #f0f0f0; align-items: center;">
+              <button type="button" class="btn-abrir-mapa btn-secondary-pill" data-nome="${local.nome}" data-endereco="${mapsQuery}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer; background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7;">
+                <i class="fa-solid fa-map-location-dot" style="color: #2e7d32;"></i> Ver no Mapa
               </button>
-              <button type="button" class="btn-editar-local btn-tab" data-id="${local.id}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer;">
-                <i class="fa-solid fa-pen-to-square"></i> Editar Dados
+              <button type="button" class="btn-editar-local btn-secondary-pill" data-id="${local.id}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; font-weight: 700;">
+                <i class="fa-solid fa-pen-to-square" style="color: #2e7d32;"></i> Editar Dados
               </button>
-              <button type="button" class="btn-toggle-status btn-secondary-pill" data-id="${local.id}" data-ativo="${isAtivo}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer;">
-                ${isAtivo ? '<i class="fa-solid fa-pause"></i> Desativar' : '<i class="fa-solid fa-play"></i> Ativar'}
+              <button type="button" class="btn-toggle-status btn-secondary-pill" data-id="${local.id}" data-ativo="${isAtivo}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer; background: ${isAtivo ? '#fffde7' : '#e8f5e9'}; color: ${isAtivo ? '#b78103' : '#1b5e20'}; border: 1.5px solid ${isAtivo ? '#fff59d' : '#a5d6a7'}; font-weight: 700;">
+                ${isAtivo ? '<i class="fa-solid fa-pause" style="color: #f57f17;"></i> Desativar' : '<i class="fa-solid fa-play" style="color: #2e7d32;"></i> Ativar'}
               </button>
-              <button type="button" class="btn-excluir-local" data-id="${local.id}" data-nome="${local.nome}" style="background: none; border: 1.5px solid #ffcdd2; color: #c62828; padding: 7px 12px; border-radius: 999px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-left: auto;">
-                <i class="fa-solid fa-trash-can"></i> Excluir
+              <button type="button" class="btn-excluir-local" data-id="${local.id}" data-nome="${local.nome}" style="background: #ffffff; border: 1.5px solid #ffcdd2; color: #c62828; padding: 7px 14px; border-radius: 999px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-left: auto; transition: all 0.2s ease;" title="Excluir ponto de coleta">
+                <i class="fa-solid fa-trash-can" style="color: #c62828;"></i> Excluir
               </button>
             </div>
           `;
@@ -326,11 +326,14 @@
         });
 
         container.querySelectorAll('.btn-abrir-mapa').forEach(b => {
-          b.addEventListener('click', () => {
+          b.addEventListener('click', (e) => {
+            const nome = e.currentTarget.getAttribute('data-nome') || 'Ponto de Coleta';
+            const endereco = e.currentTarget.getAttribute('data-endereco') || '';
             showAlertModal({
               title: 'Funcionalidade Futura',
-              message: 'A integração com mapas e navegação por geolocalização estará disponível futuramente.',
-              buttonText: 'Entendido'
+              message: `A visualização e rotas interativas no mapa estarão disponíveis em versões futuras.\n\nLocal de Coleta: ${nome}\nEndereço: ${endereco}`,
+              buttonText: 'Entendido',
+              confirmColor: '#1b6d24'
             });
           });
         });
@@ -437,6 +440,19 @@
         statusMsg.className = 'status-message error';
         statusMsg.textContent = 'Por favor, preencha todos os campos obrigatórios (*).';
         return;
+      }
+
+      // Validação: não permitir salvar como inativo se for o único ponto ativo no sistema
+      if (!ativo && locId) {
+        const outrosAtivos = locaisCarregados.filter(l => l.ativo !== false && l.id !== locId);
+        if (outrosAtivos.length === 0) {
+          showAlertModal({
+            title: 'Ação Não Permitida',
+            message: 'Não é possível desativar este local. O sistema necessita de pelo menos um ponto de coleta ativo para receber ofertas de materiais.',
+            buttonText: 'Entendido'
+          });
+          return;
+        }
       }
 
       btnSalvar.disabled = true;

@@ -12,26 +12,11 @@ export async function listarLocaisRetirada() {
       .eq('ativo', true)
       .order('nome', { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      return [
-        {
-          id: '11111111-1111-1111-1111-111111111111',
-          nome: 'Fatec Franco da Rocha',
-          bairro: 'Pouso Alegre',
-          cidade: 'Franco da Rocha'
-        }
-      ];
-    }
-    return data;
+    if (error) throw error;
+    return data || [];
   } catch (e) {
-    return [
-      {
-        id: '11111111-1111-1111-1111-111111111111',
-        nome: 'Fatec Franco da Rocha',
-        bairro: 'Pouso Alegre',
-        cidade: 'Franco da Rocha'
-      }
-    ];
+    console.error('Erro ao listar locais de retirada:', e);
+    return [];
   }
 }
 
@@ -44,22 +29,11 @@ export async function getLocalRetiradaPadrao() {
       .limit(1)
       .maybeSingle();
 
-    if (error || !data) {
-      return {
-        id: '11111111-1111-1111-1111-111111111111',
-        nome: 'Fatec Franco da Rocha',
-        bairro: 'Pouso Alegre',
-        cidade: 'Franco da Rocha'
-      };
-    }
-    return data;
+    if (error) throw error;
+    return data || null;
   } catch (e) {
-    return {
-      id: '11111111-1111-1111-1111-111111111111',
-      nome: 'Fatec Franco da Rocha',
-      bairro: 'Pouso Alegre',
-      cidade: 'Franco da Rocha'
-    };
+    console.error('Erro ao obter local padrão:', e);
+    return null;
   }
 }
 

@@ -7,9 +7,11 @@ export function showConfirmModal({
   title = 'Confirmação',
   message = 'Deseja prosseguir com esta ação?',
   confirmText = 'Confirmar',
-  cancelText = 'Cancelar',
+  cancelText = 'Voltar',
   confirmColor = '#1b6d24',
-  onConfirm = () => {}
+  icon = '<i class="fa-solid fa-circle-question" style="color: #2e7d32;"></i>',
+  onConfirm = () => {},
+  onCancel = () => {}
 }) {
   // Remove modal existente se houver
   const existingModal = document.getElementById('custom-confirm-modal');
@@ -28,7 +30,7 @@ export function showConfirmModal({
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 10000;
     padding: 16px;
   `;
 
@@ -36,7 +38,7 @@ export function showConfirmModal({
   box.style.cssText = `
     background: #ffffff;
     border-radius: 16px;
-    max-width: 420px;
+    max-width: 440px;
     width: 100%;
     padding: 24px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
@@ -47,14 +49,14 @@ export function showConfirmModal({
   `;
 
   box.innerHTML = `
-    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24);">
-      ${title}
+    <h3 style="margin: 0; font-size: 1.18rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; gap: 8px;">
+      ${icon} ${title}
     </h3>
-    <p style="margin: 0; font-size: 0.92rem; color: #555; line-height: 1.5;">
+    <p style="margin: 0; font-size: 0.92rem; color: #555; line-height: 1.5; white-space: pre-line;">
       ${message}
     </p>
-    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
-      <button id="modal-btn-cancel" style="padding: 10px 20px; font-size: 0.88rem; background: #f1f3f1; color: #444; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s;">
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
+      <button id="modal-btn-cancel" style="padding: 10px 18px; font-size: 0.88rem; background: #f1f3f1; color: #444; border: 1px solid #d0d0d0; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s;">
         ${cancelText}
       </button>
       <button id="modal-btn-confirm" style="padding: 10px 20px; font-size: 0.88rem; background: ${confirmColor}; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: opacity 0.2s;">
@@ -69,12 +71,16 @@ export function showConfirmModal({
   const btnCancel = box.querySelector('#modal-btn-cancel');
   const btnConfirm = box.querySelector('#modal-btn-confirm');
 
-  btnCancel.addEventListener('click', () => {
+  btnCancel.addEventListener('click', async () => {
     backdrop.remove();
+    if (onCancel) await onCancel();
   });
 
-  backdrop.addEventListener('click', (e) => {
-    if (e.target === backdrop) backdrop.remove();
+  backdrop.addEventListener('click', async (e) => {
+    if (e.target === backdrop) {
+      backdrop.remove();
+      if (onCancel) await onCancel();
+    }
   });
 
   btnConfirm.addEventListener('click', async () => {
@@ -128,7 +134,7 @@ export function showAlertModal({
     <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; gap: 8px;">
       <i class="fa-solid fa-circle-exclamation" style="color: #e65100;"></i> ${title}
     </h3>
-    <p style="margin: 0; font-size: 0.92rem; color: #555; line-height: 1.5;">
+    <p style="margin: 0; font-size: 0.92rem; color: #555; line-height: 1.5; white-space: pre-line;">
       ${message}
     </p>
     <div style="display: flex; justify-content: flex-end; margin-top: 8px;">

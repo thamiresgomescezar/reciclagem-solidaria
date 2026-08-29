@@ -167,8 +167,9 @@ export async function excluirTipoMaterial(cod_material) {
 }
 
 // Função auxiliar para comprimir imagem no cliente em Base64 leve e responsivo
-export function compressImageToBase64(file, maxWidth = 800, quality = 0.7) {
+export function compressImageToBase64(file, maxWidth = 800, quality = 0.75) {
   return new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = (event) => {
@@ -189,7 +190,10 @@ export function compressImageToBase64(file, maxWidth = 800, quality = 0.7) {
         const dataUrl = canvas.toDataURL('image/jpeg', quality);
         resolve(dataUrl);
       };
-      img.onerror = (err) => reject(err);
+      img.onerror = (err) => {
+        console.warn('Erro ao carregar imagem no elemento Image, utilizando DataURL original:', err);
+        resolve(event.target.result);
+      };
     };
     reader.onerror = (err) => reject(err);
   });
@@ -199,14 +203,15 @@ export function compressImageToBase64(file, maxWidth = 800, quality = 0.7) {
 export async function uploadFotoMaterial(file) {
   if (!file) return null;
 
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-  if (!allowedTypes.includes(file.type)) {
-    throw new Error('Formato de imagem inválido. Use JPEG, PNG ou WEBP.');
+  // Aceita qualquer formato de imagem comum
+  const isImage = (file.type && file.type.startsWith('image/')) || /\.(jpe?g|png|webp|gif|bmp|jfif|heic|heif)$/i.test(file.name || '');
+  if (!isImage) {
+    throw new Error('Formato de arquivo inválido. Por favor, selecione um arquivo de imagem (JPEG, PNG, WEBP, etc).');
   }
 
-  // Tenta upload no Supabase Storage
+  // 1. Tenta upload no Supabase Storage
   try {
-    const fileExt = file.name.split('.').pop();
+    const fileExt = (file.name || 'foto.jpg').split('.').pop().toLowerCase();
     const fileName = `coleta_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
     const filePath = `ofertas/${fileName}`;
 
@@ -222,15 +227,18 @@ export async function uploadFotoMaterial(file) {
         .from('materiais-fotos')
         .getPublicUrl(filePath);
 
-      if (publicUrl) return publicUrl;
+      if (publicUrl && publicUrl.startsWith('http')) {
+        return publicUrl;
+      }
     }
   } catch (storageErr) {
-    console.warn('Storage bucket indisponível, utilizando fallback em Base64 otimizado:', storageErr);
+    console.warn('Storage bucket indisponível ou sem permissão pública, utilizando fallback Base64:', storageErr);
   }
 
-  // Fallback 100% resiliente: compacta a foto para Base64 leve (<40KB) e armazena na coluna foto_url
+  // 2. Fallback 100% garantido: compacta a imagem em Base64 otimizado para gravação direta no banco
   try {
-    return await compressImageToBase64(file);
+    const base64Data = await compressImageToBase64(file);
+    return base64Data;
   } catch (compErr) {
     console.error('Erro ao processar imagem em Base64:', compErr);
     return null;

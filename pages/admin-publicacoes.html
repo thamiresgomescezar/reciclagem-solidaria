@@ -69,7 +69,11 @@
       });
 
       async function carregarPublicacoes() {
-        const { data, error } = await supabase.from('publicacoes').select('*').order('criado_em', { ascending: false });
+        const [{ data, error }, { data: usuarios }] = await Promise.all([
+          supabase.from('publicacoes').select('*').order('criado_em', { ascending: false }),
+          supabase.from('cidadao').select('id, nome')
+        ]);
+
         if (error) {
           listaContainer.innerHTML = `<div class="feedback-msg error">Erro ao carregar publicações.</div>`;
           return;
@@ -80,14 +84,38 @@
           return;
         }
 
+        const localNamesCache = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
+        const mapaAutores = { ...localNamesCache };
+        (usuarios || []).forEach(u => {
+          if (u.id && u.nome) {
+            mapaAutores[u.id] = u.nome;
+            localNamesCache[u.id] = u.nome;
+          }
+        });
+        try {
+          localStorage.setItem('sys_user_names', JSON.stringify(localNamesCache));
+        } catch (e) {}
+
         listaContainer.innerHTML = '';
         data.forEach(pub => {
+          let autorNome = mapaAutores[pub.autor_id];
+          if (!autorNome || typeof autorNome !== 'string' || autorNome.trim() === '') {
+            if (perfil && perfil.user && perfil.user.id === pub.autor_id && perfil.nome) {
+              autorNome = perfil.nome;
+            } else {
+              autorNome = 'Administrador do Portal';
+            }
+          }
+
           const div = document.createElement('div');
           div.style.cssText = 'background: white; padding: 14px; border-radius: 12px; border: 1px solid var(--cinza-borda); display: flex; flex-direction: column; gap: 6px;';
           div.innerHTML = `
             <strong style="color: var(--verde-escuro); font-size: 15px;">${pub.titulo}</strong>
             <p style="font-size: 13px; color: var(--cinza-texto); white-space: pre-wrap;">${pub.conteudo}</p>
-            <div style="font-size: 11px; color: var(--cinza-texto-aux); margin-top: 4px;">Publicado em ${new Date(pub.criado_em).toLocaleDateString('pt-BR')}</div>
+            <div style="font-size: 11px; color: var(--cinza-texto-aux); margin-top: 4px; display: flex; justify-content: space-between;">
+              <span><strong>Autor:</strong> ${autorNome} (Admin)</span>
+              <span>Publicado em ${new Date(pub.criado_em).toLocaleDateString('pt-BR')}</span>
+            </div>
           `;
           listaContainer.appendChild(div);
         });

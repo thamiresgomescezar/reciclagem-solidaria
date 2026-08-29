@@ -63,8 +63,10 @@
                   <input type="text" id="pub_titulo" class="input-underline" placeholder="Ex: Coleta Seletiva de Vidros na Fatec" required>
                 </div>
                 <div class="campo">
-                  <label for="pub_conteudo">Conteúdo / Descrição:<span class="req">*</span></label>
-                  <textarea id="pub_conteudo" class="input-underline" style="width: 100%; min-height: 110px; resize: vertical; box-sizing: border-box;" placeholder="Escreva os detalhes da campanha ou orientação..." required></textarea>
+                  <label for="pub_conteudo" style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--verde-escuro, #1b6d24); font-size: 0.92rem; margin-bottom: 0.35rem;">
+                    <i class="fa-solid fa-align-left" style="color: #2e7d32;"></i> Conteúdo / Descrição:<span class="req" style="color: #e53935; font-weight: bold;">*</span>
+                  </label>
+                  <textarea id="pub_conteudo" style="width: 100%; min-height: 120px; border-radius: 12px; border: 1.5px solid #a5d6a7; padding: 12px; font-family: inherit; font-size: 0.95rem; box-sizing: border-box; resize: vertical; outline: none; background: #ffffff; color: #172b16;" placeholder="Escreva os detalhes da campanha ou orientação..." required></textarea>
                 </div>
                 <button type="submit" class="btn-avancar" id="btn_postar" style="margin-top: 0.75rem;">
                   <i class="fa-solid fa-paper-plane"></i> Publicar Campanha
@@ -157,19 +159,33 @@
       try {
         const [{ data: pubs, error }, { data: usuarios }] = await Promise.all([
           supabase.from('publicacoes').select('*').order('criado_em', { ascending: false }),
-          supabase.from('cidadao').select('id, auth_user_id, nome')
+          supabase.from('cidadao').select('id, nome')
         ]);
 
         if (error) throw error;
 
-        const mapaAutores = {};
+        const localNamesCache = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
+        const mapaAutores = { ...localNamesCache };
         (usuarios || []).forEach(u => {
-          if (u.auth_user_id) mapaAutores[u.auth_user_id] = u.nome;
-          if (u.id) mapaAutores[u.id] = u.nome;
+          if (u.id && u.nome) {
+            mapaAutores[u.id] = u.nome;
+            localNamesCache[u.id] = u.nome;
+          }
         });
+        try {
+          localStorage.setItem('sys_user_names', JSON.stringify(localNamesCache));
+        } catch (e) {}
 
         (pubs || []).forEach(p => {
-          p.autor_nome = mapaAutores[p.autor_id] || 'Administração';
+          let autor = mapaAutores[p.autor_id];
+          if (!autor || typeof autor !== 'string' || autor.trim() === '') {
+            if (perfilAtual && perfilAtual.user && perfilAtual.user.id === p.autor_id && perfilAtual.nome) {
+              autor = perfilAtual.nome;
+            } else {
+              autor = 'Administrador do Portal';
+            }
+          }
+          p.autor_nome = autor;
         });
 
         renderCards(pubs || []);
@@ -230,6 +246,16 @@
 
       try {
         const currentUserId = perfilAtual?.user?.id || (await supabase.auth.getSession()).data.session?.user?.id;
+        const currentUserName = perfilAtual?.nome || perfilAtual?.dados?.nome;
+
+        if (currentUserId && currentUserName) {
+          try {
+            const cache = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
+            cache[currentUserId] = currentUserName;
+            localStorage.setItem('sys_user_names', JSON.stringify(cache));
+          } catch (e) {}
+        }
+
         const { error } = await supabase.from('publicacoes').insert([{
           titulo,
           conteudo,
