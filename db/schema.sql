@@ -91,7 +91,7 @@ create table public.local_retirada (
   rua varchar default 'Rod. Pref. Luiz Salomão Chamma', 
   numero varchar default '240', 
   complemento varchar default 'entrada principal pela Rua Nelson Rodrigues, s/n',
-  bairro varchar default 'Pouso Alegre', 
+  bairro varchar default 'Centro', 
   cidade varchar default 'Franco da Rocha', 
   estado varchar default 'SP', 
   cep varchar default '07857-050',
@@ -169,7 +169,7 @@ insert into public.materiais (tipo) values
 on conflict (tipo) do nothing;
 
 insert into public.local_retirada (nome, rua, numero, complemento, bairro, cidade, estado, cep, latitude, longitude)
-values ('Fatec Franco da Rocha', 'Rod. Pref. Luiz Salomão Chamma', '240', 'entrada principal pela Rua Nelson Rodrigues, s/n', 'Pouso Alegre', 'Franco da Rocha', 'SP', '07857-050', -23,3344, -46,7132);
+values ('Fatec Franco da Rocha', 'Rod. Pref. Luiz Salomão Chamma', '240', 'entrada principal pela Rua Nelson Rodrigues, s/n', 'Centro', 'Franco da Rocha', 'SP', '07857-050', -23,3344, -46,7132);
 
 -- ==========================================================
 -- 4. ROW LEVEL SECURITY (RLS)

@@ -59,11 +59,14 @@ export async function salvarAgendaEmLote({ local_retirada_id, mapaDatas, hora_in
   // Remove registros existentes das datas enviadas
   await supabase.from('agenda').delete().eq('local_retirada_id', local_retirada_id).in('data', datas);
 
-  const registros = datas.map(dateStr => {
+  const registros = [];
+  datas.forEach(dateStr => {
     const entry = mapaDatas[dateStr];
     let isDisp = false;
     let hIni = hora_inicio;
     let hFim = hora_fim;
+    let hIni2 = null;
+    let hFim2 = null;
 
     if (typeof entry === 'boolean') {
       isDisp = entry;
@@ -71,16 +74,31 @@ export async function salvarAgendaEmLote({ local_retirada_id, mapaDatas, hora_in
       isDisp = Boolean(entry.disponivel);
       hIni = entry.hora_inicio || hora_inicio;
       hFim = entry.hora_fim || hora_fim;
+      hIni2 = entry.hora_inicio_2 || null;
+      hFim2 = entry.hora_fim_2 || null;
     }
 
-    return {
+    // 1º Turno / Intervalo Principal
+    registros.push({
       local_retirada_id,
       data: dateStr,
       hora_inicio: hIni,
       hora_fim: hFim,
       disponivel: isDisp,
       criado_por: session.user.id
-    };
+    });
+
+    // 2º Turno / Intervalo Opcional
+    if (isDisp && hIni2 && hFim2) {
+      registros.push({
+        local_retirada_id,
+        data: dateStr,
+        hora_inicio: hIni2,
+        hora_fim: hFim2,
+        disponivel: true,
+        criado_por: session.user.id
+      });
+    }
   });
 
   const { data, error } = await supabase.from('agenda').insert(registros).select();

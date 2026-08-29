@@ -113,11 +113,21 @@
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="campo">
                   <label for="senha">Crie senha (mín. 6 dígitos):<span class="req">*</span></label>
-                  <input type="password" id="senha" class="input-underline" placeholder="••••••••" autocomplete="new-password" required>
+                  <div style="position: relative; display: flex; align-items: center;">
+                    <input type="password" id="senha" class="input-underline" placeholder="••••••••" autocomplete="new-password" required style="padding-right: 36px; width: 100%;">
+                    <button type="button" class="btn-toggle-senha" data-target="senha" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666; font-size: 1.05rem; padding: 4px;" aria-label="Mostrar ou ocultar senha" title="Ver senha">
+                      <i class="fa-regular fa-eye"></i>
+                    </button>
+                  </div>
                 </div>
                 <div class="campo">
                   <label for="confirma_senha">Confirme sua senha:<span class="req">*</span></label>
-                  <input type="password" id="confirma_senha" class="input-underline" placeholder="••••••••" autocomplete="new-password" required>
+                  <div style="position: relative; display: flex; align-items: center;">
+                    <input type="password" id="confirma_senha" class="input-underline" placeholder="••••••••" autocomplete="new-password" required style="padding-right: 36px; width: 100%;">
+                    <button type="button" class="btn-toggle-senha" data-target="confirma_senha" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666; font-size: 1.05rem; padding: 4px;" aria-label="Mostrar ou ocultar senha" title="Ver senha">
+                      <i class="fa-regular fa-eye"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -352,6 +362,32 @@
         }
       });
     }
+
+    // Toggle de visibilidade da senha (ícone de olho)
+    document.querySelectorAll('.btn-toggle-senha').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        const icon = btn.querySelector('i');
+        if (!input) return;
+
+        if (input.type === 'password') {
+          input.type = 'text';
+          if (icon) {
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+          }
+          btn.title = 'Ocultar senha';
+        } else {
+          input.type = 'password';
+          if (icon) {
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+          }
+          btn.title = 'Ver senha';
+        }
+      });
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

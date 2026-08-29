@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <thead>
               <tr style="border-bottom: 2px solid var(--verde-escuro, #1b6d24); text-align: left; color: var(--verde-escuro, #1b6d24);">
                 <th style="padding: 10px;">Posição / Catador</th>
-                <th style="padding: 10px;">Bairro / Localidade</th>
+                <th style="padding: 10px;">Bairro</th>
                 <th style="padding: 10px; text-align: right;">Coletas Atribuídas</th>
               </tr>
             </thead>
@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <!-- Tabela Catadores por Bairro -->
             <div style="background: white; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 14px;">
               <h5 style="color: var(--verde-escuro, #1b6d24); font-weight: 800; margin-bottom: 10px; font-size: 0.95rem;">
-                <i class="fa-solid fa-id-card"></i> Catadores por Bairro / Região
+                <i class="fa-solid fa-id-card"></i> Catadores por Bairro
               </h5>
               <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
                 <thead>
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <!-- Tabela Cidadãos por Bairro -->
             <div style="background: white; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 14px;">
               <h5 style="color: var(--verde-escuro, #1b6d24); font-weight: 800; margin-bottom: 10px; font-size: 0.95rem;">
-                <i class="fa-solid fa-user"></i> Cidadãos por Bairro / Região
+                <i class="fa-solid fa-user"></i> Cidadãos por Bairro
               </h5>
               <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
                 <thead>
@@ -487,7 +487,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <Row><Cell ss:StyleID="Title"><Data ss:Type="String">RANKING DE ATENDIMENTO POR CATADORES</Data></Cell></Row>
       <Row>
         <Cell ss:StyleID="Header"><Data ss:Type="String">Catador</Data></Cell>
-        <Cell ss:StyleID="Header"><Data ss:Type="String">Bairro / Localidade</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Bairro</Data></Cell>
         <Cell ss:StyleID="Header"><Data ss:Type="String">Coletas Atribuídas</Data></Cell>
       </Row>`;
     (catData || []).forEach(item => {
@@ -521,7 +521,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <Row><Cell ss:StyleID="Title"><Data ss:Type="String">MAPEAMENTO TERRITORIAL &amp; INCLUSÃO SOCIAL</Data></Cell></Row>
       <Row>
         <Cell ss:StyleID="Header"><Data ss:Type="String">Categoria</Data></Cell>
-        <Cell ss:StyleID="Header"><Data ss:Type="String">Bairro / Região</Data></Cell>
+        <Cell ss:StyleID="Header"><Data ss:Type="String">Bairro</Data></Cell>
         <Cell ss:StyleID="Header"><Data ss:Type="String">Quantidade</Data></Cell>
       </Row>`;
     (geoData || []).forEach(item => {

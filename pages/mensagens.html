@@ -336,7 +336,7 @@
 
           if (catadoresSemApp.length > 0) {
             const optGroupSemApp = document.createElement('optgroup');
-            optGroupSemApp.label = 'Catadores Cadastrados por Terceiros (Sem App)';
+            optGroupSemApp.label = 'Catadores Cadastrados por Terceiros';
             catadoresSemApp.forEach(c => {
               const opt = document.createElement('option');
               opt.value = `SEM_APP_${c.id}`;
@@ -375,7 +375,7 @@
                     existingOpt.dataset.nome = catByPk.nome;
                     existingOpt.dataset.telefone = catByPk.telefone || '';
                     existingOpt.dataset.temApp = temApp ? 'true' : 'false';
-                    existingOpt.textContent = `${catByPk.nome}${temApp ? '' : ' (Sem App)'}`;
+                    existingOpt.textContent = catByPk.nome;
                     selectDest.appendChild(existingOpt);
                   }
                   selectDest.value = targetVal;
@@ -507,6 +507,30 @@
       }
     }
 
+    function formatarDataHoraMensagem(dateRaw) {
+      if (!dateRaw) return 'Agora';
+      const d = new Date(dateRaw);
+      if (isNaN(d.getTime())) return 'Agora';
+
+      const diaStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const horaStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      const hoje = new Date();
+      const hojeStr = hoje.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      const ontem = new Date();
+      ontem.setDate(ontem.getDate() - 1);
+      const ontemStr = ontem.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      if (diaStr === hojeStr) {
+        return `Hoje às ${horaStr}`;
+      } else if (diaStr === ontemStr) {
+        return `Ontem às ${horaStr}`;
+      } else {
+        return `${diaStr} às ${horaStr}`;
+      }
+    }
+
     function renderizarMensagens(data, currentUserId) {
       if (!data || data.length === 0) {
         box.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); margin: auto;"><i class="fa-regular fa-comments" style="font-size: 1.5rem; display: block; margin-bottom: 6px;"></i>Nenhuma mensagem trocada com este contato ainda. Escreva uma mensagem abaixo para iniciar a conversa!</div>`;
@@ -514,16 +538,35 @@
       }
 
       box.innerHTML = '';
+      let ultimaDataStr = null;
+
       data.forEach(m => {
+        const rawDate = m.enviado_em || m.criado_em;
+        const msgDateObj = rawDate ? new Date(rawDate) : new Date();
+        const dataDiaAtual = !isNaN(msgDateObj.getTime())
+          ? msgDateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+          : null;
+
+        // Se mudou o dia, insere um divisor de data elegante
+        if (dataDiaAtual && dataDiaAtual !== ultimaDataStr) {
+          ultimaDataStr = dataDiaAtual;
+          const divider = document.createElement('div');
+          divider.style.cssText = 'align-self: center; margin: 12px 0 6px; padding: 4px 14px; background: rgba(0,0,0,0.06); color: #555; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-align: center;';
+          divider.innerHTML = `<i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> ${dataDiaAtual}`;
+          box.appendChild(divider);
+        }
+
         const eMinha = m.remetente_id === currentUserId;
         const msgDiv = document.createElement('div');
-        msgDiv.style.cssText = `max-width: 75%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; margin-${eMinha ? 'left' : 'right'}: auto; background: ${eMinha ? '#e8f5e9' : '#f0f0f0'}; color: #172b16; border: 1px solid ${eMinha ? '#a5d6a7' : '#e0e0e0'};`;
+        msgDiv.style.cssText = `max-width: 78%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; margin-${eMinha ? 'left' : 'right'}: auto; background: ${eMinha ? '#e8f5e9' : '#ffffff'}; color: #172b16; border: 1px solid ${eMinha ? '#a5d6a7' : '#e0e0e0'}; box-shadow: 0 2px 5px rgba(0,0,0,0.03);`;
         
-        const horaStr = m.enviado_em || m.criado_em ? new Date(m.enviado_em || m.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora';
+        const timestampStr = formatarDataHoraMensagem(rawDate);
 
         msgDiv.innerHTML = `
-          <div>${m.conteudo}</div>
-          <div style="font-size: 0.7rem; color: #777; text-align: right; margin-top: 4px;">${horaStr}</div>
+          <div style="word-break: break-word; white-space: pre-wrap;">${m.conteudo}</div>
+          <div style="font-size: 0.72rem; color: #666; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+            <i class="fa-regular fa-clock" style="font-size: 0.65rem;"></i> <span>${timestampStr}</span>
+          </div>
         `;
         box.appendChild(msgDiv);
       });

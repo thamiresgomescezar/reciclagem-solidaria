@@ -4,6 +4,7 @@ import { listarAgendaPorLocal } from '../services/agenda.js';
 import { renderCalendarGrid } from './calendarPicker.js';
 import { logout } from '../services/auth.js';
 import { supabase } from '../lib/supabaseClient.js';
+import { showAlertModal } from '../lib/modal.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const perfil = await proibirAcessoInvalido(['catador', 'administrador']);
@@ -81,14 +82,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const localBairro = coleta.local_retirada?.bairro || '';
         const localCidade = coleta.local_retirada?.cidade || 'Franco da Rocha';
         const mapsQuery = `${localNome} ${localRua} ${localBairro} ${localCidade}`.trim();
-        const fotoTag = coleta.foto_url
-          ? `<div style="position: relative; overflow: hidden; border-radius: 12px; margin-bottom: 4px; background: #f0f0f0;">
-              <img src="${coleta.foto_url}" data-src="${coleta.foto_url}" alt="${tipoMaterial} (${coleta.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 180px; object-fit: cover; border-radius: 12px; cursor: pointer; transition: transform 0.2s;" title="Clique para ampliar a foto do material">
-              <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">
+        const fotoTag = (coleta.foto_url && coleta.foto_url.trim() !== '')
+          ? `<div style="position: relative; overflow: hidden; border-radius: 12px; margin-bottom: 6px; background: #e8f5e9; border: 1.5px solid #a5d6a7;">
+              <img src="${coleta.foto_url}" data-src="${coleta.foto_url}" alt="${tipoMaterial} (${coleta.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px; cursor: pointer; transition: transform 0.2s;" title="Clique para ampliar a foto do material" onerror="this.parentElement.innerHTML='<div style=\\'padding: 12px; text-align: center; color: #555; font-size: 0.82rem;\\'><i class=\\'fa-regular fa-image\\'></i> Imagem não disponível para visualização</div>';">
+              <div style="position: absolute; top: 8px; left: 8px; background: rgba(27,109,36,0.85); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                <i class="fa-solid fa-camera"></i> Foto Anexada
+              </div>
+              <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">
                 <i class="fa-solid fa-magnifying-glass-plus"></i> Toque para ampliar
               </div>
             </div>`
-          : '';
+          : `<div style="display: flex; align-items: center; gap: 8px; background: #f8faf8; border: 1px dashed #c8e6c9; border-radius: 10px; padding: 10px 14px; color: #666; font-size: 0.82rem; margin-bottom: 6px;">
+               <i class="fa-regular fa-image" style="color: #81c784; font-size: 1.1rem;"></i>
+               <span><b>Sem foto anexada</b> pelo cidadão ofertante</span>
+             </div>`;
 
         card.innerHTML = `
           ${fotoTag}
@@ -276,7 +283,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderCalendarGrid('agenda-calendar-picker', {
         agendaData,
         isAdmin: false,
-        onSelectDay: (dateStr) => {
+        onSelectDay: (dateStr, entryDia) => {
           dataSelecionadaStr = dateStr;
           const [ano, mes, dia] = dateStr.split('-');
           const dataFormatada = `${dia}/${mes}/${ano}`;
@@ -284,10 +291,26 @@ document.addEventListener('DOMContentLoaded', async () => {
           const lblData = document.getElementById('lbl-data-selecionada');
           const boxConfirmar = document.getElementById('container-confirmar-agendamento');
           const modalFeedback = document.getElementById('modal-feedback');
+          const selectHorario = document.getElementById('select-horario-retirada');
 
           if (lblData) lblData.textContent = dataFormatada;
           if (boxConfirmar) boxConfirmar.style.display = 'block';
           if (modalFeedback) modalFeedback.style.display = 'none';
+
+          if (selectHorario) {
+            const slotsDoDia = (agendaData || []).filter(a => a.data === dateStr && a.disponivel);
+            if (slotsDoDia.length === 0 && entryDia && entryDia.disponivel) {
+              if (entryDia.hora_inicio && entryDia.hora_fim) {
+                slotsDoDia.push({ hora_inicio: entryDia.hora_inicio, hora_fim: entryDia.hora_fim });
+              }
+              if (entryDia.hora_inicio_2 && entryDia.hora_fim_2) {
+                slotsDoDia.push({ hora_inicio: entryDia.hora_inicio_2, hora_fim: entryDia.hora_fim_2 });
+              }
+            }
+
+            const horariosGerados = gerarHorariosDisponiveis(slotsDoDia);
+            selectHorario.innerHTML = horariosGerados.map(h => `<option value="${h}">${h} hs</option>`).join('');
+          }
         }
       });
 
@@ -375,58 +398,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function abrirModalMapa(nomePonto, enderecoCompleto) {
-  let modal = document.getElementById('modal-mapa');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'modal-mapa';
-    modal.style.cssText = `
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);
-      z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px;
-    `;
-    document.body.appendChild(modal);
-  }
+  showAlertModal({
+    title: 'Funcionalidade Futura',
+    message: `A visualização e rotas interativas no mapa estarão disponíveis em versões futuras.\n\nLocal de Coleta: ${nomePonto}\nEndereço: ${enderecoCompleto}`,
+    buttonText: 'Entendido',
+    confirmColor: '#1b6d24'
+  });
 
+  /*
+  // Código preservado para integração futura com mapas / embed:
   const embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(enderecoCompleto)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
   const mapsExternalUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoCompleto)}`;
+  // ...
+  */
+}
 
-  modal.innerHTML = `
-    <div style="background: white; border-radius: 20px; padding: 20px; max-width: 640px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="color: var(--verde-escuro, #1b6d24); margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-map-location-dot" style="color: #2e7d32;"></i> ${nomePonto}
-        </h3>
-        <button id="close-mapa-modal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">✕</button>
-      </div>
+function gerarHorariosDisponiveis(slots) {
+  const lista = [];
+  if (!slots || slots.length === 0) {
+    return ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'];
+  }
 
-      <div style="font-size: 0.88rem; color: #555; background: #f9fbf9; padding: 10px 14px; border-radius: 10px; border: 1px solid #e8f5e9;">
-        <i class="fa-solid fa-location-dot" style="color: #2e7d32;"></i> <strong>Endereço:</strong> ${enderecoCompleto}
-      </div>
+  slots.forEach(slot => {
+    if (!slot.hora_inicio || !slot.hora_fim) return;
+    const [hIni, mIni] = slot.hora_inicio.split(':').map(Number);
+    const [hFim, mFim] = slot.hora_fim.split(':').map(Number);
+    let curMin = hIni * 60 + (mIni || 0);
+    const endMin = hFim * 60 + (mFim || 0);
 
-      <iframe 
-        width="100%" 
-        height="320" 
-        style="border: 0; border-radius: 12px;" 
-        loading="lazy" 
-        allowfullscreen 
-        src="${embedUrl}">
-      </iframe>
+    while (curMin <= endMin) {
+      const h = String(Math.floor(curMin / 60)).padStart(2, '0');
+      const m = String(curMin % 60).padStart(2, '0');
+      const tStr = `${h}:${m}`;
+      if (!lista.includes(tStr)) {
+        lista.push(tStr);
+      }
+      curMin += 30; // Intervalo de 30 min
+    }
+  });
 
-      <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 4px;">
-        <a href="${mapsExternalUrl}" target="_blank" class="btn-secondary-pill" style="padding: 8px 16px; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; background: #ffffff; border: 1.5px solid #2e7d32; color: #2e7d32;">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir no Google Maps App
-        </a>
-        <button id="btn-fechar-mapa" class="btn-avancar" style="width: auto; padding: 8px 20px; font-size: 0.85rem;">
-          Fechar
-        </button>
-      </div>
-    </div>
-  `;
-
-  modal.style.display = 'flex';
-
-  const fechar = () => { modal.style.display = 'none'; };
-  modal.querySelector('#close-mapa-modal').addEventListener('click', fechar);
-  modal.querySelector('#btn-fechar-mapa').addEventListener('click', fechar);
+  return lista.length > 0 ? lista : ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
 }
 

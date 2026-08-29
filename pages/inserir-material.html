@@ -73,7 +73,12 @@
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 1rem;">
                 <div class="campo">
                   <label for="foto">Foto do Material (Opcional):</label>
-                  <input type="file" id="foto" class="input-underline" accept="image/jpeg,image/png,image/webp" style="width: 100%;">
+                  <input type="file" id="foto" class="input-underline" accept="image/*" style="width: 100%;">
+                  <div id="box-preview-foto" style="display: none; margin-top: 10px; position: relative; width: fit-content;">
+                    <img id="img-preview-inserir" src="" alt="Prévia da Foto" style="max-width: 140px; max-height: 140px; object-fit: cover; border-radius: 10px; border: 2px solid #a5d6a7; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+                    <button type="button" id="btn-remover-foto" style="position: absolute; top: -8px; right: -8px; background: #c62828; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.2);" title="Remover Foto">✕</button>
+                    <span id="lbl-foto-nome" style="display: block; font-size: 0.75rem; color: #555; margin-top: 4px; font-weight: 600;"></span>
+                  </div>
                 </div>
 
                 <div class="campo">

@@ -453,10 +453,8 @@
         }
 
         let appAccessBadge = '';
-        if (u.tipo === 'catador') {
-          appAccessBadge = u.auth_user_id
-            ? `<span style="font-size: 0.72rem; font-weight: 700; background: #e8f5e9; color: #1b6d24; border: 1px solid #c8e6c9; padding: 2px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-mobile-screen"></i> App</span>`
-            : `<span style="font-size: 0.72rem; font-weight: 700; background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; padding: 2px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-user-tag"></i> Sem App</span>`;
+        if (u.tipo === 'catador' && u.auth_user_id) {
+          appAccessBadge = `<span style="font-size: 0.72rem; font-weight: 700; background: #e8f5e9; color: #1b6d24; border: 1px solid #c8e6c9; padding: 2px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-mobile-screen"></i> Conta com App</span>`;
         }
 
         item.innerHTML = `

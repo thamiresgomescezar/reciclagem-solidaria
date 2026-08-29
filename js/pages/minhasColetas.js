@@ -8,7 +8,7 @@ import {
   cancelarColeta 
 } from '../services/coletas.js';
 import { supabase } from '../lib/supabaseClient.js';
-import { showConfirmModal } from '../lib/modal.js';
+import { showConfirmModal, showAlertModal } from '../lib/modal.js';
 
 async function init() {
   const listaContainer = document.getElementById('lista-minhas-coletas');
@@ -155,6 +155,14 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
         doadorNome = 'Cidadão Doador';
       }
 
+      const dataCriacao = coleta.criado_em ? new Date(coleta.criado_em) : null;
+      const dataFormatada = dataCriacao && !isNaN(dataCriacao.getTime())
+        ? dataCriacao.toLocaleDateString('pt-BR')
+        : '';
+      const dataAgendada = coleta.data
+        ? `${new Date(coleta.data + 'T00:00:00').toLocaleDateString('pt-BR')}${coleta.hora ? ` às ${coleta.hora.slice(0,5)}` : ''}`
+        : null;
+
       const doadorTel = '';
       const localNome = coleta.local_retirada?.nome || 'Fatec Franco da Rocha';
       const localRua = coleta.local_retirada?.rua || '';
@@ -221,14 +229,20 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
         }
       }
 
-      const fotoTag = coleta.foto_url
-        ? `<div style="position: relative; overflow: hidden; border-radius: 12px; margin-bottom: 4px; background: #f0f0f0;">
-            <img src="${coleta.foto_url}" data-src="${coleta.foto_url}" alt="${tipoMaterial} (${coleta.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 160px; object-fit: cover; border-radius: 12px; cursor: pointer; transition: transform 0.2s;" title="Clique para ampliar a foto do material">
-            <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); color: #ffffff; padding: 3px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">
+      const fotoTag = (coleta.foto_url && coleta.foto_url.trim() !== '')
+        ? `<div style="position: relative; overflow: hidden; border-radius: 12px; margin-bottom: 6px; background: #e8f5e9; border: 1.5px solid #a5d6a7;">
+            <img src="${coleta.foto_url}" data-src="${coleta.foto_url}" alt="${tipoMaterial} (${coleta.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 170px; object-fit: cover; border-radius: 10px; cursor: pointer; transition: transform 0.2s;" title="Clique para ampliar a foto do material" onerror="this.parentElement.innerHTML='<div style=\\'padding: 10px; text-align: center; color: #666; font-size: 0.8rem;\\'><i class=\\'fa-regular fa-image\\'></i> Imagem não disponível</div>';">
+            <div style="position: absolute; top: 6px; left: 6px; background: rgba(27,109,36,0.85); color: #ffffff; padding: 3px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+              <i class="fa-solid fa-camera"></i> Foto Anexada
+            </div>
+            <div style="position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.7); color: #ffffff; padding: 3px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">
               <i class="fa-solid fa-magnifying-glass-plus"></i> Ampliar
             </div>
           </div>`
-        : '';
+        : `<div style="display: flex; align-items: center; gap: 8px; background: #f8faf8; border: 1px dashed #c8e6c9; border-radius: 10px; padding: 8px 12px; color: #777; font-size: 0.8rem; margin-bottom: 6px;">
+             <i class="fa-regular fa-image" style="color: #a5d6a7; font-size: 1rem;"></i>
+             <span>Sem foto anexada</span>
+           </div>`;
 
       card.innerHTML = `
         ${fotoTag}
@@ -242,7 +256,8 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
         <div style="font-size: 0.88rem; color: #444; display: flex; flex-direction: column; gap: 4px; background: #f9fbf9; padding: 10px 14px; border-radius: 8px; border: 1px solid #e8f5e9;">
           <span><strong>Local de Retirada:</strong> ${localNome}</span>
           ${éCatador ? `<span><strong>Ofertante (Cidadão):</strong> ${doadorNome}${doadorTel}</span>` : `<span><strong>Catador Atribuído:</strong> ${catadorNome}</span>`}
-          ${dataFormatada ? `<span style="font-size: 0.8rem; color: #777;">Data da Solicitação: ${dataFormatada}</span>` : ''}
+          ${dataAgendada ? `<span style="font-size: 0.82rem; color: #b78103; font-weight: 700;"><i class="fa-regular fa-calendar-check"></i> Agendado para: ${dataAgendada}</span>` : ''}
+          ${dataFormatada ? `<span style="font-size: 0.8rem; color: #777;">Data da Oferta: ${dataFormatada}</span>` : ''}
         </div>
 
         ${acoesHtml}
@@ -275,8 +290,10 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
         showConfirmModal({
           title: 'Confirmar Retirada',
           message: 'Confirma que o material reciclável já foi recolhido do ponto de retirada?',
-          confirmText: 'Sim, Confirmar',
+          confirmText: 'Sim, Confirmar Retirada',
+          cancelText: 'Voltar',
           confirmColor: '#1b6d24',
+          icon: '<i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.25rem;"></i>',
           onConfirm: async () => {
             try {
               await confirmarRetirada(id);
@@ -297,7 +314,9 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
           title: 'Redisponibilizar Oferta',
           message: 'Deseja redisponibilizar esta oferta para que os catadores possam agendá-la?',
           confirmText: 'Sim, Redisponibilizar',
+          cancelText: 'Voltar',
           confirmColor: '#1b6d24',
+          icon: '<i class="fa-solid fa-rotate-left" style="color: #2e7d32; font-size: 1.25rem;"></i>',
           onConfirm: async () => {
             try {
               await reabrirColeta(id);
@@ -317,8 +336,10 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
         showConfirmModal({
           title: 'Cancelar Oferta',
           message: 'Tem certeza que deseja cancelar esta oferta de material reciclável?',
-          confirmText: 'Sim, Cancelar',
-          confirmColor: '#ef5350',
+          confirmText: 'Sim, Cancelar Oferta',
+          cancelText: 'Voltar',
+          confirmColor: '#c62828',
+          icon: '<i class="fa-solid fa-triangle-exclamation" style="color: #c62828; font-size: 1.25rem;"></i>',
           onConfirm: async () => {
             try {
               await cancelarColeta(id);
@@ -355,59 +376,19 @@ function showSuccess(feedbackMsg, msg) {
 }
 
 function abrirModalMapa(nomePonto, enderecoCompleto) {
-  let modal = document.getElementById('modal-mapa');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'modal-mapa';
-    modal.style.cssText = `
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);
-      z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px;
-    `;
-    document.body.appendChild(modal);
-  }
+  showAlertModal({
+    title: 'Funcionalidade Futura',
+    message: `A visualização e rotas interativas no mapa estarão disponíveis em versões futuras.\n\nLocal de Coleta: ${nomePonto}\nEndereço: ${enderecoCompleto}`,
+    buttonText: 'Entendido',
+    confirmColor: '#1b6d24'
+  });
 
+  /*
+  // Código preservado para integração futura com mapas / embed:
   const embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(enderecoCompleto)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
   const mapsExternalUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoCompleto)}`;
-
-  modal.innerHTML = `
-    <div style="background: white; border-radius: 20px; padding: 20px; max-width: 640px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="color: var(--verde-escuro, #1b6d24); margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-map-location-dot" style="color: #2e7d32;"></i> ${nomePonto}
-        </h3>
-        <button id="close-mapa-modal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">✕</button>
-      </div>
-
-      <div style="font-size: 0.88rem; color: #555; background: #f9fbf9; padding: 10px 14px; border-radius: 10px; border: 1px solid #e8f5e9;">
-        <i class="fa-solid fa-location-dot" style="color: #2e7d32;"></i> <strong>Endereço:</strong> ${enderecoCompleto}
-      </div>
-
-      <iframe 
-        width="100%" 
-        height="320" 
-        style="border: 0; border-radius: 12px;" 
-        loading="lazy" 
-        allowfullscreen 
-        src="${embedUrl}">
-      </iframe>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 4px;">
-        <a href="${mapsExternalUrl}" target="_blank" class="btn-secondary-pill" style="padding: 8px 16px; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; background: #ffffff; border: 1.5px solid #2e7d32; color: #2e7d32;">
-          <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir no Google Maps App
-        </a>
-        <button id="btn-fechar-mapa" class="btn-avancar" style="width: auto; padding: 8px 20px; font-size: 0.85rem;">
-          Fechar
-        </button>
-      </div>
-    </div>
-  `;
-
-  modal.style.display = 'flex';
-
-  const fechar = () => { modal.style.display = 'none'; };
-  modal.querySelector('#close-mapa-modal').addEventListener('click', fechar);
-  modal.querySelector('#btn-fechar-mapa').addEventListener('click', fechar);
+  // ...
+  */
 }
 
 function abrirModalFoto(url, titulo) {

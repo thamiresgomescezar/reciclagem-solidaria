@@ -68,7 +68,12 @@
 
               <div class="campo">
                 <label for="senha">Senha:<span class="req">*</span></label>
-                <input type="password" id="senha" class="input-underline" placeholder="Sua senha" autocomplete="current-password" required>
+                <div style="position: relative; display: flex; align-items: center;">
+                  <input type="password" id="senha" class="input-underline" placeholder="Sua senha" autocomplete="current-password" required style="padding-right: 36px; width: 100%;">
+                  <button type="button" id="btn-toggle-senha" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666; font-size: 1.05rem; padding: 4px;" aria-label="Mostrar ou ocultar senha" title="Ver senha">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                </div>
               </div>
 
               <div style="text-align: right; margin: 0.5rem 0 1.5rem;">
@@ -101,6 +106,24 @@
     const form = document.getElementById('formLogin');
     const statusMsg = document.getElementById('statusMsg');
     const btn = document.getElementById('btnEntrar');
+    const btnToggleSenha = document.getElementById('btn-toggle-senha');
+
+    if (btnToggleSenha) {
+      btnToggleSenha.addEventListener('click', () => {
+        const input = document.getElementById('senha');
+        const icon = btnToggleSenha.querySelector('i');
+        if (!input) return;
+        if (input.type === 'password') {
+          input.type = 'text';
+          if (icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
+          btnToggleSenha.title = 'Ocultar senha';
+        } else {
+          input.type = 'password';
+          if (icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
+          btnToggleSenha.title = 'Ver senha';
+        }
+      });
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
       const perfil = await getPerfilAtual();

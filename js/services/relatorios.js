@@ -105,18 +105,22 @@ export async function relatorioGeografico() {
 
     const mapa = new Map();
 
-    const chave = (bairro, cidade) => `${cidade || '—'} / ${bairro || '—'}`;
+    const normalizar = (val) => val && val.trim() ? val.trim() : 'Não Informado';
 
     for (const c of cidadaos.data || []) {
-      const k = chave(c.bairro, c.cidade);
-      const item = mapa.get(k) || { cidade: c.cidade || '—', bairro: c.bairro || '—', cidadaos: 0, catadores: 0, sem_residencia: 0 };
+      const b = c.sem_residencia ? 'Sem moradia' : normalizar(c.bairro);
+      const cid = normalizar(c.cidade);
+      const k = `${cid}|||${b}`;
+      const item = mapa.get(k) || { cidade: cid, bairro: b, cidadaos: 0, catadores: 0, sem_residencia: 0 };
       item.cidadaos++;
       if (c.sem_residencia) item.sem_residencia++;
       mapa.set(k, item);
     }
     for (const c of catadores.data || []) {
-      const k = chave(c.bairro, c.cidade);
-      const item = mapa.get(k) || { cidade: c.cidade || '—', bairro: c.bairro || '—', cidadaos: 0, catadores: 0, sem_residencia: 0 };
+      const b = c.sem_residencia ? 'Sem moradia' : normalizar(c.bairro);
+      const cid = normalizar(c.cidade);
+      const k = `${cid}|||${b}`;
+      const item = mapa.get(k) || { cidade: cid, bairro: b, cidadaos: 0, catadores: 0, sem_residencia: 0 };
       item.catadores++;
       if (c.sem_residencia) item.sem_residencia++;
       mapa.set(k, item);
