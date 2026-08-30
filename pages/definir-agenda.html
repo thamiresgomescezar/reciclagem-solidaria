@@ -56,7 +56,7 @@
                 <i class="fa-regular fa-clock"></i> Gerar Agenda Automática Mensal
               </h4>
 
-              <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem;" id="weekdays-group">
+              <div id="weekdays-group">
                 <button type="button" class="btn-tab active" data-day="1">Segunda</button>
                 <button type="button" class="btn-tab active" data-day="2">Terça</button>
                 <button type="button" class="btn-tab active" data-day="3">Quarta</button>
@@ -68,46 +68,46 @@
 
               <div style="margin-bottom: 1rem; background: #f9fbf9; padding: 14px; border-radius: 12px; border: 1px solid #e8f5e9;">
                 <span style="font-size: 0.88rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-                  <i class="fa-regular fa-clock"></i> 1º Turno de Atendimento:
+                  <i class="fa-regular fa-clock"></i> Horário de Funcionamento:
                 </span>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                   <div class="campo">
-                    <label for="horario_inicio">Horário Inicial:</label>
-                    <input type="time" id="horario_inicio" class="input-underline" value="08:00">
+                    <label for="horario_abertura">Abertura:</label>
+                    <input type="time" id="horario_abertura" class="input-underline" value="08:00">
                   </div>
                   <div class="campo">
-                    <label for="horario_fim">Horário Final:</label>
-                    <input type="time" id="horario_fim" class="input-underline" value="12:00">
+                    <label for="horario_fechamento">Fechamento:</label>
+                    <input type="time" id="horario_fechamento" class="input-underline" value="17:00">
                   </div>
                 </div>
 
-                <div style="border-top: 1px dashed #c8e6c9; margin-top: 10px; padding-top: 10px;">
+                <div style="border-top: 1px dashed #c8e6c9; padding-top: 10px;">
                   <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <input type="checkbox" id="chk_intervalo_2_recorrente" style="width: 17px; height: 17px; accent-color: var(--verde-escuro, #1b6d24); cursor: pointer;">
-                    <label for="chk_intervalo_2_recorrente" style="font-weight: 700; color: var(--verde-escuro, #1b6d24); font-size: 0.88rem; cursor: pointer;">
-                      <i class="fa-solid fa-plus-circle"></i> Adicionar 2º Turno / Intervalo (ex: Tarde/Noite das 14:00 às 19:00)
+                    <input type="checkbox" id="chk_pausa_recorrente" style="width: 17px; height: 17px; accent-color: var(--verde-escuro, #1b6d24); cursor: pointer;">
+                    <label for="chk_pausa_recorrente" style="font-weight: 700; color: var(--verde-escuro, #1b6d24); font-size: 0.88rem; cursor: pointer;">
+                      <i class="fa-solid fa-utensils"></i> Incluir Pausa para Almoço / Intervalo
                     </label>
                   </div>
-                  <div id="box_intervalo_2_recorrente" style="display: none; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <div id="box_pausa_recorrente" style="display: none; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
                     <div class="campo">
-                      <label for="horario_inicio_2">Início 2º Turno:</label>
-                      <input type="time" id="horario_inicio_2" class="input-underline" value="14:00">
+                      <label for="horario_pausa_ini">Início da Pausa:</label>
+                      <input type="time" id="horario_pausa_ini" class="input-underline" value="12:00">
                     </div>
                     <div class="campo">
-                      <label for="horario_fim_2">Término 2º Turno:</label>
-                      <input type="time" id="horario_fim_2" class="input-underline" value="19:00">
+                      <label for="horario_pausa_fim">Retorno do Atendimento:</label>
+                      <input type="time" id="horario_pausa_fim" class="input-underline" value="14:00">
                     </div>
                   </div>
                 </div>
               </div>
 
-              <button type="button" id="btn-gerar-recorrente" class="btn-avancar">
-                <i class="fa-solid fa-bolt"></i> GERAR AGENDA AUTOMÁTICA (MÊS ATUAL)
+              <button type="button" id="btn-gerar-recorrente" class="btn-avancar" style="font-size: 0.92rem;">
+                <i class="fa-solid fa-bolt"></i> GERAR AGENDA DO MÊS
               </button>
 
               <div style="font-size: 0.83rem; color: #388e3c; background: #e8f5e9; padding: 8px 12px; border-radius: 8px; border: 1px solid #c8e6c9; margin-top: 12px; display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-lightbulb" style="color: #fbc02d; font-size: 1rem;"></i>
-                <span><b>Dica de Flexibilidade:</b> Para definir turnos e horários diferenciados por dia específico (ex: <b>Sábados 08h-12h</b> ou <b>08h-12h e 14h-19h</b>), clique diretamente sobre a data no calendário.</span>
+                <span><b>Dica:</b> Para personalizar horários ou pausas em dias específicos, basta clicar diretamente sobre a data no calendário.</span>
               </div>
             </div>
 
@@ -133,12 +133,12 @@
 
     const boxAdmin = document.getElementById('box_config_admin');
     const btnGerar = document.getElementById('btn-gerar-recorrente');
-    const inputInicio = document.getElementById('horario_inicio');
-    const inputFim = document.getElementById('horario_fim');
-    const chkInt2Rec = document.getElementById('chk_intervalo_2_recorrente');
-    const boxInt2Rec = document.getElementById('box_intervalo_2_recorrente');
-    const inputInicio2 = document.getElementById('horario_inicio_2');
-    const inputFim2 = document.getElementById('horario_fim_2');
+    const inputAbertura = document.getElementById('horario_abertura');
+    const inputFechamento = document.getElementById('horario_fechamento');
+    const chkPausaRec = document.getElementById('chk_pausa_recorrente');
+    const boxPausaRec = document.getElementById('box_pausa_recorrente');
+    const inputPausaIni = document.getElementById('horario_pausa_ini');
+    const inputPausaFim = document.getElementById('horario_pausa_fim');
     const btnVoltarTop = document.getElementById('btn-voltar-top');
 
     let localPadrao = null;
@@ -146,9 +146,9 @@
     let agendaBanco = [];
     let perfilAtual = null;
 
-    if (chkInt2Rec && boxInt2Rec) {
-      chkInt2Rec.addEventListener('change', () => {
-        boxInt2Rec.style.display = chkInt2Rec.checked ? 'grid' : 'none';
+    if (chkPausaRec && boxPausaRec) {
+      chkPausaRec.addEventListener('change', () => {
+        boxPausaRec.style.display = chkPausaRec.checked ? 'grid' : 'none';
       });
     }
 
@@ -171,21 +171,21 @@
             if (statusEl) {
               statusEl.className = 'status-message';
               statusEl.style.display = 'block';
-              statusEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando alterações no banco de dados...';
+              statusEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando alterações...';
             }
 
             try {
               await salvarAgendaEmLote({
                 local_retirada_id: localPadrao.id,
                 mapaDatas: pendingMap,
-                hora_inicio: inputInicio.value || '08:00',
-                hora_fim: inputFim.value || '17:00'
+                hora_inicio: inputAbertura?.value || '08:00',
+                hora_fim: inputFechamento?.value || '17:00'
               });
 
               if (statusEl) {
                 statusEl.className = 'status-message success';
                 statusEl.style.display = 'block';
-                statusEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> Alterações da agenda salvas com sucesso no banco de dados!';
+                statusEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> Alterações da agenda salvas com sucesso!';
               }
 
               agendaBanco = await listarAgendaPorLocal(localPadrao.id);
@@ -245,8 +245,17 @@
         });
       });
 
-      // Atualiza novamente após confirmar o perfil
-      await carregarEExibirCalendario();
+      // Atualiza novamente após confirmar o perfil com dados reais do banco
+      await carregarEExibirCalendario(true);
+    });
+
+    const nomesMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+    window.addEventListener('calendar-month-changed', (e) => {
+      if (btnGerar && e.detail && e.detail.mes !== undefined) {
+        const mNome = nomesMeses[e.detail.mes] || '';
+        btnGerar.innerHTML = `<i class="fa-solid fa-bolt"></i> GERAR AGENDA DE ${mNome.toUpperCase()}`;
+      }
     });
 
     // Gerador de Agenda Mensal Apenas em Memória
@@ -258,16 +267,34 @@
         }
 
         const hoje = new Date();
-        const ano = hoje.getFullYear();
-        const mes = hoje.getMonth();
+        const ano = window._currentCalendarYear || hoje.getFullYear();
+        const mes = window._currentCalendarMonth !== undefined && window._currentCalendarMonth !== null ? window._currentCalendarMonth : hoje.getMonth();
         const totalDias = new Date(ano, mes + 1, 0).getDate();
 
         const newMap = window._calendarPendingMap || {};
-        const hIni = inputInicio?.value || '08:00';
-        const hFim = inputFim?.value || '12:00';
-        const tem2 = chkInt2Rec?.checked;
-        const hIni2 = tem2 ? (inputInicio2?.value || '14:00') : '';
-        const hFim2 = tem2 ? (inputFim2?.value || '19:00') : '';
+        const ab = inputAbertura?.value ? inputAbertura.value.slice(0, 5) : '08:00';
+        const fe = inputFechamento?.value ? inputFechamento.value.slice(0, 5) : '17:00';
+        const temPausa = chkPausaRec?.checked;
+        const pIni = inputPausaIni?.value ? inputPausaIni.value.slice(0, 5) : '12:00';
+        const pFim = inputPausaFim?.value ? inputPausaFim.value.slice(0, 5) : '14:00';
+
+        let configDia = {
+          disponivel: true,
+          hora_inicio: ab,
+          hora_fim: fe,
+          hora_inicio_2: '',
+          hora_fim_2: ''
+        };
+
+        if (temPausa && pIni > ab && pFim < fe && pFim > pIni) {
+          configDia = {
+            disponivel: true,
+            hora_inicio: ab,
+            hora_fim: pIni,
+            hora_inicio_2: pFim,
+            hora_fim_2: fe
+          };
+        }
 
         for (let dia = 1; dia <= totalDias; dia++) {
           const d = new Date(ano, mes, dia);
@@ -277,19 +304,13 @@
           const dateFormatted = `${ano}-${monthStr}-${dayStr}`;
 
           if (diasSelecionados.includes(dayOfWeek)) {
-            newMap[dateFormatted] = {
-              disponivel: true,
-              hora_inicio: hIni,
-              hora_fim: hFim,
-              hora_inicio_2: hIni2,
-              hora_fim_2: hFim2
-            };
+            newMap[dateFormatted] = { ...configDia };
           } else {
             // Se o dia não foi selecionado no grupo atual, marca como fechado
             newMap[dateFormatted] = {
               disponivel: false,
-              hora_inicio: hIni,
-              hora_fim: hFim,
+              hora_inicio: ab,
+              hora_fim: fe,
               hora_inicio_2: '',
               hora_fim_2: ''
             };
@@ -305,7 +326,7 @@
         if (statusEl) {
           statusEl.className = 'status-message info';
           statusEl.style.display = 'block';
-          statusEl.innerHTML = '<i class="fa-solid fa-circle-info"></i> Horários gerados na grade! Clique em <b>SALVAR ALTERAÇÕES DA AGENDA</b> abaixo para confirmar no banco.';
+          statusEl.innerHTML = '<i class="fa-solid fa-circle-info"></i> Horários gerados na grade! Clique em <b>SALVAR ALTERAÇÕES DA AGENDA</b> abaixo para confirmar.';
         }
       });
     }

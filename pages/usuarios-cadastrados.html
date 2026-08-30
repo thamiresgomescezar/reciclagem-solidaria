@@ -261,12 +261,22 @@
       if (modalEdit) modalEdit.style.display = 'flex';
     }
 
+    const inputEditEmail = document.getElementById('edit_email');
+    if (inputEditEmail) {
+      inputEditEmail.addEventListener('input', (e) => {
+        e.target.value = e.target.value.toLowerCase().replace(/\s+/g, '');
+      });
+      inputEditEmail.addEventListener('blur', (e) => {
+        e.target.value = e.target.value.trim().toLowerCase();
+      });
+    }
+
     if (btnSalvarEdit) {
       btnSalvarEdit.addEventListener('click', async () => {
         if (!usuarioEmEdicao) return;
 
         const nome = document.getElementById('edit_nome').value.trim();
-        const email = document.getElementById('edit_email').value.trim();
+        const email = document.getElementById('edit_email').value.trim().toLowerCase();
         const telefone = document.getElementById('edit_telefone').value.trim();
         const situacao = document.getElementById('edit_situacao').value;
         const nivelAcesso = document.getElementById('edit_nivel_acesso').value;

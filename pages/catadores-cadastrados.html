@@ -78,6 +78,7 @@
     import { supabase } from '../js/lib/supabaseClient.js';
     import { getPerfilAtual } from '../js/services/auth.js';
     import { showAlertModal } from '../js/lib/modal.js';
+    import { formatarNomeTitleCase, formatarTelefoneExibicao } from '../js/lib/validation.js';
 
     const container = document.getElementById('lista_catadores_rede');
     const btnVoltarTop = document.getElementById('btn-voltar-top');
@@ -123,8 +124,10 @@
         const card = document.createElement('div');
         card.style.cssText = 'background: white; padding: 16px 20px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 3px 10px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;';
         
-        const endStr = cat.sem_residencia ? 'Sem moradia' : `${cat.bairro || ''} ${cat.cidade ? '- ' + cat.cidade : ''}`.trim() || 'Não informado';
+        const endStr = cat.sem_residencia ? 'Sem moradia' : `${formatarNomeTitleCase(cat.bairro || '')} ${cat.cidade ? '- ' + formatarNomeTitleCase(cat.cidade) : ''}`.trim() || 'Não informado';
         const temLoginApp = Boolean(cat.auth_user_id);
+        const nomeFormatado = formatarNomeTitleCase(cat.nome || 'Catador');
+        const telFormatado = formatarTelefoneExibicao(cat.telefone || '');
 
         const badgeApp = temLoginApp
           ? `<span style="font-size: 0.72rem; font-weight: 700; background: #e8f5e9; color: #1b6d24; border: 1px solid #c8e6c9; padding: 2px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;" title="Possui acesso ao aplicativo com login próprio"><i class="fa-solid fa-mobile-screen"></i> Perfil com App</span>`
@@ -139,14 +142,14 @@
         card.innerHTML = `
           <div style="flex: 1; min-width: 240px;">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
-              <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.05rem;"><i class="fa-solid fa-id-card"></i> ${cat.nome}</strong>
+              <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.05rem;"><i class="fa-solid fa-id-card"></i> ${nomeFormatado}</strong>
               ${badgeApp}
             </div>
             <div style="font-size: 0.85rem; color: #555; margin-top: 4px;">
               <i class="fa-solid fa-location-dot" style="color: #666; font-size: 11px;"></i> ${endStr}
             </div>
             <div style="font-size: 0.78rem; color: var(--cinza-texto-aux); margin-top: 2px;">
-              Telefone: ${cat.telefone || 'Não informado'}
+              Telefone: ${telFormatado || 'Não informado'}
             </div>
           </div>
           <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">

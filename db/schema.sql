@@ -95,8 +95,8 @@ create table public.local_retirada (
   cidade varchar default 'Franco da Rocha', 
   estado varchar default 'SP', 
   cep varchar default '07857-050',
-  latitude numeric default -23,3344, 
-  longitude numeric default -46,7132,
+  latitude numeric default -23.3344, 
+  longitude numeric default -46.7132,
   ativo boolean not null default true,
   criado_em timestamptz default now()
 );
@@ -106,10 +106,13 @@ create table public.agenda (
   id uuid primary key default gen_random_uuid(),
   local_retirada_id uuid not null references public.local_retirada(id) on delete cascade,
   data date not null,
-  hora_inicio time not null,
-  hora_fim time not null,
+  hora_inicio time not null default '08:00',  -- Horário de Abertura
+  hora_fim time not null default '17:00',     -- Horário de Fechamento
+  pausa_inicio time,                          -- Início da pausa/almoço (opcional, ex: '12:00')
+  pausa_fim time,                             -- Fim da pausa/almoço (opcional, ex: '14:00')
   disponivel boolean not null default true,
-  criado_por uuid references public.cidadao(id)
+  criado_por uuid references public.cidadao(id),
+  constraint uq_agenda_local_data unique(local_retirada_id, data)
 );
 
 -- Oferta/coleta: entidade central, une material + local + pessoas envolvidas
@@ -169,7 +172,7 @@ insert into public.materiais (tipo) values
 on conflict (tipo) do nothing;
 
 insert into public.local_retirada (nome, rua, numero, complemento, bairro, cidade, estado, cep, latitude, longitude)
-values ('Fatec Franco da Rocha', 'Rod. Pref. Luiz Salomão Chamma', '240', 'entrada principal pela Rua Nelson Rodrigues, s/n', 'Centro', 'Franco da Rocha', 'SP', '07857-050', -23,3344, -46,7132);
+values ('Fatec Franco da Rocha', 'Rod. Pref. Luiz Salomão Chamma', '240', 'entrada principal pela Rua Nelson Rodrigues, s/n', 'Centro', 'Franco da Rocha', 'SP', '07857-050', -23.3344, -46.7132);
 
 -- ==========================================================
 -- 4. ROW LEVEL SECURITY (RLS)
@@ -457,3 +460,17 @@ begin
   end if;
 end;
 $$;
+
+-- =============================================================================
+-- SCRIPT DE MIGRAÇÃO / ATUALIZAÇÃO INCREMENTAL
+-- Execute no SQL Editor do Supabase se a base já tiver sido criada anteriormente:
+-- =============================================================================
+-- ALTER TABLE public.agenda 
+--   ADD COLUMN IF NOT EXISTS pausa_inicio time,
+--   ADD COLUMN IF NOT EXISTS pausa_fim time;
+--
+-- ALTER TABLE public.agenda 
+--   DROP CONSTRAINT IF EXISTS uq_agenda_local_data;
+-- ALTER TABLE public.agenda 
+--   ADD CONSTRAINT uq_agenda_local_data UNIQUE(local_retirada_id, data);
+

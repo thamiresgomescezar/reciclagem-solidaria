@@ -56,17 +56,28 @@
                   <label for="cod_material">Tipo de Material Reciclável:<span class="req">*</span></label>
                   <select id="cod_material" required>
                     <option value="">-- Selecione o Tipo de Material --</option>
-                    <option value="1">Papel / Papelão</option>
-                    <option value="2">Plástico / PET</option>
-                    <option value="3">Vidro</option>
-                    <option value="4">Metal / Alumínio</option>
-                    <option value="5">Outros Resíduos Recicláveis</option>
                   </select>
                 </div>
 
                 <div class="campo">
-                  <label for="quantidade">Quantidade Aproximada:<span class="req">*</span></label>
-                  <input type="text" id="quantidade" class="input-underline" placeholder="Ex: 2 sacos grandes, 15 kg, 3 caixas" required style="width: 100%;">
+                  <label for="quantidade_numero">Quantidade Aproximada:<span class="req">*</span></label>
+                  <div class="grid-qtd-inline" style="display: grid; grid-template-columns: 75px 1fr; gap: 8px; width: 100%;">
+                    <input type="number" id="quantidade_numero" class="input-underline" min="1" max="9999" value="1" placeholder="1" required style="width: 100%; text-align: center; font-weight: 700;">
+                    <select id="quantidade_unidade" class="input-underline" required style="width: 100%; font-weight: 600; cursor: pointer;">
+                      <option value="saco(s) grande(s)">saco(s) grande(s)</option>
+                      <option value="saco(s) médio(s)">saco(s) médio(s)</option>
+                      <option value="caixa(s)" selected>caixa(s)</option>
+                      <option value="sacola(s)">sacola(s)</option>
+                      <option value="pacote(s)">pacote(s)</option>
+                      <option value="kg">kg (quilos)</option>
+                      <option value="unidade(s)">unidade(s)</option>
+                      <option value="fardo(s)">fardo(s)</option>
+                      <option value="outro">Outro (especificar)</option>
+                    </select>
+                  </div>
+                  <div id="box-unidade-outro" style="display: none; margin-top: 6px;">
+                    <input type="text" id="quantidade_outro" class="input-underline" placeholder="Especifique a unidade (ex: tambores, baldes)" style="width: 100%; font-size: 0.85rem;">
+                  </div>
                 </div>
               </div>
 
@@ -86,6 +97,29 @@
                   <select id="local_retirada_id" required>
                     <option value="">-- Selecione o Ponto de Retirada --</option>
                   </select>
+                </div>
+              </div>
+
+              <!-- Painel de Confirmação dos Dias e Horários de Atendimento da Unidade -->
+              <div id="box-confirmacao-agenda" style="display: none; margin-top: 1.25rem; background: #f8faf8; border: 1.5px solid #a5d6a7; border-radius: 14px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; border-bottom: 1px solid #e8f5e9; padding-bottom: 6px;">
+                  <strong style="color: var(--verde-escuro, #1b6d24); font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-regular fa-calendar-check"></i> Dias & Horários para Retirada na Unidade
+                  </strong>
+                </div>
+
+                <div id="conteudo-agenda-resumo" style="font-size: 0.83rem; color: #444; margin-bottom: 10px; line-height: 1.4;">
+                  <i class="fa-solid fa-circle-notch fa-spin"></i> Consultando agenda de atendimento da unidade...
+                </div>
+
+                <div style="background: #e8f5e9; padding: 10px 12px; border-radius: 8px; border: 1px solid #c8e6c9;">
+                  <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 700; color: #1b6d24;">
+                    <input type="checkbox" id="check-confirmar-agenda" checked style="width: 18px; height: 18px; accent-color: #1b6d24; cursor: pointer; margin-top: 2px;">
+                    <span>Confirmo que a unidade estará aberta nestes horários para atendimento aos catadores</span>
+                  </label>
+                  <div style="font-size: 0.78rem; color: #4a5568; margin-top: 4px; padding-left: 26px; font-weight: 500; line-height: 1.3;">
+                    <i class="fa-solid fa-circle-info" style="color: #2e7d32;"></i> Se não, entre em contato com um dos administradores para ajustar a agenda.
+                  </div>
                 </div>
               </div>
 

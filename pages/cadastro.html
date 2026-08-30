@@ -269,12 +269,37 @@
   <script type="module">
     import { cadastrarCidadao, cadastrarCatador } from '../js/services/auth.js';
     import { renderEnderecoForm, lerDadosEndereco, validarEndereco } from '../js/pages/enderecoForm.js';
+    import { aplicarMascaraTelefone, formatarNomeTitleCase } from '../js/lib/validation.js';
 
     renderEnderecoForm('subform_endereco_container');
 
     const form = document.getElementById('form_cadastro');
     const statusMsg = document.getElementById('statusMsg');
     const btnCadastrar = document.getElementById('btn_cadastrar');
+    const inputNome = document.getElementById('nome');
+    const inputTelefone = document.getElementById('telefone');
+    const inputEmail = document.getElementById('email');
+
+    if (inputEmail) {
+      inputEmail.addEventListener('input', (e) => {
+        e.target.value = e.target.value.toLowerCase().replace(/\s+/g, '');
+      });
+      inputEmail.addEventListener('blur', (e) => {
+        e.target.value = e.target.value.trim().toLowerCase();
+      });
+    }
+
+    if (inputTelefone) {
+      inputTelefone.addEventListener('input', (e) => {
+        e.target.value = aplicarMascaraTelefone(e.target.value);
+      });
+    }
+
+    if (inputNome) {
+      inputNome.addEventListener('blur', (e) => {
+        e.target.value = formatarNomeTitleCase(e.target.value);
+      });
+    }
 
     // Alternância visual dos cards de perfil
     const radioPerfils = document.querySelectorAll('input[name="tipo_perfil"]');
@@ -394,7 +419,7 @@
       statusMsg.className = 'status-message';
 
       const nome = document.getElementById('nome').value.trim();
-      const email = document.getElementById('email').value.trim();
+      const email = document.getElementById('email').value.trim().toLowerCase();
       const telefone = document.getElementById('telefone').value.trim();
       const senha = document.getElementById('senha').value;
       const confirmaSenha = document.getElementById('confirma_senha').value;

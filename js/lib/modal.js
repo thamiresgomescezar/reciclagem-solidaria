@@ -150,6 +150,12 @@ export function showAlertModal({
   const btnOk = box.querySelector('#modal-alert-ok');
   btnOk.addEventListener('click', async () => {
     backdrop.remove();
-    await onOk();
+    if (onOk) await onOk();
+  });
+
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) {
+      backdrop.remove();
+    }
   });
 }

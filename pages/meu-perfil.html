@@ -131,8 +131,8 @@
                 </div>
 
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                  <button type="button" id="btn_toggle_notif_perfil" class="btn-avancar" style="width: auto; padding: 8px 18px; font-size: 0.85rem; border-radius: 999px;">
-                    Ativar Notificações
+                  <button type="button" id="btn_toggle_notif_perfil" class="btn-toggle-notif ativar">
+                    <i class="fa-solid fa-bell"></i> Ativar Notificações
                   </button>
                 </div>
               </div>
@@ -188,6 +188,7 @@
     import { renderEnderecoForm, lerDadosEndereco, preencherEndereco, validarEndereco } from '../js/pages/enderecoForm.js';
     import { showConfirmModal, showAlertModal } from '../js/lib/modal.js';
     import { abrirModalInstrucoesAtalho } from '../js/lib/navMenu.js';
+    import { aplicarMascaraTelefone, formatarNomeTitleCase, formatarTelefoneExibicao } from '../js/lib/validation.js';
     import { 
       getStatusNotificacao, 
       solicitarPermissaoNotificacao, 
@@ -205,6 +206,24 @@
     const perfilTipoBadge = document.getElementById('perfilTipoBadge');
     const btnGuiaAtalhoPerfil = document.getElementById('btn_abrir_guia_atalho_perfil');
 
+    let perfilAtual = null;
+    let isMainAdmin = false;
+
+    const elNome = document.getElementById('perfil_nome');
+    const elTel = document.getElementById('perfil_telefone');
+
+    if (elTel) {
+      elTel.addEventListener('input', (e) => {
+        e.target.value = aplicarMascaraTelefone(e.target.value);
+      });
+    }
+
+    if (elNome) {
+      elNome.addEventListener('blur', (e) => {
+        e.target.value = formatarNomeTitleCase(e.target.value);
+      });
+    }
+
     if (btnGuiaAtalhoPerfil) {
       btnGuiaAtalhoPerfil.addEventListener('click', () => {
         abrirModalInstrucoesAtalho();
@@ -218,27 +237,32 @@
     const btnToggleNotif = document.getElementById('btn_toggle_notif_perfil');
     const feedbackNotif = document.getElementById('feedback_notif_perfil');
 
-    let perfilAtual = null;
-    let isMainAdmin = false;
-
     function atualizarPainelNotificacoesPerfil() {
       const status = getStatusNotificacao();
       if (status === 'granted') {
-        txtStatusNotif.innerHTML = '<span style="color: #1b6d24;"><i class="fa-solid fa-circle-check"></i> Status: Ativado</span>';
-        descStatusNotif.textContent = 'Você receberá avisos automáticos sempre que houver novas ofertas de materiais.';
-        btnToggleNotif.textContent = 'Desativar Avisos';
-        btnToggleNotif.style.background = '#ffebee';
-        btnToggleNotif.style.color = '#c62828';
-        btnToggleNotif.style.border = '1px solid #ef9a9a';
-        btnToggleNotif.style.boxShadow = 'none';
+        txtStatusNotif.textContent = 'Ativadas';
+        txtStatusNotif.style.color = '#2e7d32';
+        descStatusNotif.textContent = 'Você receberá avisos quando novos materiais forem disponibilizados.';
+        btnToggleNotif.className = 'btn-toggle-notif desativar';
+        btnToggleNotif.innerHTML = '<i class="fa-solid fa-bell-slash"></i> Desativar Notificações';
+      } else if (status === 'denied') {
+        txtStatusNotif.textContent = 'Bloqueadas pelo Navegador';
+        txtStatusNotif.style.color = '#c62828';
+        descStatusNotif.textContent = 'Notificações foram bloqueadas nas configurações do seu navegador.';
+        btnToggleNotif.className = 'btn-toggle-notif ativar';
+        btnToggleNotif.innerHTML = '<i class="fa-solid fa-bell"></i> Como Desbloquear';
+      } else if (status === 'disabled_by_user') {
+        txtStatusNotif.textContent = 'Desativadas';
+        txtStatusNotif.style.color = '#e65100';
+        descStatusNotif.textContent = 'Você optou por não receber avisos de novas ofertas.';
+        btnToggleNotif.className = 'btn-toggle-notif ativar';
+        btnToggleNotif.innerHTML = '<i class="fa-solid fa-bell"></i> Ativar Notificações';
       } else {
-        txtStatusNotif.innerHTML = '<span style="color: #666;"><i class="fa-solid fa-circle-xmark"></i> Status: Desativado</span>';
-        descStatusNotif.textContent = 'Você não receberá avisos automáticos de novas ofertas.';
-        btnToggleNotif.textContent = 'Ativar Notificações';
-        btnToggleNotif.style.background = 'linear-gradient(180deg, #81c784, #4caf50)';
-        btnToggleNotif.style.color = '#ffffff';
-        btnToggleNotif.style.border = 'none';
-        btnToggleNotif.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.25)';
+        txtStatusNotif.textContent = 'Não configuradas';
+        txtStatusNotif.style.color = '#555';
+        descStatusNotif.textContent = 'Receba alertas instantâneos de novos materiais para coleta.';
+        btnToggleNotif.className = 'btn-toggle-notif ativar';
+        btnToggleNotif.innerHTML = '<i class="fa-solid fa-bell"></i> Ativar Notificações';
       }
     }
 
@@ -251,22 +275,17 @@
         const status = getStatusNotificacao();
         if (status === 'granted') {
           desativarNotificacoes();
-          atualizarPainelNotificacoesPerfil();
           feedbackNotif.style.display = 'block';
-          feedbackNotif.style.background = '#f5f5f5';
-          feedbackNotif.style.color = '#555';
-          feedbackNotif.textContent = 'Notificações desativadas para esta conta.';
-          setTimeout(() => { feedbackNotif.style.display = 'none'; }, 4000);
+          feedbackNotif.style.background = '#fff3e0';
+          feedbackNotif.style.color = '#e65100';
+          feedbackNotif.innerHTML = '<i class="fa-solid fa-bell-slash"></i> Notificações desativadas.';
+          setTimeout(() => { feedbackNotif.style.display = 'none'; }, 3000);
         } else {
-          btnToggleNotif.disabled = true;
-          btnToggleNotif.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Solicitando...';
           const res = await solicitarPermissaoNotificacao();
-          btnToggleNotif.disabled = false;
-          atualizarPainelNotificacoesPerfil();
           if (res.ok) {
             feedbackNotif.style.display = 'block';
             feedbackNotif.style.background = '#e8f5e9';
-            feedbackNotif.style.color = '#1b6d24';
+            feedbackNotif.style.color = '#2e7d32';
             feedbackNotif.innerHTML = '<i class="fa-solid fa-circle-check"></i> Notificações ativadas com sucesso!';
             setTimeout(() => { feedbackNotif.style.display = 'none'; }, 4000);
           } else {
@@ -280,66 +299,74 @@
       });
     }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      perfilAtual = await getPerfilAtual();
-      if (!perfilAtual) {
-        window.location.href = './login.html';
-        return;
-      }
-
-      const d = perfilAtual.dados || {};
-      const elNome = document.getElementById('perfil_nome');
-      const elEmail = document.getElementById('perfil_email');
-      const elTel = document.getElementById('perfil_telefone');
-
-      if (elNome) elNome.value = d.nome || '';
-      if (elEmail) elEmail.value = d.email || perfilAtual.user?.email || '';
-      if (elTel) elTel.value = d.telefone || '';
-
-      preencherEndereco(d);
-
-      const targetDashboard = perfilAtual.tipo === 'administrador' ? './dashboard-admin.html' : (perfilAtual.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
-      if (btnVoltarTop) btnVoltarTop.href = targetDashboard;
-
-      if (perfilAtual.tipo === 'catador') {
-        if (secaoNotifPerfil) secaoNotifPerfil.style.display = 'block';
-        atualizarPainelNotificacoesPerfil();
-      }
-
-      if (perfilAtual.tipo === 'administrador') {
-        try {
-          const { data: admins } = await supabase
-            .from('cidadao')
-            .select('id, criado_em')
-            .eq('nivel_acesso', 'administrador')
-            .order('criado_em', { ascending: true });
-
-          const mainAdminId = (admins && admins.length > 0) ? admins[0].id : null;
-          isMainAdmin = perfilAtual.user.id === mainAdminId;
-
-          const containerEncerramento = document.getElementById('container_encerramento_conta');
-          if (isMainAdmin && containerEncerramento) {
-            containerEncerramento.innerHTML = `
-              <h3 style="color: #b78103; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem;">
-                Encerramento da Conta
-              </h3>
-              <div style="background: #fff8e1; color: #856404; border: 1px solid #ffe0b2; padding: 12px 16px; border-radius: 10px; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-crown" style="color: #f59e0b; font-size: 1.1rem; flex-shrink: 0;"></i>
-                <span>Você é o Administrador Principal do sistema e a sua conta não pode ser desativada.</span>
-              </div>
-            `;
-          }
-        } catch (e) {
-          console.warn('Erro ao consultar admin principal:', e);
+    async function inicializarPerfil() {
+      try {
+        perfilAtual = await getPerfilAtual();
+        if (!perfilAtual) {
+          window.location.href = './login.html';
+          return;
         }
-      }
 
-      if (perfilTipoBadge) {
-        perfilTipoBadge.innerHTML = `
-          <i class="fa-solid fa-user-check"></i> Perfil: <strong>${(perfilAtual.tipo || 'Cidadão').toUpperCase()}</strong> ${isMainAdmin ? '(ADMIN PRINCIPAL)' : ''}
-        `;
+        const d = perfilAtual.dados || {};
+        const elEmail = document.getElementById('perfil_email');
+
+        if (elNome) elNome.value = formatarNomeTitleCase(d.nome || '');
+        if (elEmail) elEmail.value = (d.email || perfilAtual.user?.email || '').toLowerCase();
+        if (elTel) elTel.value = formatarTelefoneExibicao(d.telefone || '');
+
+        preencherEndereco(d);
+
+        const targetDashboard = perfilAtual.tipo === 'administrador' ? './dashboard-admin.html' : (perfilAtual.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+        if (btnVoltarTop) btnVoltarTop.href = targetDashboard;
+
+        if (perfilAtual.tipo === 'catador') {
+          if (secaoNotifPerfil) secaoNotifPerfil.style.display = 'block';
+          atualizarPainelNotificacoesPerfil();
+        }
+
+        if (perfilAtual.tipo === 'administrador') {
+          try {
+            const { data: admins } = await supabase
+              .from('cidadao')
+              .select('id, criado_em')
+              .eq('nivel_acesso', 'administrador')
+              .order('criado_em', { ascending: true });
+
+            const mainAdminId = (admins && admins.length > 0) ? admins[0].id : null;
+            isMainAdmin = perfilAtual.user.id === mainAdminId;
+
+            const containerEncerramento = document.getElementById('container_encerramento_conta');
+            if (isMainAdmin && containerEncerramento) {
+              containerEncerramento.innerHTML = `
+                <h3 style="color: #b78103; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem;">
+                  Encerramento da Conta
+                </h3>
+                <div style="background: #fff8e1; color: #856404; border: 1px solid #ffe0b2; padding: 12px 16px; border-radius: 10px; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-crown" style="color: #f59e0b; font-size: 1.1rem; flex-shrink: 0;"></i>
+                  <span>Você é o Administrador Principal do sistema e a sua conta não pode ser desativada.</span>
+                </div>
+              `;
+            }
+          } catch (e) {
+            console.warn('Erro ao consultar admin principal:', e);
+          }
+        }
+
+        if (perfilTipoBadge) {
+          perfilTipoBadge.innerHTML = `
+            <i class="fa-solid fa-user-check"></i> Perfil: <strong>${(perfilAtual.tipo || 'Cidadão').toUpperCase()}</strong> ${isMainAdmin ? '(ADMIN PRINCIPAL)' : ''}
+          `;
+        }
+      } catch (err) {
+        console.error('Erro ao inicializar perfil:', err);
       }
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', inicializarPerfil);
+    } else {
+      inicializarPerfil();
+    }
 
     if (form) {
       form.addEventListener('submit', async (e) => {
@@ -383,9 +410,7 @@
 
         try {
           const tabela = perfilAtual.tipo === 'catador' ? 'catador' : 'cidadao';
-          const campoId = perfilAtual.tipo === 'catador' ? 'auth_user_id' : 'id';
-
-          const { error } = await supabase
+          let updateQuery = supabase
             .from(tabela)
             .update({
               nome,
@@ -398,8 +423,15 @@
               estado: end.estado,
               cep: end.cep,
               sem_residencia: end.sem_residencia
-            })
-            .eq(campoId, perfilAtual.user.id);
+            });
+
+          if (perfilAtual.tipo === 'catador') {
+            updateQuery = updateQuery.or(`auth_user_id.eq.${perfilAtual.user.id},id.eq.${perfilAtual.user.id}`);
+          } else {
+            updateQuery = updateQuery.eq('id', perfilAtual.user.id);
+          }
+
+          const { error } = await updateQuery;
 
           if (error) throw error;
 

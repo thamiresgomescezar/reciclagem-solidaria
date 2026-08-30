@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const container = document.getElementById('relatorio_conteudo_container');
   const btnExportarCsv = document.getElementById('btn_exportar_csv');
-  const tabs = document.querySelectorAll('#tabs_relatorios button');
+  const tabs = document.querySelectorAll('#tabs_relatorios_catador button, #tabs_relatorios button');
 
   const kpiTotal = document.getElementById('kpi_total_coletas');
   const kpiMaterial = document.getElementById('kpi_top_material');
@@ -152,30 +152,30 @@ document.addEventListener('DOMContentLoaded', async () => {
       }));
 
       let html = `
-        <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; font-weight: 800; margin-bottom: 8px;">
-          <i class="fa-solid fa-chart-pie"></i> Materiais Mais Coletados por Você
-        </h3>
-        <p style="font-size: 0.85rem; color: #555; margin-bottom: 16px;">Distribuição dos tipos de materiais recicláveis que você assumiu e agendou.</p>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-          <thead>
-            <tr style="border-bottom: 2px solid var(--verde-escuro, #1b6d24); text-align: left; color: var(--verde-escuro, #1b6d24);">
-              <th style="padding: 10px;">Tipo de Material</th>
-              <th style="padding: 10px; text-align: center;">Total de Coletas</th>
-              <th style="padding: 10px; text-align: right;">Participação (%)</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div class="relatorio-card-box">
+          <h5><i class="fa-solid fa-chart-pie"></i> Materiais Mais Coletados por Você</h5>
+          <p style="font-size: 0.85rem; color: #555; margin-bottom: 14px; margin-top: 0;">Distribuição dos tipos de materiais recicláveis que você assumiu e agendou.</p>
+          <div class="relatorio-table-wrapper">
+            <table class="tabela-relatorio-clean">
+              <thead>
+                <tr>
+                  <th>Tipo de Material</th>
+                  <th style="text-align: center;">Total de Coletas</th>
+                  <th class="text-right">Participação (%)</th>
+                </tr>
+              </thead>
+              <tbody>
       `;
 
       dadosExportacao.forEach(item => {
         const pctVal = parseFloat(item['Percentual (%)']);
         html += `
-          <tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
-            <td style="padding: 12px 10px; font-weight: 700; color: #333;">
+          <tr>
+            <td style="font-weight: 700; color: #333;">
               <i class="fa-solid fa-recycle" style="color: #2e7d32; margin-right: 6px;"></i> ${item.Material}
             </td>
-            <td style="padding: 12px 10px; text-align: center; font-weight: 700; color: var(--verde-escuro, #1b6d24);">${item['Coletas Realizadas']}</td>
-            <td style="padding: 12px 10px; text-align: right;">
+            <td style="text-align: center; font-weight: 700; color: var(--verde-escuro, #1b6d24);">${item['Coletas Realizadas']}</td>
+            <td style="text-align: right;">
               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
                 <div style="width: 80px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
                   <div style="width: ${pctVal}%; height: 100%; background: var(--verde-escuro, #1b6d24); border-radius: 4px;"></div>
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
       });
 
-      html += `</tbody></table>`;
+      html += `</tbody></table></div></div>`;
       container.innerHTML = html;
 
     } else if (tab === 'pontos') {
@@ -195,8 +195,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const contagemLocais = {};
       coletasCatador.forEach(c => {
         const localNome = c.local_retirada?.nome || 'Ponto de Retirada';
-        const bairro = c.local_retirada?.bairro ? ` (${c.local_retirada.bairro})` : '';
-        const chave = `${localNome}${bairro}`;
+        const chave = localNome;
         contagemLocais[chave] = (contagemLocais[chave] || 0) + 1;
       });
 
@@ -211,32 +210,32 @@ document.addEventListener('DOMContentLoaded', async () => {
       }));
 
       let html = `
-        <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; font-weight: 800; margin-bottom: 8px;">
-          <i class="fa-solid fa-map-location-dot"></i> Pontos de Coleta Atendidos Por Você
-        </h3>
-        <p style="font-size: 0.85rem; color: #555; margin-bottom: 16px;">Locais de retirada que você atendeu nas suas coletas.</p>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-          <thead>
-            <tr style="border-bottom: 2px solid var(--verde-escuro, #1b6d24); text-align: left; color: var(--verde-escuro, #1b6d24);">
-              <th style="padding: 10px; width: 60px;">Posição</th>
-              <th style="padding: 10px;">Ponto de Retirada</th>
-              <th style="padding: 10px; text-align: center;">Total de Atendimentos</th>
-              <th style="padding: 10px; text-align: right;">Participação (%)</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div class="relatorio-card-box">
+          <h5><i class="fa-solid fa-map-location-dot"></i> Pontos de Coleta Atendidos Por Você</h5>
+          <p style="font-size: 0.85rem; color: #555; margin-bottom: 14px; margin-top: 0;">Locais de retirada que você atendeu nas suas coletas.</p>
+          <div class="relatorio-table-wrapper">
+            <table class="tabela-relatorio-clean">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Posição</th>
+                  <th>Ponto de Retirada</th>
+                  <th style="text-align: center;">Total de Atendimentos</th>
+                  <th class="text-right">Participação (%)</th>
+                </tr>
+              </thead>
+              <tbody>
       `;
 
       dadosExportacao.forEach(item => {
         const pctVal = parseFloat(item['Percentual (%)']);
         html += `
-          <tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
-            <td style="padding: 12px 10px; font-weight: 800; color: var(--verde-escuro, #1b6d24);">${item.Posição}</td>
-            <td style="padding: 12px 10px; font-weight: 700; color: #333;">
+          <tr>
+            <td style="font-weight: 800; color: var(--verde-escuro, #1b6d24);">${item.Posição}</td>
+            <td style="font-weight: 700; color: #333;">
               <i class="fa-solid fa-location-dot" style="color: #ed6c02; margin-right: 6px;"></i> ${item['Ponto de Coleta']}
             </td>
-            <td style="padding: 12px 10px; text-align: center; font-weight: 700; color: var(--verde-escuro, #1b6d24);">${item['Vezes Buscado']}</td>
-            <td style="padding: 12px 10px; text-align: right;">
+            <td style="text-align: center; font-weight: 700; color: var(--verde-escuro, #1b6d24);">${item['Vezes Buscado']}</td>
+            <td style="text-align: right;">
               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
                 <div style="width: 80px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
                   <div style="width: ${pctVal}%; height: 100%; background: #ed6c02; border-radius: 4px;"></div>
@@ -248,7 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
       });
 
-      html += `</tbody></table>`;
+      html += `</tbody></table></div></div>`;
       container.innerHTML = html;
 
     } else if (tab === 'status') {
@@ -267,31 +266,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       }));
 
       let html = `
-        <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; font-weight: 800; margin-bottom: 8px;">
-          <i class="fa-solid fa-list-check"></i> Resumo por Status de Coleta
-        </h3>
-        <p style="font-size: 0.85rem; color: #555; margin-bottom: 16px;">Acompanhamento das suas solicitações ativas e concluídas.</p>
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-          <thead>
-            <tr style="border-bottom: 2px solid var(--verde-escuro, #1b6d24); text-align: left; color: var(--verde-escuro, #1b6d24);">
-              <th style="padding: 10px;">Status da Coleta</th>
-              <th style="padding: 10px; text-align: center;">Quantidade</th>
-              <th style="padding: 10px; text-align: right;">Proporção (%)</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div class="relatorio-card-box">
+          <h5><i class="fa-solid fa-list-check"></i> Resumo por Status de Coleta</h5>
+          <p style="font-size: 0.85rem; color: #555; margin-bottom: 14px; margin-top: 0;">Acompanhamento das suas solicitações ativas e concluídas.</p>
+          <div class="relatorio-table-wrapper">
+            <table class="tabela-relatorio-clean">
+              <thead>
+                <tr>
+                  <th>Status da Coleta</th>
+                  <th style="text-align: center;">Quantidade</th>
+                  <th class="text-right">Proporção (%)</th>
+                </tr>
+              </thead>
+              <tbody>
       `;
 
       dadosExportacao.forEach(item => {
         const pctVal = parseFloat(item['Percentual (%)']);
         const cor = item.Status.includes('RETIRAD') || item.Status.includes('CONCLUÍD') ? '#2e7d32' : '#ed6c02';
         html += `
-          <tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
-            <td style="padding: 12px 10px; font-weight: 800; color: ${cor};">
+          <tr>
+            <td style="font-weight: 800; color: ${cor};">
               <i class="fa-solid fa-tag" style="margin-right: 6px;"></i> ${item.Status}
             </td>
-            <td style="padding: 12px 10px; text-align: center; font-weight: 700; color: #333;">${item.Quantidade}</td>
-            <td style="padding: 12px 10px; text-align: right;">
+            <td style="text-align: center; font-weight: 700; color: #333;">${item.Quantidade}</td>
+            <td style="text-align: right;">
               <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
                 <div style="width: 80px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
                   <div style="width: ${pctVal}%; height: 100%; background: ${cor}; border-radius: 4px;"></div>
@@ -303,7 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
       });
 
-      html += `</tbody></table>`;
+      html += `</tbody></table></div></div>`;
       container.innerHTML = html;
     }
   }

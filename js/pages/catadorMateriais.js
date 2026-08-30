@@ -78,10 +78,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const localNome = coleta.local_retirada?.nome || 'Fatec Franco da Rocha';
-        const localRua = coleta.local_retirada?.rua || '';
-        const localBairro = coleta.local_retirada?.bairro || '';
-        const localCidade = coleta.local_retirada?.cidade || 'Franco da Rocha';
-        const mapsQuery = `${localNome} ${localRua} ${localBairro} ${localCidade}`.trim();
+        const loc = coleta.local_retirada || {};
+
+        // Monta o endereço completo real cadastrado no sistema
+        const partesEndereco = [];
+        if (loc.rua) {
+          partesEndereco.push(loc.numero ? `${loc.rua}, ${loc.numero}` : loc.rua);
+        }
+        if (loc.complemento) {
+          partesEndereco.push(`(${loc.complemento})`);
+        }
+        if (loc.bairro) {
+          partesEndereco.push(loc.bairro);
+        }
+        if (loc.cidade) {
+          partesEndereco.push(loc.estado ? `${loc.cidade} - ${loc.estado}` : loc.cidade);
+        }
+        if (loc.cep) {
+          partesEndereco.push(`CEP: ${loc.cep}`);
+        }
+
+        const enderecoCompleto = partesEndereco.length > 0 
+          ? partesEndereco.join(', ') 
+          : `${localNome}, Franco da Rocha - SP`;
+
         const fotoTag = (coleta.foto_url && coleta.foto_url.trim() !== '')
           ? `<div style="position: relative; overflow: hidden; border-radius: 12px; margin-bottom: 6px; background: #e8f5e9; border: 1.5px solid #a5d6a7;">
               <img src="${coleta.foto_url}" data-src="${coleta.foto_url}" alt="${tipoMaterial} (${coleta.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px; cursor: pointer; transition: transform 0.2s;" title="Clique para ampliar a foto do material" onerror="this.parentElement.innerHTML='<div style=\\'padding: 12px; text-align: center; color: #555; font-size: 0.82rem;\\'><i class=\\'fa-regular fa-image\\'></i> Imagem não disponível para visualização</div>';">
@@ -113,16 +133,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           <div style="font-size: 0.88rem; color: #444; background: #f9fbf9; padding: 12px; border-radius: 10px; border: 1px solid #e8f5e9; display: flex; flex-direction: column; gap: 4px;">
             <p style="margin: 0;"><strong><i class="fa-solid fa-location-dot" style="color: #2e7d32;"></i> Ponto de Retirada:</strong> ${localNome}</p>
+            <p style="margin: 0; font-size: 0.82rem; color: #555;"><strong><i class="fa-solid fa-map-pin" style="color: #777;"></i> Endereço:</strong> ${enderecoCompleto}</p>
             <p style="margin: 0;"><strong><i class="fa-solid fa-user" style="color: #0288d1;"></i> Ofertante (Cidadão):</strong> ${nomeDoador}</p>
           </div>
 
           <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
-            <button type="button" class="btn-abrir-mapa btn-secondary-pill" data-local="${localNome}" data-endereco="${mapsQuery}" style="padding: 9px 14px; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #ffffff; border: 1.5px solid #2e7d32; color: #2e7d32; flex: 1;">
-              <i class="fa-solid fa-map-location-dot" style="color: #2e7d32;"></i> Ver Ponto no Mapa
+            <button type="button" class="btn-abrir-mapa btn-secondary-pill" data-local="${localNome}" data-endereco="${enderecoCompleto}" style="height: 38px; padding: 0 10px; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #ffffff; border: 1.5px solid #2e7d32; color: #2e7d32; flex: 1; white-space: nowrap; box-sizing: border-box;">
+              <i class="fa-solid fa-map-location-dot" style="color: #2e7d32;"></i> Ver no Mapa
             </button>
             ${coleta.cidadao_id ? `
-              <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-secondary-pill" style="padding: 9px 14px; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; flex: 1;">
-                <i class="fa-solid fa-comments"></i> Tirar Dúvidas com Ofertante
+              <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-secondary-pill" style="height: 38px; padding: 0 10px; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; flex: 1; white-space: nowrap; box-sizing: border-box;">
+                <i class="fa-solid fa-comments"></i> Tirar Dúvidas
               </a>
             ` : ''}
           </div>
@@ -395,6 +416,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   assinarColetasEmTempoReal(() => {
     carregarLista();
   });
+
+  window.addEventListener('nova-coleta-disponibilizada', () => {
+    carregarLista();
+  });
 });
 
 function abrirModalMapa(nomePonto, enderecoCompleto) {
@@ -426,7 +451,22 @@ function gerarHorariosDisponiveis(slots) {
     let curMin = hIni * 60 + (mIni || 0);
     const endMin = hFim * 60 + (mFim || 0);
 
+    let pIniMin = -1;
+    let pFimMin = -1;
+    if (slot.pausa_inicio && slot.pausa_fim) {
+      const [ph1, pm1] = slot.pausa_inicio.split(':').map(Number);
+      const [ph2, pm2] = slot.pausa_fim.split(':').map(Number);
+      pIniMin = ph1 * 60 + (pm1 || 0);
+      pFimMin = ph2 * 60 + (pm2 || 0);
+    }
+
     while (curMin <= endMin) {
+      // Se estiver dentro da pausa para almoço, pula para o próximo horário
+      if (pIniMin !== -1 && pFimMin !== -1 && curMin > pIniMin && curMin < pFimMin) {
+        curMin += 30;
+        continue;
+      }
+
       const h = String(Math.floor(curMin / 60)).padStart(2, '0');
       const m = String(curMin % 60).padStart(2, '0');
       const tStr = `${h}:${m}`;

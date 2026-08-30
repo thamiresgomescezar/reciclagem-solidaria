@@ -270,9 +270,9 @@ export async function cadastrarCatadorPorTerceiros({ nome, email, telefone, ende
     if (error) {
       console.error('Erro ao cadastrar catador no banco:', error);
       if (error.code === '42501' || error.message?.includes('row-level security')) {
-        return { ok: false, erro: 'Permissão negada pelo banco de dados (RLS). Certifique-se de estar logado como Administrador ou Cidadão.' };
+        return { ok: false, erro: 'Permissão negada. Certifique-se de estar logado como Administrador ou Cidadão.' };
       }
-      return { ok: false, erro: error.message || 'Erro ao registrar catador no banco de dados.' };
+      return { ok: false, erro: error.message || 'Erro ao registrar catador no sistema.' };
     }
 
     return { ok: true, data };
@@ -285,8 +285,9 @@ export async function cadastrarCatadorPorTerceiros({ nome, email, telefone, ende
 // Realiza login e valida situação do perfil
 export async function login(email, password) {
   try {
+    const emailLimpo = (email || '').trim().toLowerCase();
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: emailLimpo,
       password
     });
 
@@ -384,6 +385,28 @@ export async function getPerfilAtual() {
         dados: { ...catadorData, situacao: catadorData.situacao || 'ativo' },
         user: session.user
       };
+    } else if (session.user.email) {
+      // Fallback: se o catador foi cadastrado pelo e-mail e ainda não tinha o auth_user_id preenchido
+      try {
+        const { data: catByEmail } = await supabase
+          .from('catador')
+          .select('*')
+          .ilike('email', session.user.email.trim())
+          .maybeSingle();
+
+        if (catByEmail) {
+          if (!catByEmail.auth_user_id) {
+            await supabase.from('catador').update({ auth_user_id: userId }).eq('id', catByEmail.id);
+          }
+          return {
+            tipo: 'catador',
+            dados: { ...catByEmail, auth_user_id: userId, situacao: catByEmail.situacao || 'ativo' },
+            user: session.user
+          };
+        }
+      } catch (e) {
+        console.warn('Erro no fallback de catador por email:', e);
+      }
     }
 
     // Se houve erro na consulta ao banco, NÃO execute auto-heal para não sobrescrever dados legítimos
@@ -452,8 +475,9 @@ export function redirectPorPerfil(tipo) {
 }
 
 export async function resetPassword(email) {
+  const emailLimpo = (email || '').trim().toLowerCase();
   const redirectUrl = `${window.location.origin}${window.location.pathname.includes('/pages/') ? '' : '/pages'}/nova-senha.html`;
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+  const { data, error } = await supabase.auth.resetPasswordForEmail(emailLimpo, {
     redirectTo: redirectUrl
   });
   if (error) throw error;
