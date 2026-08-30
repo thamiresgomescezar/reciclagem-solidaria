@@ -85,12 +85,22 @@
     const form = document.getElementById('form_recuperar');
     const statusMsg = document.getElementById('statusMsg');
     const btn = document.getElementById('btn_enviar');
+    const inputEmail = document.getElementById('email');
+
+    if (inputEmail) {
+      inputEmail.addEventListener('input', (e) => {
+        e.target.value = e.target.value.toLowerCase().replace(/\s+/g, '');
+      });
+      inputEmail.addEventListener('blur', (e) => {
+        e.target.value = e.target.value.trim().toLowerCase();
+      });
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       statusMsg.className = 'status-message';
 
-      const email = document.getElementById('email').value.trim();
+      const email = document.getElementById('email').value.trim().toLowerCase();
       if (!email) {
         statusMsg.className = 'status-message error';
         statusMsg.textContent = 'Por favor, informe seu e-mail.';

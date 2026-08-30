@@ -69,7 +69,8 @@ body {
 
 @media (max-width: 480px) {
   .proto-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.65rem;
   }
 }
 
@@ -234,26 +235,40 @@ body {
   cursor: not-allowed;
 }
 
-.status-message {
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-weight: 600;
+.status-message,
+.feedback-msg {
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 700;
   font-size: 0.9rem;
   text-align: center;
+  margin-top: 12px;
   margin-bottom: 12px;
   display: none;
+  line-height: 1.45;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
-.status-message.error {
+.status-message.error,
+.feedback-msg.error {
   display: block;
-  background-color: #fdecea;
+  background-color: #ffebee;
   color: #c62828;
-  border: 1px solid #f5c6cb;
+  border: 1.5px solid #ef9a9a;
 }
 
-.status-message.success {
+.status-message.success,
+.feedback-msg.success {
   display: block;
   background-color: #e8f5e9;
-  color: #2e7d32;
-  border: 1px solid #c8e6c9;
+  color: #1b6d24;
+  border: 1.5px solid #a5d6a7;
+}
+
+.status-message.info,
+.feedback-msg.info {
+  display: block;
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border: 1.5px solid #90caf9;
 }

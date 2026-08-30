@@ -53,11 +53,11 @@
             <div id="statusMsg" class="status-message"></div>
 
             <!-- Botão de Ação para Abrir Formulário de Novo Local -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <span style="font-size: 14px; font-weight: 700; color: var(--verde-escuro, #1b6d24);">
-                <i class="fa-solid fa-location-dot"></i> Pontos de Retirada Cadastrados
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 1rem;">
+              <span style="font-size: 1rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-location-dot" style="color: #2e7d32;"></i> Pontos de Retirada Cadastrados
               </span>
-              <button type="button" id="btn_toggle_form" class="btn-tab active" style="font-size: 0.85rem; padding: 6px 16px;">
+              <button type="button" id="btn_toggle_form" class="btn-tab active" style="font-size: 0.85rem; padding: 7px 16px; white-space: nowrap;">
                 <i class="fa-solid fa-plus"></i> Novo Local de Coleta
               </button>
             </div>
@@ -281,8 +281,26 @@
             ? '<span style="font-size: 0.75rem; font-weight: 800; background: #e8f5e9; color: #1b5e20; padding: 3px 10px; border-radius: 8px;"><i class="fa-solid fa-circle-check"></i> ATIVO</span>'
             : '<span style="font-size: 0.75rem; font-weight: 800; background: #ffebee; color: #c62828; padding: 3px 10px; border-radius: 8px;"><i class="fa-solid fa-circle-pause"></i> INATIVO</span>';
 
-          const endCompleto = `${local.rua || ''}, ${local.numero || ''} ${local.complemento ? ' - ' + local.complemento : ''} - ${local.bairro || ''}, ${local.cidade || 'Franco da Rocha'} - CEP ${local.cep || ''}`.trim();
-          const mapsQuery = `${local.nome} ${local.rua || ''} ${local.bairro || ''} ${local.cidade || ''}`.trim();
+          const partesEndereco = [];
+          if (local.rua) {
+            partesEndereco.push(local.numero ? `${local.rua}, ${local.numero}` : local.rua);
+          }
+          if (local.complemento) {
+            partesEndereco.push(`(${local.complemento})`);
+          }
+          if (local.bairro) {
+            partesEndereco.push(local.bairro);
+          }
+          if (local.cidade) {
+            partesEndereco.push(local.estado ? `${local.cidade} - ${local.estado}` : local.cidade);
+          }
+          if (local.cep) {
+            partesEndereco.push(`CEP: ${local.cep}`);
+          }
+
+          const endCompleto = partesEndereco.length > 0 
+            ? partesEndereco.join(', ') 
+            : `${local.nome}, Franco da Rocha - SP`;
 
           card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
@@ -297,17 +315,17 @@
               <div>${statusBadge}</div>
             </div>
 
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; padding-top: 10px; border-top: 1px solid #f0f0f0; align-items: center;">
-              <button type="button" class="btn-abrir-mapa btn-secondary-pill" data-nome="${local.nome}" data-endereco="${mapsQuery}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer; background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7;">
+            <div class="card-acoes-local" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1px solid #f0f0f0; width: 100%;">
+              <button type="button" class="btn-abrir-mapa btn-secondary-pill" data-nome="${local.nome}" data-endereco="${endCompleto}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer; background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; justify-content: center; width: 100%; height: 36px; box-sizing: border-box; white-space: nowrap;">
                 <i class="fa-solid fa-map-location-dot" style="color: #2e7d32;"></i> Ver no Mapa
               </button>
-              <button type="button" class="btn-editar-local btn-secondary-pill" data-id="${local.id}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; font-weight: 700;">
+              <button type="button" class="btn-editar-local btn-secondary-pill" data-id="${local.id}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; font-weight: 700; justify-content: center; width: 100%; height: 36px; box-sizing: border-box; white-space: nowrap;">
                 <i class="fa-solid fa-pen-to-square" style="color: #2e7d32;"></i> Editar Dados
               </button>
-              <button type="button" class="btn-toggle-status btn-secondary-pill" data-id="${local.id}" data-ativo="${isAtivo}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer; background: ${isAtivo ? '#fffde7' : '#e8f5e9'}; color: ${isAtivo ? '#b78103' : '#1b5e20'}; border: 1.5px solid ${isAtivo ? '#fff59d' : '#a5d6a7'}; font-weight: 700;">
+              <button type="button" class="btn-toggle-status btn-secondary-pill" data-id="${local.id}" data-ativo="${isAtivo}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer; background: ${isAtivo ? '#fffde7' : '#e8f5e9'}; color: ${isAtivo ? '#b78103' : '#1b5e20'}; border: 1.5px solid ${isAtivo ? '#fff59d' : '#a5d6a7'}; font-weight: 700; justify-content: center; width: 100%; height: 36px; box-sizing: border-box; white-space: nowrap;">
                 ${isAtivo ? '<i class="fa-solid fa-pause" style="color: #f57f17;"></i> Desativar' : '<i class="fa-solid fa-play" style="color: #2e7d32;"></i> Ativar'}
               </button>
-              <button type="button" class="btn-excluir-local" data-id="${local.id}" data-nome="${local.nome}" style="background: #ffffff; border: 1.5px solid #ffcdd2; color: #c62828; padding: 7px 14px; border-radius: 999px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-left: auto; transition: all 0.2s ease;" title="Excluir ponto de coleta">
+              <button type="button" class="btn-excluir-local" data-id="${local.id}" data-nome="${local.nome}" style="background: #ffffff; border: 1.5px solid #ffcdd2; color: #c62828; padding: 7px 14px; border-radius: 999px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease; width: 100%; height: 36px; box-sizing: border-box; white-space: nowrap;" title="Excluir ponto de coleta">
                 <i class="fa-solid fa-trash-can" style="color: #c62828;"></i> Excluir
               </button>
             </div>

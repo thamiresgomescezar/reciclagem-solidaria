@@ -48,7 +48,7 @@ export async function criarHorarioAgenda({ local_retirada_id, data, hora_inicio,
   }
 }
 
-// Salva o mapa completo de agenda no banco de dados de uma só vez (Somente quando o usuário clica em Salvar)
+// Salva o mapa completo de agenda no banco de dados de uma só vez (1 registro por data com upsert atômico)
 export async function salvarAgendaEmLote({ local_retirada_id, mapaDatas, hora_inicio = '08:00', hora_fim = '17:00' }) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Usuário não autenticado.');
@@ -56,17 +56,15 @@ export async function salvarAgendaEmLote({ local_retirada_id, mapaDatas, hora_in
   const datas = Object.keys(mapaDatas);
   if (datas.length === 0) return [];
 
-  // Remove registros existentes das datas enviadas
-  await supabase.from('agenda').delete().eq('local_retirada_id', local_retirada_id).in('data', datas);
-
-  const registros = [];
+  // Garante estritamente 1 único registro por data
+  const mapUnico = new Map();
   datas.forEach(dateStr => {
     const entry = mapaDatas[dateStr];
     let isDisp = false;
     let hIni = hora_inicio;
     let hFim = hora_fim;
-    let hIni2 = null;
-    let hFim2 = null;
+    let pIni = null;
+    let pFim = null;
 
     if (typeof entry === 'boolean') {
       isDisp = entry;
@@ -74,35 +72,60 @@ export async function salvarAgendaEmLote({ local_retirada_id, mapaDatas, hora_in
       isDisp = Boolean(entry.disponivel);
       hIni = entry.hora_inicio || hora_inicio;
       hFim = entry.hora_fim || hora_fim;
-      hIni2 = entry.hora_inicio_2 || null;
-      hFim2 = entry.hora_fim_2 || null;
+      pIni = entry.pausa_inicio || null;
+      pFim = entry.pausa_fim || null;
+
+      // Se o objeto contiver representação de turnos separados, converte para abertura, fechamento e pausa
+      if (!pIni && !pFim && entry.hora_inicio_2 && entry.hora_fim_2 && entry.hora_inicio_2 !== entry.hora_inicio) {
+        pIni = entry.hora_fim;
+        pFim = entry.hora_inicio_2;
+        hFim = entry.hora_fim_2;
+      }
     }
 
-    // 1º Turno / Intervalo Principal
-    registros.push({
+    mapUnico.set(dateStr, {
       local_retirada_id,
       data: dateStr,
       hora_inicio: hIni,
       hora_fim: hFim,
+      pausa_inicio: pIni,
+      pausa_fim: pFim,
       disponivel: isDisp,
       criado_por: session.user.id
     });
-
-    // 2º Turno / Intervalo Opcional
-    if (isDisp && hIni2 && hFim2) {
-      registros.push({
-        local_retirada_id,
-        data: dateStr,
-        hora_inicio: hIni2,
-        hora_fim: hFim2,
-        disponivel: true,
-        criado_por: session.user.id
-      });
-    }
   });
 
-  const { data, error } = await supabase.from('agenda').insert(registros).select();
-  if (error) throw error;
+  const registros = Array.from(mapUnico.values());
+
+  // Upsert atômico com suporte às colunas pausa_inicio e pausa_fim
+  let { data, error } = await supabase
+    .from('agenda')
+    .upsert(registros, { onConflict: 'local_retirada_id,data' })
+    .select();
+  
+  if (error) {
+    // Fallback caso a tabela no Supabase ainda não tenha as colunas pausa_inicio/pausa_fim
+    if (error.code === '42703' || error.message?.includes('pausa_inicio') || error.message?.includes('pausa_fim')) {
+      const fallbackRegistros = registros.map(r => ({
+        local_retirada_id: r.local_retirada_id,
+        data: r.data,
+        hora_inicio: r.hora_inicio,
+        hora_fim: r.hora_fim,
+        disponivel: r.disponivel,
+        criado_por: r.criado_por
+      }));
+
+      const { data: fbData, error: fbError } = await supabase
+        .from('agenda')
+        .upsert(fallbackRegistros, { onConflict: 'local_retirada_id,data' })
+        .select();
+
+      if (fbError) throw fbError;
+      return fbData;
+    }
+    throw error;
+  }
+
   return data;
 }
 
@@ -134,7 +157,8 @@ export async function listarAgendaPorLocal(localId) {
 
 // Retorna apenas os dias marcados como DISPONÍVEIS para o catador agendar
 export async function listarDatasDisponiveisCatador(localId) {
-  const hojeStr = new Date().toISOString().split('T')[0];
+  const d = new Date();
+  const hojeStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
   let query = supabase
     .from('agenda')

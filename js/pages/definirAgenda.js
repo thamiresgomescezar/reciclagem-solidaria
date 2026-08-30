@@ -106,18 +106,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       showError('Erro ao gerar agenda recorrente: ' + err.message);
     } finally {
       btnGerarRecorrente.disabled = false;
-      btnGerarRecorrente.innerText = '⚡ GERAR AGENDA AUTOMÁTICA (PRÓXIMOS 45 DIAS)';
+      btnGerarRecorrente.innerText = '⚡ GERAR AGENDA DO MÊS';
     }
   });
 
   function showError(msg) {
+    if (!feedbackMsg) return;
     feedbackMsg.textContent = msg;
-    feedbackMsg.className = 'feedback-msg error';
+    feedbackMsg.className = 'status-message error';
+    feedbackMsg.style.display = 'block';
   }
 
   function showSuccess(msg) {
+    if (!feedbackMsg) return;
     feedbackMsg.textContent = msg;
-    feedbackMsg.className = 'feedback-msg success';
+    feedbackMsg.className = 'status-message success';
+    feedbackMsg.style.display = 'block';
   }
 
   await carregarEExibirAgenda();

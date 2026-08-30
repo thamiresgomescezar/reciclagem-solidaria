@@ -165,11 +165,29 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
 
       const doadorTel = '';
       const localNome = coleta.local_retirada?.nome || 'Fatec Franco da Rocha';
-      const localRua = coleta.local_retirada?.rua || '';
-      const localBairro = coleta.local_retirada?.bairro || '';
-      const localCidade = coleta.local_retirada?.cidade || 'Franco da Rocha';
-      const mapsQuery = `${localNome} ${localRua} ${localBairro} ${localCidade}`.trim();
-      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`;
+      const loc = coleta.local_retirada || {};
+
+      // Monta o endereço completo real cadastrado no sistema
+      const partesEndereco = [];
+      if (loc.rua) {
+        partesEndereco.push(loc.numero ? `${loc.rua}, ${loc.numero}` : loc.rua);
+      }
+      if (loc.complemento) {
+        partesEndereco.push(`(${loc.complemento})`);
+      }
+      if (loc.bairro) {
+        partesEndereco.push(loc.bairro);
+      }
+      if (loc.cidade) {
+        partesEndereco.push(loc.estado ? `${loc.cidade} - ${loc.estado}` : loc.cidade);
+      }
+      if (loc.cep) {
+        partesEndereco.push(`CEP: ${loc.cep}`);
+      }
+
+      const enderecoCompleto = partesEndereco.length > 0 
+        ? partesEndereco.join(', ') 
+        : `${localNome}, Franco da Rocha - SP`;
 
       let badgeCor = '#e8f5e9';
       let badgeTexto = '#1b5e20';
@@ -184,14 +202,17 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
         if (stNome === 'agendado') {
           acoesHtml = `
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
-              <button type="button" class="btn-abrir-mapa btn-secondary-pill" data-local="${localNome}" data-endereco="${mapsQuery}" style="padding: 9px 14px; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #ffffff; border: 1.5px solid #2e7d32; color: #2e7d32; flex: 1;">
-                <i class="fa-solid fa-map-location-dot" style="color: #2e7d32;"></i> Ver Ponto no Mapa
+              <button type="button" class="btn-abrir-mapa btn-secondary-pill" data-local="${localNome}" data-endereco="${enderecoCompleto}" style="height: 38px; padding: 0 10px; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #ffffff; border: 1.5px solid #2e7d32; color: #2e7d32; flex: 1; white-space: nowrap; box-sizing: border-box;">
+                <i class="fa-solid fa-map-location-dot" style="color: #2e7d32;"></i> Ver no Mapa
               </button>
               ${coleta.cidadao_id ? `
-                <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-secondary-pill" style="padding: 9px 14px; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; flex: 1;">
-                  <i class="fa-solid fa-comments"></i> Tirar Dúvidas com Ofertante
+                <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-secondary-pill" style="height: 38px; padding: 0 10px; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; flex: 1; white-space: nowrap; box-sizing: border-box;">
+                  <i class="fa-solid fa-comments"></i> Tirar Dúvidas
                 </a>
               ` : ''}
+              <button type="button" class="btn-desistir-agendamento btn-secondary-pill" data-id="${coleta.cod_coleta}" style="padding: 8px 14px; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #fff5f5; border: 1.5px solid #ef9a9a; color: #c62828; width: 100%;">
+                <i class="fa-solid fa-calendar-xmark"></i> Cancelar Agendamento
+              </button>
             </div>
           `;
         } else if (stNome === 'retirado' || stNome === 'concluído') {
@@ -254,7 +275,8 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
         </div>
 
         <div style="font-size: 0.88rem; color: #444; display: flex; flex-direction: column; gap: 4px; background: #f9fbf9; padding: 10px 14px; border-radius: 8px; border: 1px solid #e8f5e9;">
-          <span><strong>Local de Retirada:</strong> ${localNome}</span>
+          <span><strong><i class="fa-solid fa-location-dot" style="color: #2e7d32;"></i> Local de Retirada:</strong> ${localNome}</span>
+          <span style="font-size: 0.82rem; color: #555;"><strong><i class="fa-solid fa-map-pin" style="color: #777;"></i> Endereço:</strong> ${enderecoCompleto}</span>
           ${éCatador ? `<span><strong>Ofertante (Cidadão):</strong> ${doadorNome}${doadorTel}</span>` : `<span><strong>Catador Atribuído:</strong> ${catadorNome}</span>`}
           ${dataAgendada ? `<span style="font-size: 0.82rem; color: #b78103; font-weight: 700;"><i class="fa-regular fa-calendar-check"></i> Agendado para: ${dataAgendada}</span>` : ''}
           ${dataFormatada ? `<span style="font-size: 0.8rem; color: #777;">Data da Oferta: ${dataFormatada}</span>` : ''}
@@ -347,6 +369,29 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
               carregarLista(listaContainer, feedbackMsg, perfil);
             } catch (err) {
               showError(feedbackMsg, 'Erro ao cancelar: ' + err.message);
+            }
+          }
+        });
+      });
+    });
+
+    document.querySelectorAll('.btn-desistir-agendamento').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        showConfirmModal({
+          title: 'Cancelar Agendamento',
+          message: 'Não conseguirá comparecer para retirar este material?\n\nAo cancelar seu agendamento, a coleta ficará disponível imediatamente para que outros catadores possam agendá-la.',
+          confirmText: 'Sim, Cancelar Agendamento',
+          cancelText: 'Voltar',
+          confirmColor: '#c62828',
+          icon: '<i class="fa-solid fa-calendar-xmark" style="color: #c62828; font-size: 1.25rem;"></i>',
+          onConfirm: async () => {
+            try {
+              await reabrirColeta(id);
+              showSuccess(feedbackMsg, 'Agendamento cancelado. O material foi liberado para outros catadores.');
+              carregarLista(listaContainer, feedbackMsg, perfil);
+            } catch (err) {
+              showError(feedbackMsg, 'Erro ao cancelar agendamento: ' + err.message);
             }
           }
         });

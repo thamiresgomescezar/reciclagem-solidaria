@@ -1,8 +1,4 @@
-/**
- * Componente Reutilizável: Subformulário de Coleta de Endereço
- * Suporta o checkbox 'Sem moradia' escondendo os campos de endereço
- * e preenchimento automático via busca de CEP (ViaCEP).
- */
+import { formatarNomeTitleCase, aplicarMascaraCep } from '../lib/validation.js';
 
 export function renderEnderecoForm(containerId) {
   const container = document.getElementById(containerId);
@@ -35,7 +31,7 @@ export function renderEnderecoForm(containerId) {
           </div>
           <div class="campo">
             <label for="end_estado">Estado:</label>
-            <input type="text" id="end_estado" class="input-underline" placeholder="SP" maxlength="2">
+            <input type="text" id="end_estado" class="input-underline" placeholder="SP" maxlength="2" style="text-transform: uppercase;">
           </div>
         </div>
 
@@ -69,6 +65,10 @@ export function renderEnderecoForm(containerId) {
   const semResidenciaCheck = document.getElementById('sem_residencia');
   const camposEnderecoBox = document.getElementById('campos-endereco');
   const inputCep = document.getElementById('end_cep');
+  const inputRua = document.getElementById('end_rua');
+  const inputBairro = document.getElementById('end_bairro');
+  const inputCidade = document.getElementById('end_cidade');
+  const inputEstado = document.getElementById('end_estado');
 
   if (semResidenciaCheck && camposEnderecoBox) {
     semResidenciaCheck.addEventListener('change', (e) => {
@@ -80,8 +80,12 @@ export function renderEnderecoForm(containerId) {
     });
   }
 
-  // Preenchimento automático com ViaCEP
+  // Formatação em tempo real do CEP
   if (inputCep) {
+    inputCep.addEventListener('input', (e) => {
+      e.target.value = aplicarMascaraCep(e.target.value);
+    });
+
     inputCep.addEventListener('blur', async () => {
       const cepVal = inputCep.value.replace(/\D/g, '');
       if (cepVal.length === 8) {
@@ -89,26 +93,43 @@ export function renderEnderecoForm(containerId) {
           const resp = await fetch(`https://viacep.com.br/ws/${cepVal}/json/`);
           const data = await resp.json();
           if (!data.erro) {
-            const inputRua = document.getElementById('end_rua');
-            const inputBairro = document.getElementById('end_bairro');
-            const inputCidade = document.getElementById('end_cidade');
-            const inputEstado = document.getElementById('end_estado');
-
             if (data.logradouro && inputRua && !inputRua.value) {
-              inputRua.value = data.logradouro;
+              inputRua.value = formatarNomeTitleCase(data.logradouro);
             }
             if (data.bairro && inputBairro && !inputBairro.value) {
-              inputBairro.value = data.bairro;
+              inputBairro.value = formatarNomeTitleCase(data.bairro);
             }
             if (data.localidade && inputCidade && !inputCidade.value) {
-              inputCidade.value = data.localidade;
+              inputCidade.value = formatarNomeTitleCase(data.localidade);
             }
             if (data.uf && inputEstado) {
-              inputEstado.value = data.uf;
+              inputEstado.value = data.uf.toUpperCase();
             }
           }
         } catch (e) {}
       }
+    });
+  }
+
+  // Formatação automática em Title Case ao sair do campo
+  if (inputRua) {
+    inputRua.addEventListener('blur', (e) => {
+      e.target.value = formatarNomeTitleCase(e.target.value);
+    });
+  }
+  if (inputBairro) {
+    inputBairro.addEventListener('blur', (e) => {
+      e.target.value = formatarNomeTitleCase(e.target.value);
+    });
+  }
+  if (inputCidade) {
+    inputCidade.addEventListener('blur', (e) => {
+      e.target.value = formatarNomeTitleCase(e.target.value);
+    });
+  }
+  if (inputEstado) {
+    inputEstado.addEventListener('input', (e) => {
+      e.target.value = e.target.value.toUpperCase().slice(0, 2);
     });
   }
 }
@@ -128,14 +149,20 @@ export function lerDadosEndereco() {
     };
   }
 
+  const ruaVal = document.getElementById('end_rua')?.value.trim() || null;
+  const bairroVal = document.getElementById('end_bairro')?.value.trim() || null;
+  const cidadeVal = document.getElementById('end_cidade')?.value.trim() || null;
+  const estadoVal = document.getElementById('end_estado')?.value.trim() || null;
+  const cepVal = document.getElementById('end_cep')?.value.replace(/\D/g, '') || null;
+
   return {
-    rua: document.getElementById('end_rua')?.value.trim() || null,
+    rua: ruaVal ? formatarNomeTitleCase(ruaVal) : null,
     numero: document.getElementById('end_numero')?.value.trim() || null,
     complemento: document.getElementById('end_complemento')?.value.trim() || null,
-    bairro: document.getElementById('end_bairro')?.value.trim() || null,
-    cidade: document.getElementById('end_cidade')?.value.trim() || null,
-    estado: document.getElementById('end_estado')?.value.trim() || null,
-    cep: document.getElementById('end_cep')?.value.trim() || null,
+    bairro: bairroVal ? formatarNomeTitleCase(bairroVal) : null,
+    cidade: cidadeVal ? formatarNomeTitleCase(cidadeVal) : null,
+    estado: estadoVal ? estadoVal.toUpperCase().slice(0, 2) : null,
+    cep: cepVal || null,
     sem_residencia: false
   };
 }
@@ -155,11 +182,11 @@ export function preencherEndereco(dados) {
   } else {
     if (semResCheck) semResCheck.checked = false;
     if (camposBox) camposBox.style.display = 'block';
-    if (document.getElementById('end_cep')) document.getElementById('end_cep').value = dados.cep || '';
-    if (document.getElementById('end_cidade')) document.getElementById('end_cidade').value = dados.cidade || '';
-    if (document.getElementById('end_estado')) document.getElementById('end_estado').value = dados.estado || '';
-    if (document.getElementById('end_bairro')) document.getElementById('end_bairro').value = dados.bairro || '';
-    if (document.getElementById('end_rua')) document.getElementById('end_rua').value = dados.rua || '';
+    if (document.getElementById('end_cep')) document.getElementById('end_cep').value = aplicarMascaraCep(dados.cep || '');
+    if (document.getElementById('end_cidade')) document.getElementById('end_cidade').value = formatarNomeTitleCase(dados.cidade || '');
+    if (document.getElementById('end_estado')) document.getElementById('end_estado').value = (dados.estado || '').toUpperCase();
+    if (document.getElementById('end_bairro')) document.getElementById('end_bairro').value = formatarNomeTitleCase(dados.bairro || '');
+    if (document.getElementById('end_rua')) document.getElementById('end_rua').value = formatarNomeTitleCase(dados.rua || '');
     if (document.getElementById('end_numero')) document.getElementById('end_numero').value = dados.numero || '';
     if (document.getElementById('end_complemento')) document.getElementById('end_complemento').value = dados.complemento || '';
   }

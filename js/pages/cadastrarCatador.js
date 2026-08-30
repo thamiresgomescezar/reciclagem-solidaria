@@ -1,6 +1,7 @@
 import { proibirAcessoInvalido, redirecionarPorPerfil } from '../lib/routeGuard.js';
 import { renderEnderecoForm, getEnderecoValues } from './enderecoForm.js';
 import { cadastrarCatadorPorTerceiros } from '../services/auth.js';
+import { aplicarMascaraTelefone, formatarNomeTitleCase } from '../lib/validation.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const perfil = await proibirAcessoInvalido(['administrador', 'cidadao', 'catador']);
@@ -19,6 +20,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('cadastrar-catador-form');
   const feedbackMsg = document.getElementById('feedback-msg');
   const btnSalvar = document.getElementById('btn-salvar');
+  const inputNome = document.getElementById('nome');
+  const inputTelefone = document.getElementById('telefone');
+  const inputEmail = document.getElementById('email');
+
+  if (inputEmail) {
+    inputEmail.addEventListener('input', (e) => {
+      e.target.value = e.target.value.toLowerCase().replace(/\s+/g, '');
+    });
+    inputEmail.addEventListener('blur', (e) => {
+      e.target.value = e.target.value.trim().toLowerCase();
+    });
+  }
+
+  if (inputTelefone) {
+    inputTelefone.addEventListener('input', (e) => {
+      e.target.value = aplicarMascaraTelefone(e.target.value);
+    });
+  }
+
+  if (inputNome) {
+    inputNome.addEventListener('blur', (e) => {
+      e.target.value = formatarNomeTitleCase(e.target.value);
+    });
+  }
 
   if (!form) return;
 
@@ -26,10 +51,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     esconderFeedback();
 
-    const inputNome = document.getElementById('nome');
     const nome = inputNome?.value.trim();
-    const telefone = document.getElementById('telefone')?.value.trim();
-    const email = document.getElementById('email')?.value.trim();
+    const telefone = inputTelefone?.value.trim();
+    const email = inputEmail?.value.trim().toLowerCase() || null;
     const endereco = getEnderecoValues();
 
     if (!nome) {

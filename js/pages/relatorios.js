@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { showAlertModal } from '../lib/modal.js';
+import { formatarNomeTitleCase } from '../lib/validation.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const container = document.getElementById('relatorio_conteudo_container');
@@ -20,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function carregarRelatorio(tab) {
     if (!container) return;
-    container.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 30px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Consultando dados reais no banco de dados...</div>`;
+    container.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 30px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Consultando dados atualizados...</div>`;
     dadosExportacao = [];
 
     try {
@@ -41,43 +42,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         const totalGeral = Object.values(contagem).reduce((a, b) => a + b, 0);
 
         if (totalGeral === 0) {
-          container.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 24px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">Nenhum material ofertado registrado no banco de dados até o momento.</div>`;
+          container.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 24px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">Nenhum material ofertado registrado até o momento.</div>`;
           return;
         }
 
-        dadosExportacao = Object.entries(contagem).map(([material, ofertas]) => ({
-          material,
-          ofertas,
-          percentual: ((ofertas / totalGeral) * 100).toFixed(1) + '%'
-        }));
+        dadosExportacao = Object.entries(contagem)
+          .map(([material, ofertas]) => ({
+            material,
+            ofertas,
+            percentual: ((ofertas / totalGeral) * 100).toFixed(1) + '%'
+          }))
+          .sort((a, b) => b.ofertas - a.ofertas);
 
         let html = `
-          <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; font-weight: 800; margin-bottom: 12px;">
-            <i class="fa-solid fa-chart-pie"></i> Volume de Ofertas por Tipo de Material Reciclável
-          </h3>
-          <p style="font-size: 0.85rem; color: #555; margin-bottom: 16px;">Total real de materiais disponibilizados para coleta cadastrados no banco de dados.</p>
-          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-            <thead>
-              <tr style="border-bottom: 2px solid var(--verde-escuro, #1b6d24); text-align: left; color: var(--verde-escuro, #1b6d24);">
-                <th style="padding: 10px;">Categoria do Material</th>
-                <th style="padding: 10px; text-align: center;">Total de Ofertas</th>
-                <th style="padding: 10px; text-align: right;">Participação (%)</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div class="relatorio-card-box">
+            <h5><i class="fa-solid fa-chart-pie"></i> Volume de Ofertas por Tipo de Material Reciclável</h5>
+            <p style="font-size: 0.85rem; color: #555; margin-bottom: 14px; margin-top: 0;">Volume de materiais disponibilizados para coleta (ordenado dos mais ofertados para os menos ofertados).</p>
+            <div class="relatorio-table-wrapper">
+              <table class="tabela-relatorio-clean">
+                <thead>
+                  <tr>
+                    <th>Posição / Categoria do Material</th>
+                    <th style="text-align: center;">Total de Ofertas</th>
+                    <th class="text-right">Participação (%)</th>
+                  </tr>
+                </thead>
+                <tbody>
         `;
 
-        dadosExportacao.forEach(item => {
+        dadosExportacao.forEach((item, index) => {
           html += `
-            <tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
-              <td style="padding: 10px; font-weight: 700;">${item.material}</td>
-              <td style="padding: 10px; text-align: center;">${item.ofertas}</td>
-              <td style="padding: 10px; text-align: right; font-weight: 700; color: #1b6d24;">${item.percentual}</td>
+            <tr>
+              <td style="font-weight: 700;">#${index + 1} ${item.material}</td>
+              <td style="text-align: center; font-weight: 800; color: #1b6d24;">${item.ofertas}</td>
+              <td style="text-align: right; font-weight: 700; color: #1b6d24;">${item.percentual}</td>
             </tr>
           `;
         });
 
-        html += `</tbody></table>`;
+        html += `</tbody></table></div></div>`;
         container.innerHTML = html;
 
       } else if (tab === 'catadores') {
@@ -98,32 +101,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         let rankingList = (catadores || []).map(cat => ({
-          nome: cat.nome || 'Catador Autônomo',
-          bairro: cat.sem_residencia ? 'Sem moradia' : (cat.bairro || 'Não Informado'),
+          nome: formatarNomeTitleCase(cat.nome || 'Catador Autônomo'),
+          bairro: cat.sem_residencia ? 'Sem moradia' : (cat.bairro ? formatarNomeTitleCase(cat.bairro) : 'Não Informado'),
           total_coletas: contagemColetas[cat.id] || 0
         })).sort((a, b) => b.total_coletas - a.total_coletas);
 
         if (rankingList.length === 0) {
-          container.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 24px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">Nenhum catador cadastrado no banco de dados.</div>`;
+          container.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 24px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">Nenhum catador cadastrado até o momento.</div>`;
           return;
         }
 
         dadosExportacao = rankingList;
 
         let html = `
-          <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; font-weight: 800; margin-bottom: 12px;">
-            <i class="fa-solid fa-trophy" style="color: #fbc02d;"></i> Ranking de Atendimento por Catadores Autônomos
-          </h3>
-          <p style="font-size: 0.85rem; color: #555; margin-bottom: 16px;">Catadores cadastrados no banco e volume de coletas atreladas a cada um.</p>
-          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-            <thead>
-              <tr style="border-bottom: 2px solid var(--verde-escuro, #1b6d24); text-align: left; color: var(--verde-escuro, #1b6d24);">
-                <th style="padding: 10px;">Posição / Catador</th>
-                <th style="padding: 10px;">Bairro</th>
-                <th style="padding: 10px; text-align: right;">Coletas Atribuídas</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div class="relatorio-card-box">
+            <h5><i class="fa-solid fa-trophy" style="color: #fbc02d;"></i> Ranking de Atendimento por Catadores Autônomos</h5>
+            <p style="font-size: 0.85rem; color: #555; margin-bottom: 14px; margin-top: 0;">Catadores cadastrados e volume de coletas atreladas a cada um.</p>
+            <div class="relatorio-table-wrapper">
+              <table class="tabela-relatorio-clean">
+                <thead>
+                  <tr>
+                    <th>Posição / Catador</th>
+                    <th>Bairro</th>
+                    <th class="text-right">Coletas Atribuídas</th>
+                  </tr>
+                </thead>
+                <tbody>
         `;
 
         rankingList.forEach((item, index) => {
@@ -136,15 +139,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 : `#${index + 1}`));
 
           html += `
-            <tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
-              <td style="padding: 10px; font-weight: 700;">${medalha} ${item.nome}</td>
-              <td style="padding: 10px; color: #555;">${item.bairro}</td>
-              <td style="padding: 10px; text-align: right; font-weight: 800; color: #1b6d24;">${item.total_coletas} coletas</td>
+            <tr>
+              <td style="font-weight: 700;">${medalha} ${item.nome}</td>
+              <td style="color: #555;">${item.bairro}</td>
+              <td style="text-align: right; font-weight: 800; color: #1b6d24;">${item.total_coletas} coletas</td>
             </tr>
           `;
         });
 
-        html += `</tbody></table>`;
+        html += `</tbody></table></div></div>`;
         container.innerHTML = html;
 
       } else if (tab === 'cidadaos') {
@@ -165,45 +168,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         let rankingCid = (cidadaos || []).map(cid => ({
-          nome: cid.nome || 'Cidadão Ofertante',
-          bairro: cid.bairro || 'Não Informado',
+          nome: formatarNomeTitleCase(cid.nome || 'Cidadão Ofertante'),
+          bairro: cid.bairro ? formatarNomeTitleCase(cid.bairro) : 'Não Informado',
           materiais_ofertados: contagemOfertante[cid.id] || 0
         })).sort((a, b) => b.materiais_ofertados - a.materiais_ofertados);
 
         if (rankingCid.length === 0) {
-          container.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 24px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">Nenhum cidadão cadastrado no banco de dados.</div>`;
+          container.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 24px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">Nenhum cidadão cadastrado até o momento.</div>`;
           return;
         }
 
         dadosExportacao = rankingCid;
 
         let html = `
-          <h3 style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; font-weight: 800; margin-bottom: 12px;">
-            <i class="fa-solid fa-medal" style="color: #0288d1;"></i> Ranking de Engenharia Solidária dos Cidadãos
-          </h3>
-          <p style="font-size: 0.85rem; color: #555; margin-bottom: 16px;">Moradores cadastrados e total de doações de materiais efetuadas no banco de dados.</p>
-          <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-            <thead>
-              <tr style="border-bottom: 2px solid var(--verde-escuro, #1b6d24); text-align: left; color: var(--verde-escuro, #1b6d24);">
-                <th style="padding: 10px;">Cidadão Ofertante</th>
-                <th style="padding: 10px;">Bairro</th>
-                <th style="padding: 10px; text-align: right;">Total de Materiais Doados</th>
-              </tr>
-            </thead>
-            <tbody>
+          <div class="relatorio-card-box">
+            <h5><i class="fa-solid fa-medal" style="color: #0288d1;"></i> Ranking de Participação dos Cidadãos</h5>
+            <p style="font-size: 0.85rem; color: #555; margin-bottom: 14px; margin-top: 0;">Moradores cadastrados e total de doações de materiais efetuadas.</p>
+            <div class="relatorio-table-wrapper">
+              <table class="tabela-relatorio-clean">
+                <thead>
+                  <tr>
+                    <th>Cidadão Ofertante</th>
+                    <th>Bairro</th>
+                    <th class="text-right">Total de Materiais Doados</th>
+                  </tr>
+                </thead>
+                <tbody>
         `;
 
         rankingCid.forEach((item, index) => {
           html += `
-            <tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
-              <td style="padding: 10px; font-weight: 700;">#${index + 1} ${item.nome}</td>
-              <td style="padding: 10px; color: #555;">${item.bairro}</td>
-              <td style="padding: 10px; text-align: right; font-weight: 800; color: #1b6d24;">${item.materiais_ofertados} ofertas</td>
+            <tr>
+              <td style="font-weight: 700;">#${index + 1} ${item.nome}</td>
+              <td style="color: #555;">${item.bairro}</td>
+              <td style="text-align: right; font-weight: 800; color: #1b6d24;">${item.materiais_ofertados} ofertas</td>
             </tr>
           `;
         });
 
-        html += `</tbody></table>`;
+        html += `</tbody></table></div></div>`;
         container.innerHTML = html;
 
       } else if (tab === 'geografico') {
@@ -225,7 +228,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (c.sem_residencia) {
             catadoresSemResidencia++;
           } else {
-            const b = c.bairro?.trim() || 'Não Informado';
+            const bRaw = c.bairro?.trim() || 'Não Informado';
+            const b = bRaw.toLowerCase() === 'não informado' ? 'Não Informado' : formatarNomeTitleCase(bRaw);
             catadoresPorBairro[b] = (catadoresPorBairro[b] || 0) + 1;
           }
         });
@@ -233,15 +237,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Mapeamento 2: Cidadãos por Bairro
         const cidadaosPorBairro = {};
         cidadaos.forEach(c => {
-          const b = c.bairro?.trim() || 'Não Informado';
+          const bRaw = c.bairro?.trim() || 'Não Informado';
+          const b = bRaw.toLowerCase() === 'não informado' ? 'Não Informado' : formatarNomeTitleCase(bRaw);
           cidadaosPorBairro[b] = (cidadaosPorBairro[b] || 0) + 1;
         });
 
         // Mapeamento 3: Volume de Ofertas por Localidade e Bairro (Separados)
         const reciclaPorLocal = {};
         coletas.forEach(c => {
-          const localNome = c.local_retirada?.nome?.trim() || 'Ponto de Coleta Principal';
-          const bairroNome = c.local_retirada?.bairro?.trim() || c.cidadao?.bairro?.trim() || 'Não Informado';
+          const localNomeRaw = c.local_retirada?.nome?.trim() || 'Ponto de Coleta Principal';
+          const bRaw = c.local_retirada?.bairro?.trim() || c.cidadao?.bairro?.trim() || 'Não Informado';
+          const localNome = formatarNomeTitleCase(localNomeRaw);
+          const bairroNome = bRaw.toLowerCase() === 'não informado' ? 'Não Informado' : formatarNomeTitleCase(bRaw);
           const chave = `${localNome}|||${bairroNome}`;
           reciclaPorLocal[chave] = (reciclaPorLocal[chave] || 0) + 1;
         });
@@ -267,91 +274,97 @@ document.addEventListener('DOMContentLoaded', async () => {
             </p>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div class="grid-relatorios-duplo">
             
             <!-- Tabela Catadores por Bairro -->
-            <div style="background: white; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 14px;">
-              <h5 style="color: var(--verde-escuro, #1b6d24); font-weight: 800; margin-bottom: 10px; font-size: 0.95rem;">
-                <i class="fa-solid fa-id-card"></i> Catadores por Bairro
-              </h5>
-              <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
-                <thead>
-                  <tr style="border-bottom: 1.5px solid #a5d6a7; text-align: left; color: #1b6d24;">
-                    <th style="padding: 6px;">Bairro</th>
-                    <th style="padding: 6px; text-align: right;">Catadores</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${Object.entries(catadoresPorBairro).map(([b, qtd]) => `
-                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
-                      <td style="padding: 6px; font-weight: 600;"><i class="fa-solid fa-location-dot" style="color: #2e7d32; font-size: 11px;"></i> ${b}</td>
-                      <td style="padding: 6px; text-align: right; font-weight: 800; color: #1b6d24;">${qtd}</td>
+            <div class="relatorio-card-box" style="margin-bottom: 0;">
+              <h5><i class="fa-solid fa-id-card"></i> Catadores por Bairro</h5>
+              <div class="relatorio-table-wrapper">
+                <table class="tabela-relatorio-clean">
+                  <thead>
+                    <tr>
+                      <th>Bairro</th>
+                      <th class="text-right">Catadores</th>
                     </tr>
-                  `).join('')}
-                  ${catadoresSemResidencia > 0 ? `
-                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.05); background-color: #fff3e0;">
-                      <td style="padding: 6px; font-weight: 700; color: #e65100;"><i class="fa-solid fa-person-shelter"></i> Sem moradia</td>
-                      <td style="padding: 6px; text-align: right; font-weight: 800; color: #e65100;">${catadoresSemResidencia}</td>
-                    </tr>
-                  ` : ''}
-                  ${catadores.length === 0 ? `<tr><td colspan="2" style="padding: 10px; text-align: center; color: #999;">Nenhum catador cadastrado</td></tr>` : ''}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    ${Object.entries(catadoresPorBairro).sort((a, b) => b[1] - a[1]).map(([b, qtd]) => `
+                      <tr>
+                        <td style="font-weight: 600;">
+                          <i class="fa-solid fa-location-dot" style="color: #2e7d32; font-size: 11px; margin-right: 6px;"></i> ${b}
+                        </td>
+                        <td style="text-align: right; font-weight: 800; color: #1b6d24;">${qtd}</td>
+                      </tr>
+                    `).join('')}
+                    ${catadoresSemResidencia > 0 ? `
+                      <tr class="linha-sem-moradia">
+                        <td><i class="fa-solid fa-person-shelter" style="color: #e65100; margin-right: 6px;"></i> Sem moradia</td>
+                        <td style="text-align: right;">${catadoresSemResidencia}</td>
+                      </tr>
+                    ` : ''}
+                    ${catadores.length === 0 ? `<tr><td colspan="2" style="padding: 12px; text-align: center; color: #999;">Nenhum catador cadastrado</td></tr>` : ''}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <!-- Tabela Cidadãos por Bairro -->
-            <div style="background: white; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 14px;">
-              <h5 style="color: var(--verde-escuro, #1b6d24); font-weight: 800; margin-bottom: 10px; font-size: 0.95rem;">
-                <i class="fa-solid fa-user"></i> Cidadãos por Bairro
-              </h5>
-              <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
-                <thead>
-                  <tr style="border-bottom: 1.5px solid #a5d6a7; text-align: left; color: #1b6d24;">
-                    <th style="padding: 6px;">Bairro</th>
-                    <th style="padding: 6px; text-align: right;">Cidadãos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${Object.entries(cidadaosPorBairro).map(([b, qtd]) => `
-                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
-                      <td style="padding: 6px; font-weight: 600;"><i class="fa-solid fa-house-user" style="color: #0288d1; font-size: 11px;"></i> ${b}</td>
-                      <td style="padding: 6px; text-align: right; font-weight: 800; color: #1b6d24;">${qtd}</td>
+            <div class="relatorio-card-box" style="margin-bottom: 0;">
+              <h5><i class="fa-solid fa-user"></i> Cidadãos por Bairro</h5>
+              <div class="relatorio-table-wrapper">
+                <table class="tabela-relatorio-clean">
+                  <thead>
+                    <tr>
+                      <th>Bairro</th>
+                      <th class="text-right">Cidadãos</th>
                     </tr>
-                  `).join('')}
-                  ${cidadaos.length === 0 ? `<tr><td colspan="2" style="padding: 10px; text-align: center; color: #999;">Nenhum cidadão cadastrado</td></tr>` : ''}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    ${Object.entries(cidadaosPorBairro).sort((a, b) => b[1] - a[1]).map(([b, qtd]) => `
+                      <tr>
+                        <td style="font-weight: 600;">
+                          <i class="fa-solid fa-house-user" style="color: #0288d1; font-size: 11px; margin-right: 6px;"></i> ${b}
+                        </td>
+                        <td style="text-align: right; font-weight: 800; color: #1b6d24;">${qtd}</td>
+                      </tr>
+                    `).join('')}
+                    ${cidadaos.length === 0 ? `<tr><td colspan="2" style="padding: 12px; text-align: center; color: #999;">Nenhum cidadão cadastrado</td></tr>` : ''}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
           </div>
 
           <!-- Regiões e Pontos de Coleta que Mais Reciclam -->
-          <div style="background: white; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 14px;">
-            <h5 style="color: var(--verde-escuro, #1b6d24); font-weight: 800; margin-bottom: 10px; font-size: 0.95rem;">
-              <i class="fa-solid fa-fire" style="color: #e65100;"></i> Locais e Bairros com Maior Volume de Reciclagem
-            </h5>
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
-              <thead>
-                <tr style="border-bottom: 1.5px solid #a5d6a7; text-align: left; color: #1b6d24;">
-                  <th style="padding: 6px;">Ponto de Coleta (Localidade)</th>
-                  <th style="padding: 6px;">Bairro</th>
-                  <th style="padding: 6px; text-align: right;">Total de Ofertas</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${Object.entries(reciclaPorLocal).map(([chave, qtd]) => {
-                  const [localNome, bairroNome] = chave.split('|||');
-                  return `
-                    <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
-                      <td style="padding: 6px; font-weight: 700; color: #1b6d24;"><i class="fa-solid fa-location-dot" style="color: #2e7d32;"></i> ${localNome}</td>
-                      <td style="padding: 6px; color: #555;">${bairroNome}</td>
-                      <td style="padding: 6px; text-align: right; font-weight: 800; color: #2e7d32;">${qtd} ofertas</td>
-                    </tr>
-                  `;
-                }).join('')}
-                ${coletas.length === 0 ? `<tr><td colspan="3" style="padding: 10px; text-align: center; color: #999;">Nenhuma oferta registrada ainda</td></tr>` : ''}
-              </tbody>
-            </table>
+          <div class="relatorio-card-box">
+            <h5><i class="fa-solid fa-fire" style="color: #e65100;"></i> Locais e Bairros com Maior Volume de Reciclagem</h5>
+            <div class="relatorio-table-wrapper">
+              <table class="tabela-relatorio-clean">
+                <thead>
+                  <tr>
+                    <th>Ponto de Coleta (Localidade)</th>
+                    <th>Bairro</th>
+                    <th class="text-right">Total de Ofertas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${Object.entries(reciclaPorLocal).sort((a, b) => b[1] - a[1]).map(([chave, qtd]) => {
+                    const [localNome, bairroNome] = chave.split('|||');
+                    return `
+                      <tr>
+                        <td style="font-weight: 700; color: #1b6d24;">
+                          <i class="fa-solid fa-location-dot" style="color: #2e7d32; margin-right: 6px;"></i> ${localNome}
+                        </td>
+                        <td style="color: #555;">${bairroNome}</td>
+                        <td style="text-align: right; font-weight: 800; color: #2e7d32;">${qtd} ofertas</td>
+                      </tr>
+                    `;
+                  }).join('')}
+                  ${coletas.length === 0 ? `<tr><td colspan="3" style="padding: 12px; text-align: center; color: #999;">Nenhuma oferta registrada ainda</td></tr>` : ''}
+                </tbody>
+              </table>
+            </div>
           </div>
         `;
 
@@ -360,7 +373,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (err) {
       console.error('Erro ao processar relatórios:', err);
-      container.innerHTML = `<div class="status-message error">Erro ao consultar dados no banco de dados.</div>`;
+      container.innerHTML = `<div class="status-message error">Erro ao consultar dados do relatório.</div>`;
     }
   }
 
@@ -380,7 +393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           supabase.from('coleta').select('cidadao(bairro), catador_id, cidadao_id')
         ]);
 
-        // 1. Aba Material
+        // 1. Aba Material (Ordenado do mais ofertado para o menos ofertado)
         const contagemMat = {};
         (resColetas?.data || []).forEach(c => {
           const nomeMat = c.materiais?.tipo || 'Material Cadastrado';
@@ -391,7 +404,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           material,
           ofertas,
           percentual: totalMat > 0 ? ((ofertas / totalMat) * 100).toFixed(1) + '%' : '0%'
-        }));
+        })).sort((a, b) => b.ofertas - a.ofertas);
 
         // 2. Aba Catadores
         const contagemCatColetas = {};
@@ -423,14 +436,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (c.sem_residencia) catSemMoradia++;
           else catBairros[c.bairro?.trim() || 'Não Informado'] = (catBairros[c.bairro?.trim() || 'Não Informado'] || 0) + 1;
         });
-        Object.entries(catBairros).forEach(([b, q]) => geoData.push({ tipo: 'Catadores', bairro: b, quantidade: q }));
+        Object.entries(catBairros).sort((a, b) => b[1] - a[1]).forEach(([b, q]) => geoData.push({ tipo: 'Catadores', bairro: b, quantidade: q }));
         if (catSemMoradia > 0) geoData.push({ tipo: 'Catadores', bairro: 'Sem moradia', quantidade: catSemMoradia });
 
         const cidBairros = {};
         (resGeoCid?.data || []).forEach(c => {
           cidBairros[c.bairro?.trim() || 'Não Informado'] = (cidBairros[c.bairro?.trim() || 'Não Informado'] || 0) + 1;
         });
-        Object.entries(cidBairros).forEach(([b, q]) => geoData.push({ tipo: 'Cidadãos', bairro: b, quantidade: q }));
+        Object.entries(cidBairros).sort((a, b) => b[1] - a[1]).forEach(([b, q]) => geoData.push({ tipo: 'Cidadãos', bairro: b, quantidade: q }));
 
         // Gerar arquivo Excel consolidado com 4 abas (Worksheets)
         exportarRelatorioConsolidadoExcel(matData, catData, cidData, geoData);
