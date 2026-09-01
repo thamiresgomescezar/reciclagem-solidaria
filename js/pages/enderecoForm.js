@@ -17,7 +17,7 @@ export function renderEnderecoForm(containerId) {
         <!-- Linha 1: CEP -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="campo">
-            <label for="end_cep">CEP:</label>
+            <label for="end_cep">CEP <span style="font-size: 0.8rem; font-weight: 500; color: #777;">- Opcional</span>:</label>
             <input type="text" id="end_cep" class="input-underline" placeholder="00000-000" maxlength="9">
           </div>
           <div></div>
@@ -26,31 +26,31 @@ export function renderEnderecoForm(containerId) {
         <!-- Linha 2: Cidade e Estado -->
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
           <div class="campo">
-            <label for="end_cidade">Cidade:</label>
+            <label for="end_cidade">Cidade:<span class="req">*</span></label>
             <input type="text" id="end_cidade" class="input-underline" placeholder="Ex: Franco da Rocha">
           </div>
           <div class="campo">
-            <label for="end_estado">Estado:</label>
+            <label for="end_estado">Estado (UF):<span class="req">*</span></label>
             <input type="text" id="end_estado" class="input-underline" placeholder="SP" maxlength="2" style="text-transform: uppercase;">
           </div>
         </div>
 
         <!-- Linha 3: Bairro -->
         <div class="campo">
-          <label for="end_bairro">Bairro:</label>
+          <label for="end_bairro">Bairro:<span class="req">*</span></label>
           <input type="text" id="end_bairro" class="input-underline" placeholder="Ex: Centro">
         </div>
 
-        <!-- Linha 4: Rua -->
+        <!-- Linha 4: Rua / Logradouro -->
         <div class="campo">
-          <label for="end_rua">Rua:</label>
+          <label for="end_rua">Rua / Logradouro:<span class="req">*</span></label>
           <input type="text" id="end_rua" class="input-underline" placeholder="Ex: Rua das Flores">
         </div>
 
-        <!-- Linha 5: Número e Complemento - Opcional -->
+        <!-- Linha 5: Número e Complemento -->
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
           <div class="campo">
-            <label for="end_numero">Número:</label>
+            <label for="end_numero">Número:<span class="req">*</span></label>
             <input type="text" id="end_numero" class="input-underline" placeholder="Ex: 123 ou S/N">
           </div>
           <div class="campo">
@@ -80,34 +80,10 @@ export function renderEnderecoForm(containerId) {
     });
   }
 
-  // Formatação em tempo real do CEP
+  // Formatação em tempo real do CEP (máscara 00000-000)
   if (inputCep) {
     inputCep.addEventListener('input', (e) => {
       e.target.value = aplicarMascaraCep(e.target.value);
-    });
-
-    inputCep.addEventListener('blur', async () => {
-      const cepVal = inputCep.value.replace(/\D/g, '');
-      if (cepVal.length === 8) {
-        try {
-          const resp = await fetch(`https://viacep.com.br/ws/${cepVal}/json/`);
-          const data = await resp.json();
-          if (!data.erro) {
-            if (data.logradouro && inputRua && !inputRua.value) {
-              inputRua.value = formatarNomeTitleCase(data.logradouro);
-            }
-            if (data.bairro && inputBairro && !inputBairro.value) {
-              inputBairro.value = formatarNomeTitleCase(data.bairro);
-            }
-            if (data.localidade && inputCidade && !inputCidade.value) {
-              inputCidade.value = formatarNomeTitleCase(data.localidade);
-            }
-            if (data.uf && inputEstado) {
-              inputEstado.value = data.uf.toUpperCase();
-            }
-          }
-        } catch (e) {}
-      }
     });
   }
 
@@ -194,11 +170,18 @@ export function preencherEndereco(dados) {
 
 export function validarEndereco() {
   const semRes = document.getElementById('sem_residencia')?.checked || false;
-  if (semRes) return null; // Sem residência é válido
+  if (semRes) return null; // Sem moradia é válido
 
-  const rua = document.getElementById('end_rua')?.value.trim();
+  const cidade = document.getElementById('end_cidade')?.value.trim();
+  const estado = document.getElementById('end_estado')?.value.trim();
   const bairro = document.getElementById('end_bairro')?.value.trim();
+  const rua = document.getElementById('end_rua')?.value.trim();
+  const numero = document.getElementById('end_numero')?.value.trim();
+
+  if (!cidade) return 'Informe a cidade no endereço.';
+  if (!estado) return 'Informe o estado (UF) no endereço.';
+  if (!bairro) return 'Informe o bairro no endereço.';
   if (!rua) return 'Informe o nome da rua ou logradouro.';
-  if (!bairro) return 'Informe o bairro.';
+  if (!numero) return 'Informe o número do endereço (ou S/N).';
   return null;
 }

@@ -106,11 +106,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Top Material
     const topMat = Object.entries(matCount).sort((a, b) => b[1] - a[1])[0];
-    kpiMaterial.textContent = topMat ? topMat[0] : 'Nenhum';
+    const nomeMat = topMat ? topMat[0] : 'Nenhum';
+    kpiMaterial.textContent = nomeMat;
+    kpiMaterial.title = nomeMat;
 
     // Top Ponto
     const topPonto = Object.entries(pontoCount).sort((a, b) => b[1] - a[1])[0];
-    kpiPonto.textContent = topPonto ? topPonto[0] : 'Nenhum';
+    const nomePonto = topPonto ? topPonto[0] : 'Nenhum';
+    kpiPonto.textContent = nomePonto;
+    kpiPonto.title = nomePonto;
 
     // Taxa Conclusão
     const tx = Math.round((concluidas / total) * 100);
@@ -145,7 +149,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       const total = coletasCatador.length;
-      dadosExportacao = Object.entries(contagem).map(([material, quantidade]) => ({
+      const ordenadoMateriais = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
+      dadosExportacao = ordenadoMateriais.map(([material, quantidade]) => ({
         Material: material,
         'Coletas Realizadas': quantidade,
         'Percentual (%)': ((quantidade / total) * 100).toFixed(1) + '%'
@@ -259,7 +264,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       const total = coletasCatador.length;
-      dadosExportacao = Object.entries(contagemStatus).map(([status, quantidade]) => ({
+      const ordenadoStatus = Object.entries(contagemStatus).sort((a, b) => b[1] - a[1]);
+      dadosExportacao = ordenadoStatus.map(([status, quantidade]) => ({
         Status: status,
         Quantidade: quantidade,
         'Percentual (%)': ((quantidade / total) * 100).toFixed(1) + '%'

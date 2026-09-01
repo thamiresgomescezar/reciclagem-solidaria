@@ -49,13 +49,16 @@
 
             <div id="statusMsg" class="status-message"></div>
 
-            <!-- Seletor de Destinatário / Conversas Ativas -->
+            <!-- Seletor de Destinatário / Conversas Ativas com Abas de Filtragem -->
             <div style="background: white; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.08); margin-bottom: 0.75rem; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+              <!-- Abas de Tipo de Contato -->
+              <div id="tabs_tipo_contato" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;"></div>
+
               <label id="lbl_destinatario" for="select_destinatario" style="font-size: 0.88rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); display: block; margin-bottom: 6px;">
-                <i class="fa-solid fa-comments"></i> Conversa Ativa:
+                <i class="fa-solid fa-comments"></i> Selecionar Destinatário:
               </label>
               <select id="select_destinatario">
-                <option value="">-- Carregando conversas... --</option>
+                <option value="">-- Carregando contatos... --</option>
               </select>
             </div>
 
@@ -96,32 +99,22 @@
     const input = document.getElementById('input_msg_text');
     const selectDest = document.getElementById('select_destinatario');
     const lblDest = document.getElementById('lbl_destinatario');
+    const tabsContainer = document.getElementById('tabs_tipo_contato');
     const btnEnviar = document.getElementById('btn_enviar_msg');
     const statusMsg = document.getElementById('statusMsg');
     const btnVoltarTop = document.getElementById('btn-voltar-top');
 
     let perfilAtual = null;
     let destinatarioId = null;
+    let catadorPkId = null;
+    let abaAtiva = null;
 
-    // Inicialização instantânea quando a URL possui o parâmetro destinatario
+    let listaCatadores = [];
+    let listaCidadaos = [];
+    let listaAdmins = [];
+
     const initialUrlParams = new URLSearchParams(window.location.search);
     const initialDestParam = initialUrlParams.get('destinatario');
-
-    if (initialDestParam) {
-      const cacheNames = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
-      const cachedNome = cacheNames[initialDestParam];
-      const nomeExib = (cachedNome && typeof cachedNome === 'string' && !cachedNome.toLowerCase().includes('erro')) 
-        ? `Conversa com ${cachedNome}` 
-        : 'Carregando conversa...';
-      
-      selectDest.innerHTML = `<option value="${initialDestParam}" selected>${nomeExib}</option>`;
-      destinatarioId = initialDestParam;
-      input.disabled = false;
-      btnEnviar.disabled = false;
-      input.removeAttribute('disabled');
-      btnEnviar.removeAttribute('disabled');
-      input.placeholder = "Digite sua mensagem aqui...";
-    }
 
     if (btnVoltarTop) {
       btnVoltarTop.addEventListener('click', (e) => {
@@ -152,6 +145,15 @@
       await carregarContatos();
     });
 
+    function formatarNome(str) {
+      if (!str || typeof str !== 'string') return '';
+      return str.trim().split(/\s+/).map(p => {
+        const min = p.toLowerCase();
+        if (['de', 'da', 'do', 'dos', 'das', 'e', 'em'].includes(min)) return min;
+        return p.charAt(0).toUpperCase() + p.slice(1).toLowerCase();
+      }).join(' ');
+    }
+
     async function carregarContatos() {
       try {
         let currentUserId = perfilAtual?.user?.id || perfilAtual?.dados?.id || perfilAtual?.id || null;
@@ -166,7 +168,6 @@
           return;
         }
 
-        // Verificação de tipo de perfil
         let eCatador = perfilAtual?.tipo === 'catador';
         let eAdmin = perfilAtual?.tipo === 'administrador';
 
@@ -179,239 +180,305 @@
               .maybeSingle();
             if (catCheck) {
               eCatador = true;
+              catadorPkId = catCheck.id;
               if (perfilAtual) perfilAtual.tipo = 'catador';
+            }
+          } catch (e) {}
+        } else if (eCatador) {
+          try {
+            const { data: catCheck } = await supabase
+              .from('catador')
+              .select('id')
+              .or(`auth_user_id.eq.${currentUserId},id.eq.${currentUserId}`)
+              .maybeSingle();
+            if (catCheck) catadorPkId = catCheck.id;
+          } catch (e) {}
+        }
+
+        // 1. Busca abrangente em paralelo de múltiplas fontes para contornar qualquer limitação de RLS
+        const [
+          resCid,
+          resCat,
+          resColetas,
+          resPubs
+        ] = await Promise.allSettled([
+          supabase.from('cidadao').select('id, nome, email, telefone, nivel_acesso').order('nome', { ascending: true }),
+          supabase.from('catador').select('id, auth_user_id, nome, telefone').order('nome', { ascending: true }),
+          supabase.from('coleta').select('cidadao_id, cidadao:cidadao_id(id, nome, email, telefone)'),
+          supabase.from('publicacoes').select('autor_id, autor:autor_id(id, nome, email)')
+        ]);
+
+        const rawCid = (resCid.status === 'fulfilled' && Array.isArray(resCid.value?.data)) ? resCid.value.data : [];
+        const rawCat = (resCat.status === 'fulfilled' && Array.isArray(resCat.value?.data)) ? resCat.value.data : [];
+        const coletasList = (resColetas.status === 'fulfilled' && Array.isArray(resColetas.value?.data)) ? resColetas.value.data : [];
+        const pubsList = (resPubs.status === 'fulfilled' && Array.isArray(resPubs.value?.data)) ? resPubs.value.data : [];
+
+        // 1. Dicionário de nomes reais obtidos dinamicamente do banco de dados
+        const nomesPorId = new Map();
+
+        // Nomes de cidadãos do banco
+        rawCid.forEach(c => {
+          if (c.id && c.nome) nomesPorId.set(c.id, c.nome);
+        });
+
+        // Nomes das coletas
+        coletasList.forEach(col => {
+          if (col.cidadao_id && col.cidadao?.nome) {
+            nomesPorId.set(col.cidadao_id, col.cidadao.nome);
+          }
+        });
+
+        // Nomes das publicações
+        pubsList.forEach(pub => {
+          if (pub.autor_id && pub.autor?.nome) {
+            nomesPorId.set(pub.autor_id, pub.autor.nome);
+          }
+        });
+
+        // Nomes dos catadores
+        rawCat.forEach(cat => {
+          if (cat.id && cat.nome) nomesPorId.set(cat.id, cat.nome);
+          if (cat.auth_user_id && cat.nome) nomesPorId.set(cat.auth_user_id, cat.nome);
+        });
+
+        // Busca nomes reais de ofertantes via RPC (bypassa restrições RLS de leitura)
+        const cidadaoIdsColetas = Array.from(new Set(coletasList.map(c => c.cidadao_id).filter(Boolean)));
+        if (cidadaoIdsColetas.length > 0) {
+          try {
+            const { data: ofertantes } = await supabase.rpc('buscar_ofertante', { p_ids: cidadaoIdsColetas });
+            if (ofertantes && Array.isArray(ofertantes)) {
+              ofertantes.forEach(o => {
+                if (o.id && o.nome) nomesPorId.set(o.id, o.nome);
+              });
             }
           } catch (e) {}
         }
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const destParam = urlParams.get('destinatario');
+        // Conjunto de identificadores de catadores para exclusão estrita da lista de cidadãos
+        const catadorIds = new Set();
+        rawCat.forEach(cat => {
+          if (cat.id) catadorIds.add(cat.id);
+          if (cat.auth_user_id) catadorIds.add(cat.auth_user_id);
+        });
 
-        // 1. Busca Administradores do Sistema
-        let admins = [];
-        try {
-          const { data: adminsData } = await supabase
-            .from('cidadao')
-            .select('id, nome, email')
-            .eq('nivel_acesso', 'administrador')
-            .order('nome', { ascending: true });
-          admins = (adminsData || []).filter(a => a.id !== currentUserId);
-        } catch (e) {
-          console.warn('Erro ao buscar administradores:', e);
+        // Mapas unificados
+        const mapaCidadaos = new Map();
+        const mapaAdmins = new Map();
+
+        // A) Identificação de Administradores e Cidadãos a partir da tabela 'cidadao' do banco de dados
+        rawCid.forEach(c => {
+          if (!c.id) return;
+          const niv = (c.nivel_acesso || '').toLowerCase().trim();
+          const nomeReal = nomesPorId.get(c.id) || c.nome;
+          if (!nomeReal) return;
+
+          // Ignora se for catador
+          if (catadorIds.has(c.id)) {
+            return;
+          }
+
+          if (niv === 'administrador' || niv === 'admin') {
+            mapaAdmins.set(c.id, {
+              id: c.id,
+              nome: nomeReal,
+              email: c.email || '',
+              telefone: c.telefone || '',
+              nivel_acesso: 'administrador'
+            });
+          } else {
+            mapaCidadaos.set(c.id, {
+              id: c.id,
+              nome: nomeReal,
+              email: c.email || '',
+              telefone: c.telefone || '',
+              nivel_acesso: 'cidadao'
+            });
+          }
+        });
+
+        // B) Alimenta das coletas (ofertantes reais de materiais)
+        coletasList.forEach(col => {
+          if (col.cidadao_id) {
+            const realNome = nomesPorId.get(col.cidadao_id) || col.cidadao?.nome;
+            if (!realNome) return;
+
+            if (catadorIds.has(col.cidadao_id)) {
+              return;
+            }
+
+            if (!mapaCidadaos.has(col.cidadao_id) && !mapaAdmins.has(col.cidadao_id)) {
+              mapaCidadaos.set(col.cidadao_id, {
+                id: col.cidadao_id,
+                nome: realNome,
+                email: col.cidadao?.email || '',
+                telefone: col.cidadao?.telefone || '',
+                nivel_acesso: 'cidadao'
+              });
+            }
+          }
+        });
+
+        // C) Alimenta autores administradores a partir de publicações
+        pubsList.forEach(pub => {
+          if (pub.autor_id) {
+            const realNome = nomesPorId.get(pub.autor_id) || pub.autor?.nome;
+            if (realNome && !mapaAdmins.has(pub.autor_id)) {
+              mapaAdmins.set(pub.autor_id, {
+                id: pub.autor_id,
+                nome: realNome,
+                email: pub.autor?.email || '',
+                telefone: '',
+                nivel_acesso: 'administrador'
+              });
+              mapaCidadaos.delete(pub.autor_id);
+            }
+          }
+        });
+
+        // D) Limpeza estrita final: garante que nenhum catador ou admin permaneça em mapaCidadaos
+        for (const [id] of mapaCidadaos.entries()) {
+          if (catadorIds.has(id) || mapaAdmins.has(id)) {
+            mapaCidadaos.delete(id);
+          }
         }
 
-        if (eCatador) {
-          if (lblDest) lblDest.innerHTML = '<i class="fa-solid fa-comments"></i> Conversa Ativa:';
-
-          const idsCidadaos = new Set();
-
-          // Busca cidadãos de coletas
-          try {
-            const { data: coletasData } = await supabase
-              .from('coleta')
-              .select('cidadao_id');
-
-            if (coletasData) {
-              coletasData.forEach(c => {
-                if (c.cidadao_id && c.cidadao_id !== currentUserId) idsCidadaos.add(c.cidadao_id);
-              });
-            }
-          } catch (e) {
-            console.warn('Erro ao carregar ofertas de cidadãos:', e);
-          }
-
-          // Busca mensagens anteriores do catador
-          try {
-            const { data: msgs } = await supabase
-              .from('mensagens')
-              .select('remetente_id, destinatario_id')
-              .or(`remetente_id.eq.${currentUserId},destinatario_id.eq.${currentUserId}`);
-
-            if (msgs) {
-              msgs.forEach(m => {
-                const outroId = m.remetente_id === currentUserId ? m.destinatario_id : m.remetente_id;
-                if (outroId && outroId !== currentUserId) {
-                  // Se não for admin, adiciona aos cidadãos
-                  if (!admins.some(a => a.id === outroId)) {
-                    idsCidadaos.add(outroId);
-                  }
-                }
-              });
-            }
-          } catch (e) {
-            console.warn('Erro ao carregar mensagens:', e);
-          }
-
-          if (destParam && !admins.some(a => a.id === destParam)) {
-            idsCidadaos.add(destParam);
-          }
-
-          // Busca dados detalhados dos cidadãos
-          const arrayCidIds = Array.from(idsCidadaos);
-          let cidadaosData = [];
-          if (arrayCidIds.length > 0) {
-            try {
-              const { data: rpcRes, error: rpcErr } = await supabase.rpc('buscar_ofertante', { p_ids: arrayCidIds });
-              if (!rpcErr && rpcRes && rpcRes.length > 0) {
-                cidadaosData = rpcRes;
-              } else {
-                const { data: directCid } = await supabase.from('cidadao').select('id, nome').in('id', arrayCidIds);
-                cidadaosData = directCid || [];
-              }
-            } catch (e) {
-              try {
-                const { data: directCid } = await supabase.from('cidadao').select('id, nome').in('id', arrayCidIds);
-                cidadaosData = directCid || [];
-              } catch (e2) {}
-            }
-          }
-
-          const nomesCidMap = {};
-          (cidadaosData || []).forEach(c => {
-            const nomeExib = (c.nome && c.nome.trim() !== '' && !c.nome.toLowerCase().includes('erro')) ? c.nome : 'Cidadão Doador';
-            nomesCidMap[c.id] = nomeExib;
+        // Salva cache de nomes atualizado exclusivamente a partir do banco de dados
+        try {
+          const localNames = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
+          mapaCidadaos.forEach((v, k) => { if (v.nome) localNames[k] = v.nome; });
+          mapaAdmins.forEach((v, k) => { if (v.nome) localNames[k] = v.nome; });
+          rawCat.forEach(cat => {
+            if (cat.id && cat.nome) localNames[cat.id] = cat.nome;
+            if (cat.auth_user_id && cat.nome) localNames[cat.auth_user_id] = cat.nome;
           });
+          localStorage.setItem('sys_user_names', JSON.stringify(localNames));
+        } catch (e) {}
 
-          if (destParam && !nomesCidMap[destParam] && !admins.some(a => a.id === destParam)) {
-            try {
-              const { data: singleCid } = await supabase.from('cidadao').select('nome').eq('id', destParam).maybeSingle();
-              if (singleCid?.nome) nomesCidMap[destParam] = singleCid.nome;
-            } catch (e) {}
+        listaAdmins = Array.from(mapaAdmins.values());
+        listaCidadaos = Array.from(mapaCidadaos.values());
+        listaCatadores = rawCat;
+
+        // Montagem das Abas de Filtragem conforme o perfil do usuário
+        tabsContainer.innerHTML = '';
+
+        if (eAdmin) {
+          // ADMIN: Botão 1: Catadores | Botão 2: Cidadãos
+          tabsContainer.innerHTML = `
+            <button type="button" class="btn-tab active" id="btn_tab_opt1" data-tipo="catadores" style="height: 38px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+              <i class="fa-solid fa-id-card"></i> Catadores
+            </button>
+            <button type="button" class="btn-tab btn-secondary-pill" id="btn_tab_opt2" data-tipo="cidadaos" style="height: 38px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+              <i class="fa-solid fa-user"></i> Cidadãos
+            </button>
+          `;
+        } else if (eCatador) {
+          // CATADOR: Botão 1: Cidadãos | Botão 2: Administração
+          tabsContainer.innerHTML = `
+            <button type="button" class="btn-tab active" id="btn_tab_opt1" data-tipo="cidadaos" style="height: 38px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+              <i class="fa-solid fa-user"></i> Cidadãos
+            </button>
+            <button type="button" class="btn-tab btn-secondary-pill" id="btn_tab_opt2" data-tipo="admins" style="height: 38px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+              <i class="fa-solid fa-user-shield"></i> Administração
+            </button>
+          `;
+        } else {
+          // CIDADÃO: Botão 1: Catadores | Botão 2: Administração
+          tabsContainer.innerHTML = `
+            <button type="button" class="btn-tab active" id="btn_tab_opt1" data-tipo="catadores" style="height: 38px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+              <i class="fa-solid fa-id-card"></i> Catadores
+            </button>
+            <button type="button" class="btn-tab btn-secondary-pill" id="btn_tab_opt2" data-tipo="admins" style="height: 38px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+              <i class="fa-solid fa-user-shield"></i> Administração
+            </button>
+          `;
+        }
+
+        // Event listeners nas abas
+        tabsContainer.querySelectorAll('.btn-tab').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const tipo = e.currentTarget.dataset.tipo;
+            ativarAba(tipo);
+          });
+        });
+
+        // Determina qual aba inicial carregar (caso haja destinatarioParam específico)
+        let tipoInicial = eCatador ? 'cidadaos' : 'catadores';
+
+        if (initialDestParam) {
+          const eDestAdmin = listaAdmins.some(a => a.id === initialDestParam);
+          const eDestCat = listaCatadores.some(c => c.id === initialDestParam || c.auth_user_id === initialDestParam);
+          const eDestCid = listaCidadaos.some(c => c.id === initialDestParam);
+
+          if (eDestAdmin) {
+            tipoInicial = 'admins';
+          } else if (eDestCat) {
+            tipoInicial = 'catadores';
+          } else if (eDestCid) {
+            tipoInicial = 'cidadaos';
           }
+        }
 
-          selectDest.innerHTML = '<option value="">-- Selecione uma Conversa ou Contato --</option>';
+        ativarAba(tipoInicial, initialDestParam);
 
-          // Grupo 1: Administradores do Sistema
-          if (admins.length > 0) {
-            const optGroupAdmins = document.createElement('optgroup');
-            optGroupAdmins.label = 'Administração do Sistema';
-            admins.forEach(adm => {
+      } catch (err) {
+        console.error('Erro ao carregar contatos:', err);
+        selectDest.innerHTML = '<option value="">Erro ao carregar contatos</option>';
+      }
+    }
+
+    function ativarAba(tipo, targetId = null) {
+      abaAtiva = tipo;
+
+      tabsContainer.querySelectorAll('.btn-tab').forEach(btn => {
+        if (btn.dataset.tipo === tipo) {
+          btn.className = 'btn-tab active';
+        } else {
+          btn.className = 'btn-tab btn-secondary-pill';
+        }
+      });
+
+      renderizarDropdown(tipo, targetId);
+    }
+
+    function renderizarDropdown(tipo, targetId = null) {
+      selectDest.innerHTML = '';
+
+      let currentUserId = perfilAtual?.user?.id || perfilAtual?.dados?.id || perfilAtual?.id || null;
+
+      if (tipo === 'catadores') {
+        lblDest.innerHTML = '<i class="fa-solid fa-id-card"></i> Selecionar Catador:';
+        selectDest.innerHTML = '<option value="">-- Selecione um Catador --</option>';
+
+        const catComApp = listaCatadores.filter(c => Boolean(c.auth_user_id) && c.auth_user_id !== currentUserId && c.id !== currentUserId);
+        const catSemApp = listaCatadores.filter(c => !c.auth_user_id);
+
+        if (catComApp.length === 0 && catSemApp.length === 0) {
+          const optVazio = document.createElement('option');
+          optVazio.disabled = true;
+          optVazio.textContent = 'Nenhum catador cadastrado no momento';
+          selectDest.appendChild(optVazio);
+        } else {
+          if (catComApp.length > 0) {
+            const grpApp = document.createElement('optgroup');
+            grpApp.label = 'Catadores com Acesso ao App (Chat Disponível)';
+            catComApp.forEach(c => {
               const opt = document.createElement('option');
-              opt.value = adm.id;
-              opt.dataset.nome = adm.nome || 'Administrador';
-              opt.textContent = `Administrador: ${adm.nome || 'Suporte Fatec'}`;
-              optGroupAdmins.appendChild(opt);
-            });
-            selectDest.appendChild(optGroupAdmins);
-          }
-
-          // Grupo 2: Cidadãos Ofertantes / Moradores
-          if (arrayCidIds.length > 0) {
-            const optGroupCidadaos = document.createElement('optgroup');
-            optGroupCidadaos.label = 'Cidadãos (Ofertas & Dúvidas de Coletas)';
-            arrayCidIds.forEach(id => {
-              const nomeContato = nomesCidMap[id] || 'Cidadão Doador';
-              const opt = document.createElement('option');
-              opt.value = id;
-              opt.dataset.nome = nomeContato;
-              opt.textContent = `Cidadão: ${nomeContato}`;
-              optGroupCidadaos.appendChild(opt);
-            });
-            selectDest.appendChild(optGroupCidadaos);
-          }
-
-          if (admins.length === 0 && arrayCidIds.length === 0) {
-            selectDest.innerHTML = '<option value="">Nenhuma conversa ativa no momento</option>';
-          }
-
-          if (destParam) {
-            selectDest.value = destParam;
-          }
-          atualizarDestinatarioSelecionado();
-
-        } else if (eAdmin) {
-          // Visão Administrador: pode falar com Catadores e Cidadãos
-          if (lblDest) lblDest.innerHTML = '<i class="fa-solid fa-comments"></i> Conversa com Usuário:';
-
-          const [catRes, cidRes] = await Promise.all([
-            supabase.from('catador').select('id, auth_user_id, nome, telefone').order('nome', { ascending: true }),
-            supabase.from('cidadao').select('id, nome, email').neq('id', currentUserId).order('nome', { ascending: true })
-          ]);
-
-          const catadores = catRes.data || [];
-          const cidadaos = cidRes.data || [];
-
-          selectDest.innerHTML = '<option value="">-- Selecione um Usuário --</option>';
-
-          if (catadores.length > 0) {
-            const optGroupCat = document.createElement('optgroup');
-            optGroupCat.label = 'Catadores Cadastrados';
-            catadores.forEach(c => {
-              const temApp = Boolean(c.auth_user_id);
-              const opt = document.createElement('option');
-              opt.value = temApp ? c.auth_user_id : `SEM_APP_${c.id}`;
+              opt.value = c.auth_user_id;
               opt.dataset.catadorId = c.id;
-              opt.dataset.authUserId = c.auth_user_id || '';
+              opt.dataset.authUserId = c.auth_user_id;
               opt.dataset.nome = c.nome;
               opt.dataset.telefone = c.telefone || '';
-              opt.dataset.temApp = temApp ? 'true' : 'false';
-              opt.textContent = `${c.nome} ${temApp ? '(App)' : '(Sem App)'}`;
-              optGroupCat.appendChild(opt);
+              opt.dataset.temApp = 'true';
+              opt.textContent = `${formatarNome(c.nome)} (App)`;
+              grpApp.appendChild(opt);
             });
-            selectDest.appendChild(optGroupCat);
+            selectDest.appendChild(grpApp);
           }
 
-          if (cidadaos.length > 0) {
-            const optGroupCid = document.createElement('optgroup');
-            optGroupCid.label = 'Cidadãos Cadastrados';
-            cidadaos.forEach(cid => {
-              const opt = document.createElement('option');
-              opt.value = cid.id;
-              opt.dataset.nome = cid.nome;
-              opt.textContent = `Cidadão: ${cid.nome || cid.email}`;
-              optGroupCid.appendChild(opt);
-            });
-            selectDest.appendChild(optGroupCid);
-          }
-
-          if (destParam) {
-            let opt = Array.from(selectDest.options).find(o => 
-              o.value === destParam || 
-              o.dataset.catadorId === destParam || 
-              o.dataset.authUserId === destParam ||
-              o.value === `SEM_APP_${destParam}`
-            );
-            if (opt) selectDest.value = opt.value;
-          }
-          atualizarDestinatarioSelecionado();
-
-        } else {
-          // Visão Cidadão: seleciona Catadores e Administradores
-          if (lblDest) lblDest.innerHTML = '<i class="fa-solid fa-id-card"></i> Selecionar Destinatário:<span class="req">*</span>';
-
-          const { data: catadores } = await supabase
-            .from('catador')
-            .select('id, auth_user_id, nome, telefone')
-            .order('nome', { ascending: true });
-
-          selectDest.innerHTML = '<option value="">-- Selecione um Catador ou Administrador --</option>';
-
-          const catadoresComApp = (catadores || []).filter(c => Boolean(c.auth_user_id));
-          const catadoresSemApp = (catadores || []).filter(c => !c.auth_user_id);
-
-          if (catadoresComApp.length > 0) {
-            const optGroupComApp = document.createElement('optgroup');
-            optGroupComApp.label = 'Catadores com Acesso ao App (Chat Disponível)';
-            catadoresComApp.forEach(c => {
-              if (c.auth_user_id !== currentUserId) {
-                const opt = document.createElement('option');
-                opt.value = c.auth_user_id;
-                opt.dataset.catadorId = c.id;
-                opt.dataset.authUserId = c.auth_user_id;
-                opt.dataset.nome = c.nome;
-                opt.dataset.telefone = c.telefone || '';
-                opt.dataset.temApp = 'true';
-                opt.textContent = c.nome;
-                optGroupComApp.appendChild(opt);
-              }
-            });
-            selectDest.appendChild(optGroupComApp);
-          }
-
-          if (catadoresSemApp.length > 0) {
-            const optGroupSemApp = document.createElement('optgroup');
-            optGroupSemApp.label = 'Catadores Cadastrados por Terceiros';
-            catadoresSemApp.forEach(c => {
+          if (catSemApp.length > 0) {
+            const grpSem = document.createElement('optgroup');
+            grpSem.label = 'Catadores Cadastrados por Terceiros (Telefone)';
+            catSemApp.forEach(c => {
               const opt = document.createElement('option');
               opt.value = `SEM_APP_${c.id}`;
               opt.dataset.catadorId = c.id;
@@ -419,65 +486,77 @@
               opt.dataset.nome = c.nome;
               opt.dataset.telefone = c.telefone || '';
               opt.dataset.temApp = 'false';
-              opt.textContent = c.nome;
-              optGroupSemApp.appendChild(opt);
+              opt.textContent = `${formatarNome(c.nome)} (Sem App)`;
+              grpSem.appendChild(opt);
             });
-            selectDest.appendChild(optGroupSemApp);
+            selectDest.appendChild(grpSem);
           }
-
-          if (admins.length > 0) {
-            const optGroupAdmins = document.createElement('optgroup');
-            optGroupAdmins.label = 'Administração do Sistema';
-            admins.forEach(adm => {
-              const opt = document.createElement('option');
-              opt.value = adm.id;
-              opt.dataset.nome = adm.nome || 'Administrador';
-              opt.textContent = `Administrador: ${adm.nome || 'Suporte Fatec'}`;
-              optGroupAdmins.appendChild(opt);
-            });
-            selectDest.appendChild(optGroupAdmins);
-          }
-
-          if (destParam) {
-            let opt = Array.from(selectDest.options).find(o => 
-              o.value === destParam || 
-              o.dataset.catadorId === destParam || 
-              o.dataset.authUserId === destParam ||
-              o.value === `SEM_APP_${destParam}`
-            );
-            if (opt) {
-              selectDest.value = opt.value;
-            } else {
-              try {
-                const { data: catByPk } = await supabase.from('catador').select('id, auth_user_id, nome, telefone').or(`id.eq.${destParam},auth_user_id.eq.${destParam}`).maybeSingle();
-                if (catByPk) {
-                  const temApp = Boolean(catByPk.auth_user_id);
-                  const targetVal = temApp ? catByPk.auth_user_id : `SEM_APP_${catByPk.id}`;
-                  let existingOpt = Array.from(selectDest.options).find(o => o.value === targetVal);
-                  if (!existingOpt) {
-                    existingOpt = document.createElement('option');
-                    existingOpt.value = targetVal;
-                    existingOpt.dataset.catadorId = catByPk.id;
-                    existingOpt.dataset.authUserId = catByPk.auth_user_id || '';
-                    existingOpt.dataset.nome = catByPk.nome;
-                    existingOpt.dataset.telefone = catByPk.telefone || '';
-                    existingOpt.dataset.temApp = temApp ? 'true' : 'false';
-                    existingOpt.textContent = catByPk.nome;
-                    selectDest.appendChild(existingOpt);
-                  }
-                  selectDest.value = targetVal;
-                }
-              } catch (e) {}
-            }
-          }
-          atualizarDestinatarioSelecionado();
         }
 
-      } catch (err) {
-        console.error('Erro ao carregar contatos:', err);
-        selectDest.innerHTML = '<option value="">Erro ao carregar contatos</option>';
-        atualizarDestinatarioSelecionado();
+      } else if (tipo === 'cidadaos') {
+        lblDest.innerHTML = '<i class="fa-solid fa-user"></i> Selecionar Cidadão:';
+        selectDest.innerHTML = '<option value="">-- Selecione um Cidadão --</option>';
+
+        const cidDisponiveis = listaCidadaos.filter(cid => cid.id !== currentUserId);
+
+        if (cidDisponiveis.length === 0) {
+          const optVazio = document.createElement('option');
+          optVazio.disabled = true;
+          optVazio.textContent = 'Nenhum cidadão cadastrado no momento';
+          selectDest.appendChild(optVazio);
+        } else {
+          const grpCid = document.createElement('optgroup');
+          grpCid.label = 'Cidadãos Cadastrados no Sistema';
+
+          cidDisponiveis.forEach(cid => {
+            const opt = document.createElement('option');
+            opt.value = cid.id;
+            opt.dataset.nome = cid.nome;
+            opt.dataset.temApp = 'true';
+            opt.textContent = `${formatarNome(cid.nome) || cid.email || 'Cidadão'}`;
+            grpCid.appendChild(opt);
+          });
+          selectDest.appendChild(grpCid);
+        }
+
+      } else if (tipo === 'admins') {
+        lblDest.innerHTML = '<i class="fa-solid fa-user-shield"></i> Selecionar Administrador:';
+        selectDest.innerHTML = '<option value="">-- Selecione um Administrador --</option>';
+
+        const admDisponiveis = listaAdmins.filter(adm => adm.id !== currentUserId);
+
+        if (admDisponiveis.length === 0) {
+          const optVazio = document.createElement('option');
+          optVazio.disabled = true;
+          optVazio.textContent = 'Nenhum administrador encontrado';
+          selectDest.appendChild(optVazio);
+        } else {
+          const grpAdm = document.createElement('optgroup');
+          grpAdm.label = 'Administração do Sistema';
+
+          admDisponiveis.forEach(adm => {
+            const opt = document.createElement('option');
+            opt.value = adm.id;
+            opt.dataset.nome = adm.nome;
+            opt.dataset.temApp = 'true';
+            opt.textContent = `${formatarNome(adm.nome)} (Administrador)`;
+            grpAdm.appendChild(opt);
+          });
+          selectDest.appendChild(grpAdm);
+        }
       }
+
+      if (targetId) {
+        let opt = Array.from(selectDest.options).find(o => 
+          o.value === targetId || 
+          o.dataset.catadorId === targetId || 
+          o.dataset.authUserId === targetId ||
+          o.value === `SEM_APP_${targetId}`
+        );
+        if (opt) selectDest.value = opt.value;
+      }
+
+      atualizarDestinatarioSelecionado();
     }
 
     selectDest.addEventListener('change', atualizarDestinatarioSelecionado);
@@ -485,7 +564,7 @@
     function atualizarDestinatarioSelecionado() {
       const selectedOption = selectDest.selectedOptions[0];
       const temApp = selectedOption ? selectedOption.dataset.temApp !== 'false' : true;
-      const nomeContato = selectedOption ? (selectedOption.dataset.nome || selectedOption.textContent) : 'Catador';
+      const nomeContato = selectedOption ? (selectedOption.dataset.nome || selectedOption.textContent) : 'Contato';
       const telContato = selectedOption ? selectedOption.dataset.telefone : '';
 
       destinatarioId = selectDest.value || null;
@@ -496,15 +575,14 @@
         input.setAttribute('disabled', 'true');
         btnEnviar.setAttribute('disabled', 'true');
         input.value = '';
-        input.placeholder = 'Selecione uma conversa para enviar mensagens...';
+        input.placeholder = 'Selecione um contato para enviar mensagens...';
         box.innerHTML = `
           <div style="text-align: center; color: var(--cinza-texto-aux); margin: auto; padding: 20px;">
             <i class="fa-regular fa-comments" style="font-size: 2.2rem; display: block; margin-bottom: 8px; color: var(--verde-escuro, #1b6d24);"></i>
-            Por favor, selecione uma conversa no campo acima para enviar mensagens.
+            Por favor, selecione um contato no campo acima para enviar mensagens.
           </div>
         `;
       } else if (!temApp || destinatarioId.startsWith('SEM_APP_')) {
-        // Catador sem login no aplicativo
         input.disabled = true;
         btnEnviar.disabled = true;
         input.setAttribute('disabled', 'true');
@@ -518,7 +596,7 @@
             </div>
             <h4 style="font-size: 1.1rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin-bottom: 8px;">Chat Indisponível pelo Aplicativo</h4>
             <p style="font-size: 0.9rem; color: #555; line-height: 1.5; margin-bottom: 14px;">
-              O catador <strong>${nomeContato.replace('[Catador] ', '').replace(' (Sem login no app)', '')}</strong> foi registrado por terceiros e ainda não possui login ou aplicativo instalado para receber mensagens.
+              O catador <strong>${nomeContato.replace('[Catador] ', '').replace(' (Sem App)', '')}</strong> foi registrado por terceiros e ainda não possui login ou aplicativo instalado para receber mensagens.
             </p>
             ${telContato ? `
               <div style="background: #f9fbf9; border: 1px solid #c8e6c9; border-radius: 10px; padding: 10px 14px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--verde-escuro, #1b6d24); font-weight: 700;">
@@ -569,10 +647,12 @@
       box.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); margin: auto;"><i class="fa-solid fa-circle-notch fa-spin"></i> Carregando mensagens...</div>`;
 
       try {
+        const userIds = [currentUserId];
+        if (catadorPkId && catadorPkId !== currentUserId) userIds.push(catadorPkId);
+
         const { data, error } = await supabase
           .from('mensagens')
           .select('*')
-          .or(`remetente_id.eq.${currentUserId},destinatario_id.eq.${currentUserId}`)
           .order('enviado_em', { ascending: true });
 
         if (error) {
@@ -582,8 +662,8 @@
         }
 
         const mensagensFiltradas = (data || []).filter(
-          m => (m.remetente_id === currentUserId && m.destinatario_id === destinatarioId) ||
-               (m.remetente_id === destinatarioId && m.destinatario_id === currentUserId)
+          m => (userIds.includes(m.remetente_id) && m.destinatario_id === destinatarioId) ||
+               (m.remetente_id === destinatarioId && userIds.includes(m.destinatario_id))
         );
 
         renderizarMensagens(mensagensFiltradas, currentUserId);

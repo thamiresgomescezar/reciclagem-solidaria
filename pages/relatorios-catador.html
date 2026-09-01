@@ -56,26 +56,34 @@
             <div id="alert_container" class="status-message"></div>
 
             <!-- Cards Sintéticos de Indicadores (KPIs) -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px;" id="kpi_container">
-              <div style="background: white; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                <i class="fa-solid fa-clipboard-check" style="color: var(--verde-escuro, #1b6d24); font-size: 1.2rem; margin-bottom: 4px;"></i>
-                <div style="font-size: 1.3rem; font-weight: 800; color: var(--verde-escuro, #1b6d24);" id="kpi_total_coletas">0</div>
-                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Coletas Atribuídas</div>
+            <div id="kpi_container" class="grid-kpis-4">
+              <div class="kpi-card">
+                <div class="kpi-icon-wrap" style="color: var(--verde-escuro, #1b6d24);">
+                  <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+                <div class="kpi-value" style="color: var(--verde-escuro, #1b6d24);" id="kpi_total_coletas">0</div>
+                <div class="kpi-label">Coletas Atribuídas</div>
               </div>
-              <div style="background: white; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                <i class="fa-solid fa-recycle" style="color: #0288d1; font-size: 1.2rem; margin-bottom: 4px;"></i>
-                <div style="font-size: 0.95rem; font-weight: 800; color: #0288d1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpi_top_material">-</div>
-                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Material Principal</div>
+              <div class="kpi-card">
+                <div class="kpi-icon-wrap" style="color: #0288d1;">
+                  <i class="fa-solid fa-recycle"></i>
+                </div>
+                <div class="kpi-value" style="color: #0288d1;" id="kpi_top_material">-</div>
+                <div class="kpi-label">Material Principal</div>
               </div>
-              <div style="background: white; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                <i class="fa-solid fa-map-location-dot" style="color: #ed6c02; font-size: 1.2rem; margin-bottom: 4px;"></i>
-                <div style="font-size: 0.95rem; font-weight: 800; color: #ed6c02; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="kpi_top_ponto">-</div>
-                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Ponto Mais Buscado</div>
+              <div class="kpi-card">
+                <div class="kpi-icon-wrap" style="color: #ed6c02;">
+                  <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+                <div class="kpi-value" style="color: #ed6c02;" id="kpi_top_ponto">-</div>
+                <div class="kpi-label">Ponto Mais Buscado</div>
               </div>
-              <div style="background: white; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-                <i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.2rem; margin-bottom: 4px;"></i>
-                <div style="font-size: 1.3rem; font-weight: 800; color: #2e7d32;" id="kpi_taxa_conclusao">0%</div>
-                <div style="font-size: 0.75rem; color: #666; font-weight: 600;">Coletas Retiradas</div>
+              <div class="kpi-card">
+                <div class="kpi-icon-wrap" style="color: #2e7d32;">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div class="kpi-value" style="color: #2e7d32;" id="kpi_taxa_conclusao">0%</div>
+                <div class="kpi-label">Coletas Retiradas</div>
               </div>
             </div>
 

@@ -55,7 +55,7 @@ export async function initNavMenu() {
           <li class="sidebar-nav-item"><a href="${p('relatorios.html')}"><i class="fa-solid fa-chart-column"></i> Relatórios</a></li>
           <li class="sidebar-nav-item"><a href="${p('usuarios-cadastrados.html')}"><i class="fa-solid fa-users"></i> Usuários Cadastrados</a></li>
           <li class="sidebar-nav-item"><a href="${p('catadores-cadastrados.html')}"><i class="fa-solid fa-sitemap"></i> Catadores Cadastrados</a></li>
-          <li class="sidebar-nav-item"><a href="${p('cadastrar-catador.html')}"><i class="fa-solid fa-id-card"></i> Cadastrar Catador</a></li>
+          <li class="sidebar-nav-item"><a href="${p('cadastrar-catador.html')}"><i class="fa-solid fa-user-plus"></i> Cadastrar Catador</a></li>
           <li class="sidebar-nav-item"><a href="${p('mensagens.html')}"><i class="fa-solid fa-comments"></i> Mensagens</a></li>
           <li class="sidebar-nav-item"><a href="${p('publicacoes.html')}"><i class="fa-solid fa-bullhorn"></i> Publicações</a></li>
         `;
@@ -78,6 +78,7 @@ export async function initNavMenu() {
           <li class="sidebar-nav-item"><a href="${p('minhas-ofertas.html')}"><i class="fa-solid fa-clipboard-check"></i> Minhas Ofertas</a></li>
           <li class="sidebar-nav-item"><a href="${p('agenda-horarios.html')}"><i class="fa-solid fa-calendar-days"></i> Agenda & Horários</a></li>
           <li class="sidebar-nav-item"><a href="${p('catadores-cadastrados.html')}"><i class="fa-solid fa-sitemap"></i> Catadores Cadastrados</a></li>
+          <li class="sidebar-nav-item"><a href="${p('cadastrar-catador.html')}"><i class="fa-solid fa-user-plus"></i> Cadastrar Catador</a></li>
           <li class="sidebar-nav-item"><a href="${p('mensagens.html')}"><i class="fa-solid fa-comments"></i> Mensagens</a></li>
           <li class="sidebar-nav-item"><a href="${p('publicacoes.html')}"><i class="fa-solid fa-bullhorn"></i> Publicações</a></li>
         `;

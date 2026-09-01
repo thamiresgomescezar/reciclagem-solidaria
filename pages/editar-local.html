@@ -177,38 +177,6 @@
 
     let locaisCarregados = [];
 
-    // CEP auto-complete via ViaCEP
-    if (inputCep) {
-      inputCep.addEventListener('blur', async () => {
-        const cepVal = inputCep.value.replace(/\D/g, '');
-        if (cepVal.length === 8) {
-          try {
-            const resp = await fetch(`https://viacep.com.br/ws/${cepVal}/json/`);
-            const data = await resp.json();
-            if (!data.erro) {
-              const inputRua = document.getElementById('local_rua');
-              const inputBairro = document.getElementById('local_bairro');
-              const inputCidade = document.getElementById('local_cidade');
-              const inputEstado = document.getElementById('local_estado');
-
-              if (data.logradouro && inputRua && !inputRua.value) {
-                inputRua.value = data.logradouro;
-              }
-              if (data.bairro && inputBairro && !inputBairro.value) {
-                inputBairro.value = data.bairro;
-              }
-              if (data.localidade && inputCidade && !inputCidade.value) {
-                inputCidade.value = data.localidade;
-              }
-              if (data.uf && inputEstado) {
-                inputEstado.value = data.uf;
-              }
-            }
-          } catch (e) {}
-        }
-      });
-    }
-
     function abrirFormularioNovo() {
       form.reset();
       document.getElementById('local_id').value = '';
@@ -351,7 +319,8 @@
               title: 'Funcionalidade Futura',
               message: `A visualização e rotas interativas no mapa estarão disponíveis em versões futuras.\n\nLocal de Coleta: ${nome}\nEndereço: ${endereco}`,
               buttonText: 'Entendido',
-              confirmColor: '#1b6d24'
+              confirmColor: '#1b6d24',
+              icon: '<i class="fa-solid fa-map-location-dot" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>'
             });
           });
         });
