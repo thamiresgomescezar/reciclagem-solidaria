@@ -64,6 +64,7 @@
   <script type="module" src="../js/lib/navMenu.js"></script>
   <script type="module">
     import { getPerfilAtual } from '../js/services/auth.js';
+    import { proibirAcessoInvalido } from '../js/lib/routeGuard.js';
     import { listarAgendaPorLocal } from '../js/services/agenda.js';
     import { getLocalRetiradaPadrao } from '../js/services/coletas.js';
     import { renderCalendarGrid, resetCalendarPendingMap } from '../js/pages/calendarPicker.js';
@@ -92,6 +93,10 @@
     }
 
     async function initPage() {
+      const perfil = await proibirAcessoInvalido(['administrador', 'cidadao', 'catador']);
+      if (!perfil) return;
+      perfilAtual = perfil;
+
       const container = document.getElementById('calendar-picker-box');
       if (!container) return;
 

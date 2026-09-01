@@ -77,6 +77,7 @@
   <script type="module">
     import { supabase } from '../js/lib/supabaseClient.js';
     import { getPerfilAtual } from '../js/services/auth.js';
+    import { proibirAcessoInvalido } from '../js/lib/routeGuard.js';
     import { showAlertModal } from '../js/lib/modal.js';
     import { formatarNomeTitleCase, formatarTelefoneExibicao } from '../js/lib/validation.js';
 
@@ -88,11 +89,15 @@
 
     async function initPerfil() {
       try {
-        perfilAtual = await getPerfilAtual().catch(() => null);
+        perfilAtual = await proibirAcessoInvalido(['administrador', 'cidadao', 'catador']);
+        if (!perfilAtual) return false;
         if (perfilAtual?.tipo && btnVoltarTop) {
           btnVoltarTop.href = perfilAtual.tipo === 'administrador' ? './dashboard-admin.html' : (perfilAtual.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
         }
-      } catch (e) {}
+        return true;
+      } catch (e) {
+        return false;
+      }
     }
 
     if (btnVoltarTop) {
@@ -167,7 +172,8 @@
             title: 'Funcionalidade Futura',
             message: 'A integração direta com o WhatsApp estará disponível futuramente. No momento, utilize o telefone informado para contato convencional.',
             buttonText: 'Entendido',
-            confirmColor: '#1b6d24'
+            confirmColor: '#1b6d24',
+            icon: '<i class="fa-brands fa-whatsapp" style="color: #25d366; font-size: 1.35rem;"></i>'
           });
         });
       });

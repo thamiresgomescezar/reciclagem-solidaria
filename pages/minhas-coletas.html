@@ -65,6 +65,19 @@
 
             <div id="feedback-msg" class="status-message"></div>
 
+            <!-- Toolbar de Filtros por Status da Coleta -->
+            <div id="filtros_status_coletas" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1.25rem;">
+              <button type="button" class="btn-tab active" data-filtro="todos" style="height: 38px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+                <i class="fa-solid fa-list-ul"></i> Todas
+              </button>
+              <button type="button" class="btn-tab btn-secondary-pill" data-filtro="agendadas" style="height: 38px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+                <i class="fa-solid fa-calendar-check"></i> Agendadas
+              </button>
+              <button type="button" class="btn-tab btn-secondary-pill" data-filtro="concluidas" style="height: 38px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
+                <i class="fa-solid fa-circle-check"></i> Concluídas
+              </button>
+            </div>
+
             <!-- Lista de Coletas -->
             <div id="lista-minhas-coletas" style="display: flex; flex-direction: column; gap: 12px;">
               <div style="text-align: center; padding: 30px; color: #666; font-size: 0.95rem;">

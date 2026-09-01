@@ -94,6 +94,7 @@ export function showAlertModal({
   message = '',
   buttonText = 'Entendido',
   confirmColor = '#1b6d24',
+  icon = '<i class="fa-solid fa-circle-info" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>',
   onOk = () => {}
 }) {
   const existingModal = document.getElementById('custom-alert-modal');
@@ -132,7 +133,7 @@ export function showAlertModal({
 
   box.innerHTML = `
     <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; gap: 8px;">
-      <i class="fa-solid fa-circle-exclamation" style="color: #e65100;"></i> ${title}
+      ${icon} ${title}
     </h3>
     <p style="margin: 0; font-size: 0.92rem; color: #555; line-height: 1.5; white-space: pre-line;">
       ${message}

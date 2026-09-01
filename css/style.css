@@ -430,20 +430,21 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
   background: #ffffff !important;
   border: 1.5px solid #e2e8f0 !important;
   border-radius: 14px !important;
-  padding: 18px !important;
+  padding: 16px !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
   box-sizing: border-box !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: flex-start !important;
   margin-bottom: 16px !important;
+  width: 100% !important;
 }
 
 .relatorio-card-box h5 {
   color: var(--verde-escuro, #1b6d24) !important;
   font-weight: 800 !important;
   margin-top: 0 !important;
-  margin-bottom: 14px !important;
+  margin-bottom: 12px !important;
   font-size: 0.98rem !important;
   display: flex !important;
   align-items: center !important;
@@ -454,9 +455,10 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
   width: 100% !important;
   overflow-x: auto !important;
   -webkit-overflow-scrolling: touch !important;
-  border: 1px solid #e8f5e9 !important;
+  border: 1px solid #c8e6c9 !important;
   border-radius: 10px !important;
   background: #ffffff !important;
+  box-sizing: border-box !important;
 }
 
 .tabela-relatorio-clean {
@@ -473,7 +475,7 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
 }
 
 .tabela-relatorio-clean th {
-  padding: 10px 12px !important;
+  padding: 9px 12px !important;
   font-weight: 700 !important;
   text-align: left !important;
 }
@@ -483,7 +485,7 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
 }
 
 .tabela-relatorio-clean td {
-  padding: 10px 12px !important;
+  padding: 9px 12px !important;
   border-bottom: 1px solid #f0f4f0 !important;
   color: #333333 !important;
 }
@@ -536,6 +538,84 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
   box-sizing: border-box !important;
 }
 
+/* Container de KPIs / Cards Sintéticos com Simetria Perfeita */
+#kpi_container, .grid-kpis-4 {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-auto-rows: 1fr !important;
+  gap: 10px !important;
+  margin-bottom: 16px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.kpi-card {
+  background: #ffffff !important;
+  padding: 12px 8px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(0,0,0,0.06) !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100px !important;
+  box-sizing: border-box !important;
+}
+
+.kpi-icon-wrap {
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.25rem !important;
+  margin: 0 auto 4px !important;
+  flex-shrink: 0 !important;
+}
+
+.kpi-value {
+  font-size: 1.02rem !important;
+  font-weight: 800 !important;
+  height: 26px !important;
+  line-height: 26px !important;
+  display: block !important;
+  text-align: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+}
+
+#kpi_top_ponto.kpi-value {
+  font-size: 0.92rem !important;
+}
+
+.kpi-label {
+  font-size: 0.74rem !important;
+  color: #666666 !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  display: block !important;
+  text-align: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 2px auto 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  box-sizing: border-box !important;
+}
+
 /* Grupo de Ações nos Cards de Locais de Coleta (Grid Simétrico de 4 Colunas no Desktop) */
 .card-acoes-local {
   display: grid !important;
@@ -575,6 +655,51 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
 
 .btn-secondary-pill:hover {
   background-color: #c8e6c9;
+}
+
+/* Botões de Alternância de Notificações no Perfil */
+.btn-toggle-notif {
+  height: 38px !important;
+  padding: 0 18px !important;
+  border-radius: 999px !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+  text-decoration: none !important;
+  outline: none !important;
+  font-family: inherit !important;
+}
+
+.btn-toggle-notif.ativar {
+  background: var(--verde-escuro, #1b6d24) !important;
+  color: #ffffff !important;
+  border: 1.5px solid var(--verde-escuro, #1b6d24) !important;
+  box-shadow: 0 2px 6px rgba(27, 109, 36, 0.2) !important;
+}
+
+.btn-toggle-notif.ativar:hover {
+  background: #14551c !important;
+  border-color: #14551c !important;
+}
+
+.btn-toggle-notif.desativar {
+  background: #ffffff !important;
+  color: #c62828 !important;
+  border: 1.5px solid #ef9a9a !important;
+  box-shadow: 0 2px 6px rgba(198, 40, 40, 0.08) !important;
+}
+
+.btn-toggle-notif.desativar:hover {
+  background: #ffebee !important;
+  border-color: #e57373 !important;
+  color: #b71c1c !important;
 }
 
 /* Campos com Underline Limpo & Textareas */
@@ -1016,10 +1141,21 @@ option:disabled {
     grid-column: span 2 !important;
   }
 
-  #kpi_container {
-    grid-template-columns: repeat(2, 1fr) !important;
+  #kpi_container, .grid-kpis-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-rows: 1fr !important;
     gap: 8px !important;
     width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .kpi-card {
+    min-width: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 98px !important;
+    padding: 10px 6px !important;
+    box-sizing: border-box !important;
   }
 
   .grid-relatorios-duplo {

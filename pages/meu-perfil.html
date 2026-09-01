@@ -184,6 +184,7 @@
   <script type="module" src="../js/lib/navMenu.js"></script>
   <script type="module">
     import { getPerfilAtual } from '../js/services/auth.js';
+    import { proibirAcessoInvalido } from '../js/lib/routeGuard.js';
     import { supabase } from '../js/lib/supabaseClient.js';
     import { renderEnderecoForm, lerDadosEndereco, preencherEndereco, validarEndereco } from '../js/pages/enderecoForm.js';
     import { showConfirmModal, showAlertModal } from '../js/lib/modal.js';
@@ -301,11 +302,8 @@
 
     async function inicializarPerfil() {
       try {
-        perfilAtual = await getPerfilAtual();
-        if (!perfilAtual) {
-          window.location.href = './login.html';
-          return;
-        }
+        perfilAtual = await proibirAcessoInvalido(['administrador', 'cidadao', 'catador']);
+        if (!perfilAtual) return;
 
         const d = perfilAtual.dados || {};
         const elEmail = document.getElementById('perfil_email');
@@ -381,6 +379,12 @@
         if (!nome) {
           statusMsg.className = 'status-message error';
           statusMsg.textContent = 'Informe seu nome completo.';
+          return;
+        }
+
+        if (!telefone) {
+          statusMsg.className = 'status-message error';
+          statusMsg.textContent = 'Informe seu telefone / WhatsApp.';
           return;
         }
 

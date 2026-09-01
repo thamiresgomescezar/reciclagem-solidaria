@@ -75,36 +75,17 @@
               Seu Painel de Coletas
             </h1>
 
-            <!-- Cartão Fixo de Notificações de Novas Ofertas (Acima das Opções) -->
-            <div id="banner_notificacoes_inicial" style="background: #ffffff; border: 1.5px solid #a5d6a7; border-radius: 16px; padding: 14px 18px; margin-bottom: 1.5rem; box-shadow: 0 4px 14px rgba(27,109,36,0.06); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-              <div style="display: flex; align-items: flex-start; gap: 12px; max-width: 620px;">
-                <div style="width: 38px; height: 38px; border-radius: 50%; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; margin-top: 2px;">
-                  <i class="fa-solid fa-bell"></i>
-                </div>
-                <div>
-                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <h3 style="margin: 0; font-size: 0.98rem; font-weight: 800; color: var(--verde-escuro, #1b6d24);">
-                      Notificações de Novas Ofertas
-                    </h3>
-                    <span id="badge_status_notif_banner" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: #ffebee; color: #c62828; font-weight: 700;">
-                      Desativadas
-                    </span>
-                  </div>
-                  <p id="desc_notif_banner" style="margin: 3px 0 0; font-size: 0.82rem; color: #555; line-height: 1.4;">
-                    Receba avisos na tela sempre que novos materiais forem disponibilizados ou reabertos.
-                  </p>
-                  <div style="margin-top: 5px; font-size: 0.76rem; color: #666; display: flex; align-items: center; gap: 5px;">
-                    <i class="fa-solid fa-circle-info" style="color: var(--verde-escuro, #1b6d24);"></i>
-                    <span><strong>Dica:</strong> Para receber os avisos, mantenha-se conectado (ao terminar de usar, basta fechar o navegador sem clicar em "Sair do Sistema").</span>
-                  </div>
+            <!-- Faixa Minimalista de Status de Notificações de Novas Ofertas -->
+            <div id="banner_notificacoes_inicial" style="background: #f8faf8; border: 1px solid #c8e6c9; border-radius: 12px; padding: 10px 16px; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: #2e5b32;">
+                <i id="icone_notif_banner" class="fa-solid fa-bell" style="color: #2e7d32; font-size: 1.1rem; flex-shrink: 0;"></i>
+                <div id="desc_notif_banner" style="display: flex; flex-direction: column; gap: 2px;">
+                  <div>Notificações de novas ofertas: <strong id="badge_status_notif_banner" style="color: #1b6d24; font-weight: 700;">Ativadas</strong></div>
+                  <div style="color: #666; font-size: 0.78rem;">(Ajuste suas preferências em <em>Meu Perfil</em>)</div>
                 </div>
               </div>
 
-              <div id="acoes_notif_banner" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                <button type="button" id="btn_ativar_notif_banner" class="btn-avancar" style="width: auto; padding: 7px 16px; font-size: 0.82rem; border-radius: 999px;">
-                  <i class="fa-solid fa-bell"></i> Ativar Notificações
-                </button>
-              </div>
+              <div id="acoes_notif_banner" style="display: flex; gap: 8px; align-items: center;"></div>
             </div>
 
             <div class="proto-grid-3x3">
@@ -233,60 +214,47 @@
 
     function verificarExibicaoBannerNotificacoes() {
       const status = getStatusNotificacao();
+      const iconeNotif = document.getElementById('icone_notif_banner');
 
       if (status === 'granted') {
-        if (badgeStatusNotif) {
-          badgeStatusNotif.textContent = 'Ativadas';
-          badgeStatusNotif.style.background = '#e8f5e9';
-          badgeStatusNotif.style.color = '#1b6d24';
+        if (iconeNotif) {
+          iconeNotif.className = 'fa-solid fa-bell';
+          iconeNotif.style.color = '#2e7d32';
         }
         if (descNotifBanner) {
-          descNotifBanner.textContent = 'Você receberá avisos automáticos de novas ofertas de materiais no seu dispositivo.';
-        }
-        if (acoesNotifBanner) {
-          acoesNotifBanner.innerHTML = `
-            <a href="meu-perfil.html" class="btn-secondary-pill" style="font-size: 0.8rem; padding: 6px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: #ffffff;">
-              <i class="fa-solid fa-gear"></i> Preferências no Perfil
-            </a>
+          descNotifBanner.innerHTML = `
+            <div>Notificações de novas ofertas: <strong style="color: #1b6d24; font-weight: 700;">Ativadas</strong></div>
+            <div style="color: #666; font-size: 0.78rem;">(Ajuste suas preferências em <em>Meu Perfil</em>)</div>
           `;
         }
+        if (acoesNotifBanner) {
+          acoesNotifBanner.innerHTML = '';
+        }
       } else {
-        if (badgeStatusNotif) {
-          badgeStatusNotif.textContent = 'Desativadas';
-          badgeStatusNotif.style.background = '#ffebee';
-          badgeStatusNotif.style.color = '#c62828';
+        if (iconeNotif) {
+          iconeNotif.className = 'fa-solid fa-bell-slash';
+          iconeNotif.style.color = '#c62828';
         }
         if (descNotifBanner) {
-          descNotifBanner.textContent = 'Receba avisos na tela sempre que novos materiais forem disponibilizados ou reabertos.';
+          descNotifBanner.innerHTML = `
+            <div>Notificações de novas ofertas: <strong style="color: #c62828; font-weight: 700;">Desativadas</strong></div>
+            <div style="color: #666; font-size: 0.78rem;">Clique em Ativar para receber alertas de materiais na tela.</div>
+          `;
         }
         if (acoesNotifBanner) {
           acoesNotifBanner.innerHTML = `
-            <button type="button" id="btn_ativar_notif_banner" class="btn-avancar" style="width: auto; padding: 7px 16px; font-size: 0.82rem; border-radius: 999px;">
-              <i class="fa-solid fa-bell"></i> Ativar Notificações
+            <button type="button" id="btn_ativar_notif_banner" class="btn-secondary-pill" style="font-size: 0.75rem; padding: 4px 12px; height: auto; border-color: #a5d6a7; color: #1b6d24;">
+              <i class="fa-solid fa-bell"></i> Ativar
             </button>
           `;
           const btn = document.getElementById('btn_ativar_notif_banner');
           if (btn) {
             btn.addEventListener('click', async () => {
               btn.disabled = true;
-              btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Ativando...';
+              btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
               const res = await solicitarPermissaoNotificacao();
               btn.disabled = false;
               verificarExibicaoBannerNotificacoes();
-
-              if (!res.ok) {
-                let msgDiv = document.getElementById('erro_notif_banner');
-                if (!msgDiv) {
-                  msgDiv = document.createElement('div');
-                  msgDiv.id = 'erro_notif_banner';
-                  msgDiv.style.cssText = 'font-size: 0.78rem; color: #c62828; background: #ffebee; border: 1px solid #ef9a9a; border-radius: 8px; padding: 6px 10px; margin-top: 8px; width: 100%;';
-                  const banner = document.getElementById('banner_notificacoes_inicial');
-                  if (banner) banner.appendChild(msgDiv);
-                }
-                msgDiv.style.display = 'block';
-                msgDiv.textContent = res.erro || 'Permissão não concedida no navegador.';
-                setTimeout(() => { if (msgDiv) msgDiv.style.display = 'none'; }, 8000);
-              }
             });
           }
         }

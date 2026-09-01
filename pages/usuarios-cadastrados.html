@@ -291,6 +291,13 @@
           return;
         }
 
+        if (!telefone) {
+          editStatusMsg.className = 'status-message error';
+          editStatusMsg.textContent = 'Informe o telefone / WhatsApp do usuário.';
+          editStatusMsg.style.display = 'block';
+          return;
+        }
+
         const errEnd = validarEndereco();
         if (errEnd) {
           editStatusMsg.className = 'status-message error';
@@ -421,6 +428,15 @@
             });
           });
         }
+
+        try {
+          const cache = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
+          todosUsuarios.forEach(u => {
+            if (u.id && u.nome) cache[u.id] = u.nome;
+            if (u.auth_user_id && u.nome) cache[u.auth_user_id] = u.nome;
+          });
+          localStorage.setItem('sys_user_names', JSON.stringify(cache));
+        } catch (e) {}
 
         renderizarLista(filtroAtual);
       } catch (err) {

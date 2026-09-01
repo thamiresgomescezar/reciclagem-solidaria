@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div style="font-size: 0.88rem; color: #444; background: #f9fbf9; padding: 12px; border-radius: 10px; border: 1px solid #e8f5e9; display: flex; flex-direction: column; gap: 4px;">
             <p style="margin: 0;"><strong><i class="fa-solid fa-location-dot" style="color: #2e7d32;"></i> Ponto de Retirada:</strong> ${localNome}</p>
             <p style="margin: 0; font-size: 0.82rem; color: #555;"><strong><i class="fa-solid fa-map-pin" style="color: #777;"></i> Endereço:</strong> ${enderecoCompleto}</p>
-            <p style="margin: 0;"><strong><i class="fa-solid fa-user" style="color: #0288d1;"></i> Ofertante (Cidadão):</strong> ${nomeDoador}</p>
+            <p style="margin: 0;"><strong><i class="fa-solid fa-user" style="color: #0288d1;"></i> Ofertante:</strong> ${nomeDoador}</p>
           </div>
 
           <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
@@ -427,7 +427,8 @@ function abrirModalMapa(nomePonto, enderecoCompleto) {
     title: 'Funcionalidade Futura',
     message: `A visualização e rotas interativas no mapa estarão disponíveis em versões futuras.\n\nLocal de Coleta: ${nomePonto}\nEndereço: ${enderecoCompleto}`,
     buttonText: 'Entendido',
-    confirmColor: '#1b6d24'
+    confirmColor: '#1b6d24',
+    icon: '<i class="fa-solid fa-map-location-dot" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>'
   });
 
   /*
