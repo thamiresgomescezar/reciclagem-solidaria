@@ -329,8 +329,22 @@ document.addEventListener('DOMContentLoaded', async () => {
               }
             }
 
-            const horariosGerados = gerarHorariosDisponiveis(slotsDoDia);
-            selectHorario.innerHTML = horariosGerados.map(h => `<option value="${h}">${h} hs</option>`).join('');
+            const horariosGerados = gerarHorariosDisponiveis(slotsDoDia, dateStr);
+            const btnConfirmar = document.getElementById('btn-confirmar-agendamento-final');
+
+            if (!horariosGerados || horariosGerados.length === 0) {
+              selectHorario.innerHTML = '<option value="" disabled selected>Nenhum horário disponível restante para hoje</option>';
+              if (btnConfirmar) btnConfirmar.disabled = true;
+              if (modalFeedback) {
+                modalFeedback.textContent = 'Não há mais horários disponíveis para agendamento na data de hoje. Por favor, escolha uma data futura no calendário.';
+                modalFeedback.className = 'feedback-msg error';
+                modalFeedback.style.display = 'block';
+              }
+            } else {
+              selectHorario.innerHTML = horariosGerados.map(h => `<option value="${h}">${h} hs</option>`).join('');
+              if (btnConfirmar) btnConfirmar.disabled = false;
+              if (modalFeedback) modalFeedback.style.display = 'none';
+            }
           }
         }
       });
@@ -341,7 +355,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const modalFeedback = document.getElementById('modal-feedback');
         const selectHorario = document.getElementById('select-horario-retirada');
-        const horaVal = selectHorario ? selectHorario.value : '09:00';
+        const horaVal = selectHorario ? selectHorario.value : '';
+
+        if (!horaVal) {
+          modalFeedback.textContent = 'Por favor, selecione um horário válido para retirada.';
+          modalFeedback.className = 'feedback-msg error';
+          modalFeedback.style.display = 'block';
+          return;
+        }
+
+        // Validação estrita contra agendamentos retroativos
+        const [anoVal, mesVal, diaVal] = dataSelecionadaStr.split('-').map(Number);
+        const [horaNum, minNum] = horaVal.split(':').map(Number);
+        const dataHoraAgendada = new Date(anoVal, mesVal - 1, diaVal, horaNum, minNum, 0);
+        const agora = new Date();
+
+        if (dataHoraAgendada <= agora) {
+          modalFeedback.textContent = 'Não é permitido agendar coletas em horários retroativos. Por favor, escolha um horário futuro.';
+          modalFeedback.className = 'feedback-msg error';
+          modalFeedback.style.display = 'block';
+          btnConfirmarFinal.disabled = false;
+          return;
+        }
 
         try {
           btnConfirmarFinal.disabled = true;
@@ -363,21 +398,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             resErr = e;
           }
 
-          // Fallback de atualização direta na tabela coleta caso o RPC tenha restrição
-          if (resErr) {
-            const { error: errUpdate } = await supabase
-              .from('coleta')
-              .update({
-                catador_id: perfil.id,
-                cod_status: 2,
-                data: dataSelecionadaStr,
-                hora: horaVal,
-                atualizado_em: new Date().toISOString()
-              })
-              .eq('cod_coleta', coletaId);
+          // Atualiza a hora e a data exatas selecionadas pelo catador
+          const { error: errUpdate } = await supabase
+            .from('coleta')
+            .update({
+              catador_id: perfil.id,
+              cod_status: 2,
+              data: dataSelecionadaStr,
+              hora: horaVal,
+              atualizado_em: new Date().toISOString()
+            })
+            .eq('cod_coleta', coletaId);
 
-            if (errUpdate) throw errUpdate;
-          }
+          if (resErr && errUpdate) throw errUpdate;
 
           const [ano, mes, dia] = dataSelecionadaStr.split('-');
           showSuccess(`Coleta agendada com sucesso para ${dia}/${mes}/${ano} às ${horaVal}!`);
@@ -430,22 +463,24 @@ function abrirModalMapa(nomePonto, enderecoCompleto) {
     confirmColor: '#1b6d24',
     icon: '<i class="fa-solid fa-map-location-dot" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>'
   });
-
-  /*
-  // Código preservado para integração futura com mapas / embed:
-  const embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(enderecoCompleto)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-  const mapsExternalUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoCompleto)}`;
-  // ...
-  */
 }
 
-function gerarHorariosDisponiveis(slots) {
+function gerarHorariosDisponiveis(slots, dateStr = null) {
   const lista = [];
-  if (!slots || slots.length === 0) {
-    return ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'];
-  }
+  const baseSlots = (!slots || slots.length === 0)
+    ? [{ hora_inicio: '08:00', hora_fim: '17:00', pausa_inicio: '12:00', pausa_fim: '13:00' }]
+    : slots;
 
-  slots.forEach(slot => {
+  const agora = new Date();
+  const hojeY = agora.getFullYear();
+  const hojeM = String(agora.getMonth() + 1).padStart(2, '0');
+  const hojeD = String(agora.getDate()).padStart(2, '0');
+  const hojeStr = `${hojeY}-${hojeM}-${hojeD}`;
+
+  const ehHoje = (dateStr === hojeStr);
+  const minutosAtuais = agora.getHours() * 60 + agora.getMinutes();
+
+  baseSlots.forEach(slot => {
     if (!slot.hora_inicio || !slot.hora_fim) return;
     const [hIni, mIni] = slot.hora_inicio.split(':').map(Number);
     const [hFim, mFim] = slot.hora_fim.split(':').map(Number);
@@ -463,7 +498,13 @@ function gerarHorariosDisponiveis(slots) {
 
     while (curMin <= endMin) {
       // Se estiver dentro da pausa para almoço, pula para o próximo horário
-      if (pIniMin !== -1 && pFimMin !== -1 && curMin > pIniMin && curMin < pFimMin) {
+      if (pIniMin !== -1 && pFimMin !== -1 && curMin >= pIniMin && curMin < pFimMin) {
+        curMin += 30;
+        continue;
+      }
+
+      // Se for a data de hoje, bloqueia horários retroativos (que já passaram no relógio)
+      if (ehHoje && curMin <= minutosAtuais) {
         curMin += 30;
         continue;
       }
@@ -478,6 +519,6 @@ function gerarHorariosDisponiveis(slots) {
     }
   });
 
-  return lista.length > 0 ? lista : ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
+  return lista;
 }
 
