@@ -166,7 +166,7 @@ Antes de começar os testes, é importante entender os 3 perfis que usam a plata
 * **Como fazer (Passo a Passo):**
   1. Deixe o painel do Catador aberto no seu celular ou computador.
   2. Em outro aparelho, entre como Cidadão e cadastre uma nova doação.
-* **O que deve acontecer na tela:** O Catador recebe um aviso na tela no mesmo instante dizendo *"Nova oferta de material disponível!"* sem precisar apertar F5.
+* **O que deve acontecer na tela:** O Catador recebe um aviso na tela no mesmo instante dizendo *"Nova Oferta Disponível"* (informando o tipo do material) sem precisar apertar F5.
 
 ---
 
