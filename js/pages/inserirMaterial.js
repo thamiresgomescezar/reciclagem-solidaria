@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (checkConfirmarAgenda && !checkConfirmarAgenda.checked) {
-      showError('Por favor, confirme que a unidade estará aberta nos horários indicados para atendimento aos catadores. Se não, entre em contato com um dos administradores para ajustar a agenda.');
+      showError('Por favor, confirme que a unidade estará aberta nos horários indicados para atendimento aos catadores. Se não, entre em contato com um dos administradores para atualizar a agenda.');
       return;
     }
 

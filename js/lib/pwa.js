@@ -29,6 +29,9 @@ export function tocarSomNotificacao() {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     const now = ctx.currentTime;
 
     const osc1 = ctx.createOscillator();
@@ -248,10 +251,18 @@ export async function dispararNotificacao({ title, body, url }) {
   }
 }
 
+// Mapa de estados de coletas conhecidas: id -> { disponivel: boolean, catador_id: string|null }
+const coletasConhecidas = new Map();
+let primeiraCargaConcluida = false;
+let intervaloPolling = null;
+
 /**
  * Inicia a escuta em tempo real no Supabase para notificar novas ofertas
+ * Utiliza sistema híbrido: WebSockets Realtime + Polling inteligente a cada 4 segundos.
  */
 export function iniciarMonitoramentoColetasRealtime() {
+  iniciarPollingContingencia();
+
   if (realtimeChannel) return;
 
   try {
@@ -261,6 +272,11 @@ export function iniciarMonitoramentoColetasRealtime() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'coleta' },
         async (payload) => {
+          const id = payload.new?.cod_coleta;
+          if (id) {
+            if (coletasConhecidas.has(id)) return;
+            coletasConhecidas.set(id, { disponivel: true, catador_id: null });
+          }
           const qtd = payload.new?.quantidade || 'Novo lote';
           await dispararNotificacao({
             title: '📦 Nova Oferta de Material!',
@@ -277,6 +293,12 @@ export function iniciarMonitoramentoColetasRealtime() {
           const eraOcupadoOuInativo = payload.old && (payload.old.cod_status !== 1 || payload.old.catador_id !== null);
 
           if (agoraDisponivel && eraOcupadoOuInativo) {
+            const id = payload.new?.cod_coleta;
+            if (id) {
+              const jaNotificada = coletasConhecidas.get(id)?.disponivel === true;
+              if (jaNotificada) return;
+              coletasConhecidas.set(id, { disponivel: true, catador_id: null });
+            }
             const qtd = payload.new?.quantidade || 'Material reciclável';
             const eraCancelamentoCatador = Boolean(payload.old?.catador_id);
 
@@ -296,10 +318,96 @@ export function iniciarMonitoramentoColetasRealtime() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[Realtime] Canal de coletas conectado via WebSocket.');
+        } else if (err) {
+          console.warn('[Realtime] Canal de coletas aviso:', status, err);
+        }
+      });
   } catch (err) {
     console.warn('Não foi possível conectar ao canal Realtime do Supabase:', err);
   }
+}
+
+/**
+ * Polling de contingência a cada 4 segundos:
+ * Garante entrega imediata das notificações tanto para NOVAS ofertas
+ * quanto para ofertas CANCELADAS / REABERTAS que voltaram a ficar disponíveis!
+ */
+export function iniciarPollingContingencia() {
+  if (intervaloPolling) return;
+
+  const verificarColetas = async () => {
+    if (localStorage.getItem('reciclagem_notificacoes_ativas') === 'false') return;
+
+    try {
+      const { data, error } = await supabase
+        .from('coleta')
+        .select('cod_coleta, quantidade, cod_status, catador_id, criado_em')
+        .order('criado_em', { ascending: false })
+        .limit(20);
+
+      if (!error && data) {
+        if (!primeiraCargaConcluida) {
+          // Na primeira carga, memoriza o status de cada coleta sem apitar
+          data.forEach(item => {
+            if (item.cod_coleta) {
+              const statusVal = item.cod_status;
+              const isDisp = (statusVal === 1 || statusVal === null || statusVal === undefined) && !item.catador_id;
+              coletasConhecidas.set(item.cod_coleta, { disponivel: isDisp, catador_id: item.catador_id });
+            }
+          });
+          primeiraCargaConcluida = true;
+          return;
+        }
+
+        // Nas verificações seguintes a cada 4 segundos:
+        for (const item of data) {
+          const id = item.cod_coleta;
+          if (!id) continue;
+          const statusVal = item.cod_status;
+          const isDisp = (statusVal === 1 || statusVal === null || statusVal === undefined) && !item.catador_id;
+          const estadoAnterior = coletasConhecidas.get(id);
+
+          // Cenário 1: Nova doação cadastrada agora pelo Cidadão
+          if (!estadoAnterior) {
+            coletasConhecidas.set(id, { disponivel: isDisp, catador_id: item.catador_id });
+            if (isDisp) {
+              const qtd = item.quantidade || 'Novo lote';
+              await dispararNotificacao({
+                title: '📦 Nova Oferta de Material!',
+                body: `Um material reciclável (${qtd}) foi disponibilizado para coleta.`,
+                url: window.location.pathname.includes('/pages/') ? './catador-materiais.html' : './pages/catador-materiais.html'
+              });
+            }
+          } 
+          // Cenário 2: Oferta cujo agendamento foi cancelado e voltou a ficar disponível!
+          else if (isDisp && estadoAnterior.disponivel === false) {
+            coletasConhecidas.set(id, { disponivel: isDisp, catador_id: item.catador_id });
+            const qtd = item.quantidade || 'Material reciclável';
+            const eraCancelamentoCatador = Boolean(estadoAnterior.catador_id);
+            await dispararNotificacao({
+              title: eraCancelamentoCatador ? '♻️ Coleta Disponível Novamente!' : '♻️ Oferta Redisponibilizada!',
+              body: eraCancelamentoCatador 
+                ? `O agendamento anterior foi cancelado e a oferta (${qtd}) foi liberada para retirada.`
+                : `Uma oferta (${qtd}) foi reaberta e está disponível para coleta.`,
+              url: window.location.pathname.includes('/pages/') ? './catador-materiais.html' : './pages/catador-materiais.html'
+            });
+          } else {
+            // Atualiza o estado sem disparar notificação (ex: virou agendada)
+            coletasConhecidas.set(id, { disponivel: isDisp, catador_id: item.catador_id });
+          }
+        }
+      }
+    } catch (err) {
+      // Silencioso em caso de oscilação transitória
+    }
+  };
+
+  // Executa imediatamente e depois a cada 4 segundos
+  verificarColetas();
+  intervaloPolling = setInterval(verificarColetas, 4000);
 }
 
 // Sincronização em tempo real caso o usuário mude as permissões nativas no navegador
