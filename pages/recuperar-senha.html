@@ -20,9 +20,7 @@
     <!-- Top Header -->
     <div class="top-bar">
       <div></div>
-      <a href="./login.html" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
-        <i class="fa-solid fa-arrow-left"></i> Voltar ao Login
-      </a>
+      <div></div>
     </div>
 
     <div class="main-content">
@@ -43,32 +41,25 @@
           </div>
         </aside>
 
-        <!-- 2/4 Centro: Formulário de Recuperação -->
+        <!-- 2/4 Centro: Orientação de Suporte Direto -->
         <main class="center-panel">
-          <div style="width: 100%;">
-            <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1rem;">
-              Recuperar Acesso
+          <div style="width: 100%; max-width: 460px; margin: 0 auto; text-align: center;">
+            <div style="width: 64px; height: 64px; background: #e8f5e9; border-radius: 50%; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.85rem;">
+              <i class="fa-solid fa-circle-info"></i>
+            </div>
+
+            <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin-bottom: 0.75rem;">
+              Recuperação de Senha
             </h1>
-            <p style="text-align: center; color: var(--cinza-texto-aux); font-size: 0.9rem; margin-bottom: 1.5rem;">
-              Informe seu e-mail cadastrado para receber as instruções de redefinição de senha.
+
+            <p style="color: #444; font-size: 0.95rem; line-height: 1.6; margin-bottom: 24px;">
+              No momento, a recuperação automática de senha está desabilitada.<br><br>
+              Caso tenha perdido ou esquecido sua senha, por favor entre em contato com os <strong>desenvolvedores</strong> ou com a administração da Fatec para restabelecer o seu acesso.
             </p>
 
-            <form id="form_recuperar" novalidate style="max-width: 440px; margin: 0 auto;">
-              <div class="campo">
-                <label for="email">E-mail Cadastrado:<span class="req">*</span></label>
-                <input type="email" id="email" class="input-underline" placeholder="seuemail@exemplo.com" autocomplete="email" required>
-              </div>
-
-              <button type="submit" class="btn-avancar" id="btn_enviar" style="margin-top: 1.25rem;">
-                <i class="fa-solid fa-paper-plane"></i> ENVIAR INSTRUÇÕES
-              </button>
-
-              <div id="statusMsg" class="status-message" style="margin-top: 1rem;"></div>
-
-              <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; font-weight: 600;">
-                Lembrou sua senha? <a href="./login.html" style="color: var(--verde-escuro, #1b6d24); font-weight: 800; text-decoration: underline;">Voltar para o Login</a>
-              </p>
-            </form>
+            <a href="./login.html" class="btn-avancar" style="text-decoration: none; justify-content: center; width: 100%;">
+              <i class="fa-solid fa-arrow-left"></i> Voltar ao Login
+            </a>
           </div>
         </main>
 
@@ -79,55 +70,5 @@
   </div>
 
   <script type="module" src="../js/lib/navMenu.js"></script>
-  <script type="module">
-    import { supabase } from '../js/lib/supabaseClient.js';
-
-    const form = document.getElementById('form_recuperar');
-    const statusMsg = document.getElementById('statusMsg');
-    const btn = document.getElementById('btn_enviar');
-    const inputEmail = document.getElementById('email');
-
-    if (inputEmail) {
-      inputEmail.addEventListener('input', (e) => {
-        e.target.value = e.target.value.toLowerCase().replace(/\s+/g, '');
-      });
-      inputEmail.addEventListener('blur', (e) => {
-        e.target.value = e.target.value.trim().toLowerCase();
-      });
-    }
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      statusMsg.className = 'status-message';
-
-      const email = document.getElementById('email').value.trim().toLowerCase();
-      if (!email) {
-        statusMsg.className = 'status-message error';
-        statusMsg.textContent = 'Por favor, informe seu e-mail.';
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Enviando...';
-
-      try {
-        const redirectTarget = `${window.location.origin}${window.location.pathname.includes('/pages/') ? '' : '/pages'}/nova-senha.html`;
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: redirectTarget
-        });
-
-        if (error) throw error;
-
-        statusMsg.className = 'status-message success';
-        statusMsg.textContent = 'Enviamos as instruções de recuperação para o seu e-mail! Verifique sua caixa de entrada e spam.';
-      } catch (err) {
-        statusMsg.className = 'status-message error';
-        statusMsg.textContent = 'Erro ao solicitar recuperação: ' + err.message;
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ENVIAR INSTRUÇÕES';
-      }
-    });
-  </script>
 </body>
 </html>

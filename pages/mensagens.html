@@ -92,6 +92,7 @@
   <script type="module">
     import { supabase } from '../js/lib/supabaseClient.js';
     import { getPerfilAtual } from '../js/services/auth.js';
+    import { proibirAcessoInvalido } from '../js/lib/routeGuard.js';
     import { showAlertModal } from '../js/lib/modal.js';
 
     const box = document.getElementById('chat_messages_box');
@@ -131,11 +132,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        perfilAtual = await getPerfilAtual();
-      } catch (e) {
-        perfilAtual = null;
-      }
+      perfilAtual = await proibirAcessoInvalido(['administrador', 'cidadao', 'catador']);
+      if (!perfilAtual) return;
 
       const targetDashboard = perfilAtual?.tipo === 'administrador' 
         ? './dashboard-admin.html' 

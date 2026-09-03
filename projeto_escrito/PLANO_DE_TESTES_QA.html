@@ -2,348 +2,275 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Guia Prático de Testes (QA) — Reciclagem Solidária</title>
+  <title>Plano de Testes QA — Reciclagem Solidária</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
     @page {
       size: A4;
-      margin: 12mm 12mm 12mm 12mm;
+      margin: 12mm 14mm 12mm 14mm;
     }
-
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: #1f2937;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #1e293b;
       background-color: #ffffff;
       line-height: 1.45;
-      font-size: 10pt;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
+      font-size: 8.5pt;
     }
-
-    .header-container {
-      border-bottom: 3px solid #1b6d24;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
+    .header-doc {
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
+      align-items: center;
+      border-bottom: 2px solid #16a34a;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
     }
-
-    .title-group h1 {
-      font-size: 16pt;
+    .header-left h1 {
+      font-size: 15pt;
       font-weight: 800;
-      color: #1b6d24;
+      color: #0f172a;
       letter-spacing: -0.5px;
-      margin-bottom: 2px;
     }
-
-    .title-group h2 {
-      font-size: 11pt;
+    .header-left p {
+      font-size: 9pt;
+      color: #475569;
       font-weight: 600;
-      color: #4b5563;
     }
-
-    .meta-box {
+    .header-right {
       text-align: right;
-      font-size: 8.5pt;
-      color: #6b7280;
-    }
-
-    .meta-box strong {
-      color: #111827;
-    }
-
-    .badge-pill {
-      display: inline-block;
-      padding: 2px 8px;
       font-size: 7.5pt;
-      font-weight: 700;
-      border-radius: 999px;
-      text-transform: uppercase;
+      color: #64748b;
     }
-
-    .badge-amber {
-      background-color: #fffbeb;
-      color: #92400e;
-      border: 1px solid #fde68a;
-    }
-
-    .badge-green {
-      background-color: #ecfdf5;
-      color: #065f46;
-      border: 1px solid #a7f3d0;
-    }
-
-    .badge-red {
-      background-color: #fef2f2;
-      color: #991b1b;
-      border: 1px solid #fecaca;
-    }
-
-    .badge-blue {
-      background-color: #eff6ff;
-      color: #1e40af;
-      border: 1px solid #bfdbfe;
-    }
-
-    .intro-box {
+    .intro-banner {
       background-color: #f0fdf4;
       border: 1px solid #bbf7d0;
-      padding: 10px 14px;
-      margin-bottom: 12px;
       border-radius: 6px;
-      font-size: 9pt;
+      padding: 6px 10px;
+      font-size: 8pt;
       color: #166534;
+      margin-bottom: 10px;
     }
-
     .profiles-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 8px;
       margin-bottom: 12px;
     }
-
     .profile-card {
-      border: 1px solid #e2e8f0;
       border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 8.5pt;
+      padding: 6px 8px;
+      font-size: 7.5pt;
+      border: 1px solid #e2e8f0;
+      background-color: #f8fafc;
     }
-
-    .profile-card.p-amber {
-      background-color: #fffbeb;
-      border-color: #fde68a;
-    }
-    .profile-card.p-amber strong { color: #b45309; }
-
-    .profile-card.p-green {
-      background-color: #f0fdf4;
-      border-color: #bbf7d0;
-    }
-    .profile-card.p-green strong { color: #15803d; }
-
-    .profile-card.p-blue {
-      background-color: #eff6ff;
-      border-color: #bfdbfe;
-    }
-    .profile-card.p-blue strong { color: #1d4ed8; }
-
-    .profile-card strong {
-      display: block;
-      margin-bottom: 3px;
-      font-size: 9pt;
-    }
-
-    .section-title {
-      font-size: 11.5pt;
+    .profile-card.cidadao { border-left: 3px solid #ea580c; }
+    .profile-card.catador { border-left: 3px solid #16a34a; }
+    .profile-card.admin { border-left: 3px solid #2563eb; }
+    .profile-title {
       font-weight: 700;
-      color: #111827;
-      margin-top: 14px;
-      margin-bottom: 8px;
-      padding-bottom: 3px;
-      border-bottom: 1.5px solid #e5e7eb;
+      font-size: 8pt;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .section-title {
+      font-size: 10.5pt;
+      font-weight: 800;
+      margin: 10px 0 6px 0;
       display: flex;
       align-items: center;
       gap: 6px;
+      page-break-after: avoid;
     }
-
-    .section-title.red {
-      color: #b91c1c;
-      border-bottom-color: #fca5a5;
-    }
-
-    .section-title.amber {
-      color: #b45309;
-      border-bottom-color: #fde68a;
-    }
-
-    .section-title.green {
-      color: #15803d;
-      border-bottom-color: #86efac;
-    }
-
-    .section-title.blue {
-      color: #1d4ed8;
-      border-bottom-color: #93c5fd;
-    }
-
+    .section-title.red { color: #dc2626; }
+    .section-title.amber { color: #d97706; }
+    .section-title.green { color: #16a34a; }
+    .section-title.blue { color: #2563eb; }
+    .section-title.purple { color: #7c3aed; }
+    
     .test-card {
       border: 1px solid #e2e8f0;
       border-radius: 6px;
-      padding: 9px 12px;
-      margin-bottom: 8px;
+      padding: 7px 10px;
+      margin-bottom: 6px;
       background-color: #ffffff;
       page-break-inside: avoid;
     }
-
-    .test-card.red-card {
-      border-left: 4px solid #dc2626;
-    }
-
-    .test-card.amber-card {
-      border-left: 4px solid #d97706;
-    }
-
-    .test-card.green-card {
-      border-left: 4px solid #16a34a;
-    }
-
-    .test-card.blue-card {
-      border-left: 4px solid #2563eb;
-    }
+    .test-card.red-card { border-left: 4px solid #dc2626; }
+    .test-card.amber-card { border-left: 4px solid #d97706; }
+    .test-card.green-card { border-left: 4px solid #16a34a; }
+    .test-card.blue-card { border-left: 4px solid #2563eb; }
+    .test-card.purple-card { border-left: 4px solid #7c3aed; }
 
     .test-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
-
     .test-id {
       font-weight: 700;
-      font-size: 9.5pt;
-      color: #111827;
+      font-size: 8.5pt;
+      color: #0f172a;
     }
+    .badge-pill {
+      font-size: 6.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 9999px;
+      letter-spacing: 0.5px;
+    }
+    .badge-red { background-color: #fee2e2; color: #b91c1c; }
+    .badge-amber { background-color: #fef3c7; color: #b45309; }
+    .badge-green { background-color: #dcfce7; color: #15803d; }
+    .badge-blue { background-color: #dbeafe; color: #1d4ed8; }
 
     .test-what {
-      font-size: 8.5pt;
+      font-size: 7.5pt;
       font-weight: 600;
-      color: #4b5563;
-      margin-bottom: 4px;
+      color: #64748b;
+      margin-bottom: 3px;
     }
-
     .test-steps {
-      font-size: 8.5pt;
-      color: #374151;
-      margin-left: 14px;
-      margin-bottom: 4px;
-      line-height: 1.4;
+      font-size: 7.8pt;
+      color: #334155;
+      margin-left: 12px;
+      margin-bottom: 3px;
+      line-height: 1.35;
     }
-
     .test-result {
-      font-size: 8.5pt;
+      font-size: 7.8pt;
       font-weight: 600;
       color: #065f46;
       background-color: #f0fdf4;
-      padding: 4px 8px;
+      padding: 3px 6px;
       border-radius: 4px;
       margin-top: 3px;
       border: 1px solid #bbf7d0;
     }
-
+    .code-box {
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      background-color: #f1f5f9;
+      padding: 1px 3px;
+      border-radius: 3px;
+      font-size: 7.2pt;
+      color: #0f172a;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 8px;
-      margin-bottom: 12px;
-      font-size: 8.5pt;
+      margin-top: 6px;
+      margin-bottom: 8px;
+      font-size: 7.5pt;
       page-break-inside: avoid;
     }
-
     th {
       background-color: #f8fafc;
       color: #1e293b;
       font-weight: 700;
       text-align: left;
-      padding: 6px 8px;
+      padding: 5px 6px;
       border: 1px solid #cbd5e1;
-      font-size: 8pt;
+      font-size: 7pt;
       text-transform: uppercase;
     }
-
     td {
-      padding: 6px 8px;
+      padding: 4px 6px;
       border: 1px solid #e2e8f0;
       vertical-align: top;
       color: #334155;
     }
-
     tbody tr:nth-child(even) {
       background-color: #f8fafc;
     }
-
     .page-break {
       page-break-before: always;
     }
-
     .footer {
-      margin-top: 14px;
-      padding-top: 6px;
-      border-top: 1px solid #e5e7eb;
-      font-size: 7.5pt;
-      color: #9ca3af;
+      margin-top: 8px;
+      padding-top: 4px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 7pt;
+      color: #94a3b8;
       display: flex;
       justify-content: space-between;
-    }
-
-    .code-box {
-      font-family: Consolas, monospace;
-      background-color: #f1f5f9;
-      padding: 1px 4px;
-      border-radius: 3px;
-      font-size: 8pt;
     }
   </style>
 </head>
 <body>
 
-  <!-- PÁGINA 1: CABEÇALHO E BLOCO 1 (SEGURANÇA E ACESSO) -->
-  <div class="header-container">
-    <div class="title-group">
+  <!-- PÁGINA 1: CABEÇALHO + BLOCO 1 (SEGURANÇA E ACESSO) -->
+  <div class="header-doc">
+    <div class="header-left">
       <h1>GUIA PRÁTICO DE TESTES (PASSO A PASSO)</h1>
-      <h2>Sistema Reciclagem Solidária — Fatec Franco da Rocha</h2>
+      <p>Sistema Reciclagem Solidária — Fatec Franco da Rocha</p>
     </div>
-    <div class="meta-box">
-      <div><strong>Guia da Equipe de Testes (QA)</strong></div>
-      <div><strong>Data:</strong> 01/09/2026 | <strong>Versão:</strong> 1.0</div>
+    <div class="header-right">
+      <strong>Guia da Equipe de Testes (QA)</strong><br>
+      Data: 02/09/2026 | Versão: 2.0 (Completa)
     </div>
   </div>
 
-  <div class="intro-box">
-    <strong>👋 Olá, equipe de testes!</strong> Este guia foi feito para ser simples e direto ao ponto. Ele contém o passo a passo exato do que você deve clicar e verificar em cada tela da aplicação para saber se tudo está funcionando direitinho.
+  <div class="intro-banner">
+    👋 <strong>Olá, equipe de testes!</strong> Este guia prático cobre 100% dos fluxos reais e cenários de borda da aplicação.<br>
+    📱💻 <strong>Inspeção Geral:</strong> Abra todas as telas de cada um dos 3 perfis no computador e no celular. Caso note qualquer botão desalinhado, texto cortado ou comportamento fora do esperado, anote e tire print da tela!
   </div>
 
   <div class="profiles-grid">
-    <div class="profile-card p-amber">
-      <strong>🟠 1. Cidadão Consciente</strong>
-      Quem doa materiais recicláveis, cadastra catadores parceiros e acompanha as ofertas.
+    <div class="profile-card cidadao">
+      <div class="profile-title" style="color: #ea580c;">🟠 1. Cidadão Consciente</div>
+      Disponibiliza e doa materiais recicláveis.
     </div>
-    <div class="profile-card p-green">
-      <strong>🟢 2. Catador Autônomo</strong>
-      Quem recolhe os materiais, agenda horário e acompanha o total de quilos coletados.
+    <div class="profile-card catador">
+      <div class="profile-title" style="color: #16a34a;">🟢 2. Catador Autônomo</div>
+      Agenda e retira materiais recicláveis.
     </div>
-    <div class="profile-card p-blue">
-      <strong>🔵 3. Administrador</strong>
-      Equipe Fatec que cuida dos locais, horários da agenda, mensagens e publicações.
+    <div class="profile-card admin">
+      <div class="profile-title" style="color: #2563eb;">🔵 3. Administrador</div>
+      Gerencia o sistema (usuários, agenda e relatórios).
     </div>
   </div>
 
-  <div class="section-title red">🔴 Bloco 1: Testes Importantes de Acesso e Segurança</div>
+  <div class="section-title red">🔴 Bloco 1: Testes de Segurança Rigorosa, Acesso e Senhas</div>
 
   <div class="test-card red-card">
     <div class="test-header">
-      <span class="test-id">Teste 01 — Entrar em páginas restritas de outro perfil ou sem login</span>
+      <span class="test-id">Teste 01 — Bloqueio Cruzado de Telas Restritas (Todos os Perfis e Anônimo)</span>
       <span class="badge-pill badge-red">Prioridade Alta</span>
     </div>
-    <div class="test-what">O que testar: Bloqueio rigoroso pela barra de endereços (ex: Cidadão tentando ver Relatórios ou telas de Admin/Catador).</div>
+    <div class="test-what">O que testar: Garantir que ninguém consiga invadir telas de outros perfis digitando o link direto na barra de navegação.</div>
     <div class="test-steps">
-      1. <strong>Anônimo:</strong> Em aba anônima, tente acessar: <span class="code-box">http://localhost:8080/pages/dashboard-admin.html</span> ou <span class="code-box">http://localhost:8080/pages/relatorios.html</span>.<br>
-      2. <strong>Cidadão no Admin:</strong> Logado como Cidadão, tente acessar: <span class="code-box">http://localhost:8080/pages/relatorios.html</span> ou <span class="code-box">http://localhost:8080/pages/dashboard-admin.html</span>.<br>
-      3. <strong>Cidadão no Catador:</strong> Ainda como Cidadão, tente acessar: <span class="code-box">http://localhost:8080/pages/catador-materiais.html</span> ou <span class="code-box">http://localhost:8080/pages/relatorios-catador.html</span>.
+      1. <strong>Anônimo:</strong> Em aba anônima, tente abrir: <span class="code-box">pages/dashboard-admin.html</span>, <span class="code-box">pages/definir-agenda.html</span> ou <span class="code-box">pages/mensagens.html</span>.<br>
+      2. <strong>Cidadão no Admin:</strong> Logado como Cidadão, tente abrir: <span class="code-box">pages/relatorios.html</span>, <span class="code-box">pages/definir-agenda.html</span> ou <span class="code-box">pages/usuarios-cadastrados.html</span>.<br>
+      3. <strong>Catador no Cidadão/Admin:</strong> Logado como Catador, tente abrir: <span class="code-box">pages/inserir-material.html</span> ou <span class="code-box">pages/dashboard-cidadao.html</span>.<br>
+      4. <strong>Admin em Operação:</strong> Logado como Admin, tente acessar <span class="code-box">pages/dashboard-cidadao.html</span> ou <span class="code-box">pages/dashboard-catador.html</span>.
     </div>
-    <div class="test-result">✅ O que deve acontecer: Usuário sem login é mandado para <span class="code-box">pages/login.html</span>. Usuário logado sem permissão recebe aviso de acesso restrito e volta para seu painel.</div>
+    <div class="test-result">✅ O que deve acontecer: Usuário sem login vai direto para <span class="code-box">pages/login.html</span>. Usuário logado sem permissão recebe aviso de acesso restrito e volta em segurança para seu próprio painel.</div>
   </div>
 
   <div class="test-card red-card">
     <div class="test-header">
-      <span class="test-id">Teste 02 — Tentar cadastrar com e-mail que já existe</span>
+      <span class="test-id">Teste 02 — Suporte e Orientação para Recuperação de Senha</span>
+      <span class="badge-pill badge-red">Prioridade Alta</span>
+    </div>
+    <div class="test-what">O que testar: Interface de login limpa e orientação clara de suporte caso o usuário precise recuperar o acesso.</div>
+    <div class="test-steps">
+      1. Na tela de Login (<span class="code-box">pages/login.html</span>), veja que a interface é limpa e direta.<br>
+      2. Na barra do navegador, digite direto <span class="code-box">pages/recuperar-senha.html</span>.<br>
+      3. Observe o aviso na tela e clique no botão <strong>Voltar ao Login</strong>.
+    </div>
+    <div class="test-result">✅ O que deve acontecer: A tela informa que a recuperação automática está desabilitada e orienta a contatar os desenvolvedores ou a administração da Fatec, voltando ao login com segurança.</div>
+  </div>
+
+  <div class="test-card red-card">
+    <div class="test-header">
+      <span class="test-id">Teste 03 — Tentar cadastrar com e-mail que já existe</span>
       <span class="badge-pill badge-red">Prioridade Alta</span>
     </div>
     <div class="test-what">O que testar: O sistema não pode deixar criar duas contas com o mesmo e-mail.</div>
@@ -352,17 +279,17 @@
       2. Preencha o formulário usando um e-mail que já está cadastrado.<br>
       3. Clique em <strong>Cadastrar</strong>.
     </div>
-    <div class="test-result">✅ O que deve acontecer: Aparece um aviso na tela informando: <em>"Este e-mail já está cadastrado no sistema."</em> sem travar a tela.</div>
+    <div class="test-result">✅ O que deve acontecer: Aparece aviso informando: <em>"Este e-mail já está cadastrado no sistema."</em> sem travar a tela.</div>
   </div>
 
   <div class="test-card red-card">
     <div class="test-header">
-      <span class="test-id">Teste 03 — Login com senha incorreta</span>
+      <span class="test-id">Teste 04 — Login com senha incorreta</span>
       <span class="badge-pill badge-red">Prioridade Alta</span>
     </div>
     <div class="test-what">O que testar: Senha errada não pode entrar no sistema.</div>
     <div class="test-steps">
-      1. Na tela de <strong>Login</strong>, digite um e-mail correto e uma senha qualquer errada.<br>
+      1. Na tela de Login, digite um e-mail correto e uma senha qualquer errada.<br>
       2. Clique em <strong>Entrar</strong>.
     </div>
     <div class="test-result">✅ O que deve acontecer: Mostra o aviso: <em>"E-mail ou senha incorretos."</em> e não entra na conta.</div>
@@ -370,61 +297,59 @@
 
   <div class="test-card red-card">
     <div class="test-header">
-      <span class="test-id">Teste 04 — Dois catadores tentando agendar a mesma oferta juntos</span>
+      <span class="test-id">Teste 05 — Dois catadores tentando agendar a mesma oferta juntos</span>
       <span class="badge-pill badge-red">Prioridade Alta</span>
     </div>
-    <div class="test-what">O que testar: Impedir que dois catadores peguem a mesma doação ao mesmo tempo.</div>
+    <div class="test-what">O que testar: Impedir que dois catadores peguem a mesma doação ao mesmo tempo (bloqueio de concorrência).</div>
     <div class="test-steps">
-      1. Abra dois navegadores (ou celular e computador) com duas contas de Catadores diferentes.<br>
-      2. Abra a mesma oferta disponível e clique em <strong>Agendar Retirada</strong> quase juntos nos dois aparelhos.
+      1. Abra dois aparelhos ou navegadores com contas de Catadores diferentes.<br>
+      2. Abra a mesma oferta disponível e clique em <strong>Agendar Retirada</strong> quase juntos.
     </div>
-    <div class="test-result">✅ O que deve acontecer: O primeiro que clicar agenda com sucesso. O segundo recebe um aviso de que <em>a oferta já foi agendada por outro catador</em>.</div>
+    <div class="test-result">✅ O que deve acontecer: O primeiro agenda com sucesso. O segundo recebe aviso de que <em>a oferta já foi agendada por outro catador</em>.</div>
   </div>
 
   <div class="page-break"></div>
 
-  <!-- PÁGINA 2: BLOCO 2 (CIDADÃO CONSCIENTE - TEMA ÂMBAR/LARANJA) -->
+  <!-- PÁGINA 2: BLOCO 2 (CIDADÃO) E INÍCIO DO BLOCO 3 (CATADOR) -->
   <div class="section-title amber">🟠 Bloco 2: Testes do Fluxo do Cidadão Consciente</div>
 
   <div class="test-card amber-card">
     <div class="test-header">
-      <span class="test-id">Teste 05 — Criar conta preenchendo endereço ou opção "Sem Residência"</span>
+      <span class="test-id">Teste 06 — Criar Conta, Senhas Divergentes e "Sem Moradia"</span>
       <span class="badge-pill badge-amber">Cidadão</span>
     </div>
-    <div class="test-what">O que testar: Cadastro de novo cidadão com endereço manual e formatação de CEP.</div>
+    <div class="test-what">O que testar: Validação de senhas divergentes, preenchimento de endereço e opção "Sem moradia".</div>
     <div class="test-steps">
-      1. Acesse a tela de <strong>Cadastro</strong> (<span class="code-box">pages/cadastro.html</span>) e preencha seus dados.<br>
-      2. Digite o CEP (veja se ele formata a máscara <span class="code-box">00000-000</span>) e preencha Rua, Bairro, Cidade e Estado.<br>
-      3. Deixe o campo <strong>Número:*</strong> em branco e tente salvar (veja se ele exige o preenchimento).<br>
-      4. Preencha o número e conclua o cadastro.<br>
-      5. <em>Teste alternativo:</em> Crie outro cadastro marcando <em>"Não possuo residência fixa / endereço"</em> e veja se conclui normalmente.
+      1. Em <strong>Cadastro</strong> (<span class="code-box">pages/cadastro.html</span>), digite senhas divergentes e veja o sistema barrar o envio.<br>
+      2. Digite os 8 números do CEP (veja se coloca o traço sozinho: <span class="code-box">00000-000</span>) e preencha o endereço.<br>
+      3. <em>Cenário Sem Moradia:</em> Ao marcar <em>"Sem moradia"</em>, os campos somem e o sistema limpa os dados para evitar inconsistências.
     </div>
-    <div class="test-result">✅ O que deve acontecer: Conta criada com sucesso e você é levado para o Painel do Cidadão (<span class="code-box">pages/dashboard-cidadao.html</span>).</div>
+    <div class="test-result">✅ O que deve acontecer: O sistema barra senhas divergentes ou dados obrigatórios faltantes, e cria a conta no painel do Cidadão (<span class="code-box">pages/dashboard-cidadao.html</span>).</div>
   </div>
 
   <div class="test-card amber-card">
     <div class="test-header">
-      <span class="test-id">Teste 06 — Doar / Ofertar Material Reciclável com Foto</span>
+      <span class="test-id">Teste 07 — Doar / Ofertar Material Reciclável com Foto Opcional</span>
       <span class="badge-pill badge-amber">Cidadão</span>
     </div>
-    <div class="test-what">O que testar: Cadastro de uma doação com foto e ponto de entrega.</div>
+    <div class="test-what">O que testar: Cadastro de uma doação com foto opcional e ponto de entrega ativo.</div>
     <div class="test-steps">
-      1. No Painel do Cidadão, clique no card <strong>Inserir Material</strong> (<span class="code-box">pages/inserir-material.html</span>).<br>
-      2. Escolha o tipo de material (ex: <em>Papelão</em>, <em>Plástico</em>, <em>Vidro</em> ou <em>Metal</em>).<br>
-      3. Digite o peso aproximado (ex: <em>15 kg</em>) e anexe uma foto.<br>
+      1. No Painel do Cidadão, clique em <strong>Inserir Material</strong> (<span class="code-box">pages/inserir-material.html</span>).<br>
+      2. Escolha o material (ex: <em>Papelão</em>) e o peso aproximado (ex: <em>15 kg</em>).<br>
+      3. Anexe foto (opcional: o envio conclui normalmente sem foto). Se anexar, veja a prévia e o botão <strong>✕</strong> para remover.<br>
       4. Escolha o local de entrega (ex: <em>Fatec Franco da Rocha</em>) e clique em <strong>Disponibilizar Material</strong>.
     </div>
-    <div class="test-result">✅ O que deve acontecer: Mostra mensagem de sucesso e o material passa a aparecer para os catadores.</div>
+    <div class="test-result">✅ O que deve acontecer: Mostra mensagem de sucesso e o material passa a aparecer na lista de coletas para os catadores.</div>
   </div>
 
   <div class="test-card amber-card">
     <div class="test-header">
-      <span class="test-id">Teste 07 — Ver "Minhas Ofertas" e testar os botões de filtro</span>
+      <span class="test-id">Teste 08 — Ver "Minhas Ofertas" e testar os botões de filtro</span>
       <span class="badge-pill badge-amber">Cidadão</span>
     </div>
     <div class="test-what">O que testar: Acompanhar as ofertas e filtrar por status.</div>
     <div class="test-steps">
-      1. No Painel do Cidadão, clique no card <strong>Minhas Ofertas</strong> (<span class="code-box">pages/minhas-ofertas.html</span>).<br>
+      1. No Painel do Cidadão, clique em <strong>Minhas Ofertas</strong> (<span class="code-box">pages/minhas-ofertas.html</span>).<br>
       2. Veja se a doação cadastrada aparece na lista.<br>
       3. Clique nos botões de filtro: <strong>Todas</strong>, <strong>Agendadas</strong> e <strong>Concluídas</strong>.
     </div>
@@ -433,32 +358,61 @@
 
   <div class="test-card amber-card">
     <div class="test-header">
-      <span class="test-id">Teste 08 — Cadastrar um Catador parceiro que não tem celular</span>
+      <span class="test-id">Teste 09 — Cadastrar um Catador parceiro que não tem celular</span>
       <span class="badge-pill badge-amber">Cidadão</span>
     </div>
     <div class="test-what">O que testar: Cadastrar catadores da comunidade sem smartphone pelo botão no painel.</div>
     <div class="test-steps">
-      1. No Painel do Cidadão, clique no card <strong>Cadastrar Catador</strong> (<span class="code-box">pages/cadastrar-catador.html</span>).<br>
+      1. No Painel do Cidadão, clique em <strong>Cadastrar Catador</strong> (<span class="code-box">pages/cadastrar-catador.html</span>).<br>
       2. Preencha o nome do catador, telefone de contato e o bairro onde ele atua.<br>
       3. Clique em <strong>Registrar Catador</strong>.
     </div>
     <div class="test-result">✅ O que deve acontecer: O catador é salvo na rede sem precisar de login e passa a constar na lista de <em>Catadores Cadastrados</em> (<span class="code-box">pages/catadores-cadastrados.html</span>).</div>
   </div>
 
-  <div class="page-break"></div>
+  <div class="test-card amber-card">
+    <div class="test-header">
+      <span class="test-id">Teste 10 — Concluir Retirada ou Cancelar/Reabrir Oferta</span>
+      <span class="badge-pill badge-amber">Cidadão</span>
+    </div>
+    <div class="test-what">O que testar: Conclusão do ciclo da doação ou cancelamento com reabertura para novos catadores.</div>
+    <div class="test-steps">
+      1. Em <strong>Minhas Ofertas</strong> (<span class="code-box">pages/minhas-ofertas.html</span>), localize uma oferta <em>Agendada</em>.<br>
+      2. <em>Cenário de Reabertura:</em> Se o agendamento for cancelado, a doação volta para <em>Disponível</em> para outros catadores.<br>
+      3. Ao confirmar a retirada pelo catador, o status é encerrado como <em>Concluído/Retirado</em> no histórico.
+    </div>
+    <div class="test-result">✅ O que deve acontecer: A doação não fica travada: volta para disponível se cancelada ou conclui com sucesso.</div>
+  </div>
 
-  <!-- PÁGINA 3: BLOCOS 3 E 4 (CATADOR E ADMINISTRADOR) -->
-  <div class="section-title green">🟢 Bloco 3: Testes do Fluxo do Catador Autônomo</div>
+  <div class="section-title green" style="margin-top: 14px;">🟢 Bloco 3: Testes do Fluxo do Catador Autônomo</div>
 
   <div class="test-card green-card">
     <div class="test-header">
-      <span class="test-id">Teste 09 — Ver materiais disponíveis e agendar retirada</span>
+      <span class="test-id">Teste 11 — Criar conta de Catador Autônomo</span>
       <span class="badge-pill badge-green">Catador</span>
     </div>
-    <div class="test-what">O que testar: Catador escolher um material e agendar dia/hora.</div>
+    <div class="test-what">O que testar: Auto-cadastro de profissional da coleta com perfil específico.</div>
     <div class="test-steps">
-      1. Faça login como <strong>Catador</strong> e acesse o Painel (<span class="code-box">pages/dashboard-catador.html</span>).<br>
-      2. Clique no card <strong>Materiais para Retirada</strong> (<span class="code-box">pages/catador-materiais.html</span>).<br>
+      1. Na tela de <strong>Cadastro</strong> (<span class="code-box">pages/cadastro.html</span>), selecione o perfil <strong>Catador Autônomo</strong>.<br>
+      2. Preencha seus dados e confirme o cadastro.
+    </div>
+    <div class="test-result">✅ O que deve acontecer: O sistema cria o perfil e abre o Painel do Catador (<span class="code-box">pages/dashboard-catador.html</span>) com seus 8 cards de serviços.</div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- PÁGINA 3: RESTANTE DO BLOCO 3 (CATADOR) E BLOCO 4 (ADMINISTRADOR) -->
+  <div class="section-title green">🟢 Bloco 3 (Continuação): Testes do Catador Autônomo</div>
+
+  <div class="test-card green-card">
+    <div class="test-header">
+      <span class="test-id">Teste 12 — Ver materiais disponíveis e agendar retirada</span>
+      <span class="badge-pill badge-green">Catador</span>
+    </div>
+    <div class="test-what">O que testar: Catador escolher um material e agendar dia/hora no calendário da Fatec.</div>
+    <div class="test-steps">
+      1. Faça login como Catador e acesse o Painel (<span class="code-box">pages/dashboard-catador.html</span>).<br>
+      2. Clique em <strong>Materiais para Retirada</strong> (<span class="code-box">pages/catador-materiais.html</span>).<br>
       3. Escolha um material e clique no botão <strong>Agendar Retirada</strong>.<br>
       4. Escolha uma data e horário disponíveis no calendário e confirme.
     </div>
@@ -467,7 +421,7 @@
 
   <div class="test-card green-card">
     <div class="test-header">
-      <span class="test-id">Teste 10 — Aviso em tempo real de nova doação</span>
+      <span class="test-id">Teste 13 — Aviso em tempo real de nova doação</span>
       <span class="badge-pill badge-green">Catador</span>
     </div>
     <div class="test-what">O que testar: Catador ser avisado na mesma hora quando alguém doar material.</div>
@@ -480,119 +434,176 @@
 
   <div class="test-card green-card">
     <div class="test-header">
-      <span class="test-id">Teste 11 — Concluir coleta e ver relatório de quilos</span>
+      <span class="test-id">Teste 14 — Concluir coleta e acompanhar métricas no relatório</span>
       <span class="badge-pill badge-green">Catador</span>
     </div>
-    <div class="test-what">O que testar: Confirmar retirada e ver os gráficos subirem.</div>
+    <div class="test-what">O que testar: Confirmar retirada e ver os indicadores e gráficos do catador atualizados.</div>
     <div class="test-steps">
-      1. Na tela <strong>Minhas Coletas</strong> do Catador, clique em <strong>Confirmar Retirada / Concluir</strong>.<br>
+      1. Na tela Minhas Coletas do Catador, clique em <strong>Confirmar Retirada / Concluir</strong>.<br>
       2. Abra a tela de <strong>Relatórios do Catador</strong> (<span class="code-box">pages/relatorios-catador.html</span>).
     </div>
-    <div class="test-result">✅ O que deve acontecer: O total de quilos coletados e os gráficos de materiais aumentam na hora.</div>
+    <div class="test-result">✅ O que deve acontecer: As coletas atribuídas, o percentual de retiradas e os gráficos de materiais são atualizados na hora.</div>
   </div>
 
-  <div class="section-title blue">🔵 Bloco 4: Testes do Fluxo do Administrador</div>
+  <div class="test-card green-card">
+    <div class="test-header">
+      <span class="test-id">Teste 15 — Notificações Desativadas e Ajuste de Perfil do Catador</span>
+      <span class="badge-pill badge-green">Catador</span>
+    </div>
+    <div class="test-what">O que testar: Comprovar que, ao desativar as notificações, o catador não recebe novos avisos na tela.</div>
+    <div class="test-steps">
+      1. Em <strong>Meu Perfil</strong> (<span class="code-box">pages/meu-perfil.html</span>), desative a opção de notificações e salve.<br>
+      2. No painel do Catador, veja a faixa do topo atualizar para <em>Notificações: Desativadas</em>.<br>
+      3. Em outro aparelho, cadastre uma nova doação como Cidadão.
+    </div>
+    <div class="test-result">✅ O que deve acontecer: A faixa confirma o status "Desativadas" e nenhum aviso ou som de nova doação surge na tela do Catador.</div>
+  </div>
+
+  <div class="section-title blue" style="margin-top: 14px;">🔵 Bloco 4: Testes do Fluxo do Administrador</div>
 
   <div class="test-card blue-card">
     <div class="test-header">
-      <span class="test-id">Teste 12 — Central de Mensagens e contato com usuários</span>
+      <span class="test-id">Teste 16 — Desativação de Usuário e Tentativa de Login Bloqueada</span>
       <span class="badge-pill badge-blue">Administrador</span>
     </div>
-    <div class="test-what">O que testar: Conversar com cidadãos e ver botão de WhatsApp para catadores sem app.</div>
+    <div class="test-what">O que testar: Administrador desativar conta de usuário e o sistema impedir seu acesso.</div>
     <div class="test-steps">
-      1. Faça login como <strong>Administrador</strong> e clique em <strong>Mensagens</strong> (<span class="code-box">pages/mensagens.html</span>).<br>
-      2. Alterne entre as abas <strong>Catadores</strong> e <strong>Cidadãos</strong>.<br>
-      3. Ao selecionar um catador sem app, veja se aparece o botão verde para chamar no WhatsApp.<br>
-      4. Na aba Cidadãos, veja se aparecem os nomes reais de quem está cadastrado no sistema.
+      1. No Painel Admin, clique em <strong>Usuários Cadastrados</strong> (<span class="code-box">pages/usuarios-cadastrados.html</span>).<br>
+      2. Localize um usuário de teste e clique no botão para <strong>Desativar</strong>.<br>
+      3. Tente fazer login com a conta desativada.
     </div>
-    <div class="test-result">✅ O que deve acontecer: As mensagens funcionam na hora e os nomes exibidos são os nomes reais do banco.</div>
+    <div class="test-result">✅ O que deve acontecer: O sistema bloqueia o acesso e exibe a mensagem: <em>"Sua conta está desabilitada. Por favor, entre em contato com a administração."</em></div>
   </div>
 
   <div class="test-card blue-card">
     <div class="test-header">
-      <span class="test-id">Teste 13 — Proteção do Ponto de Coleta da Fatec</span>
+      <span class="test-id">Teste 17 — Proteção do Administrador Principal da Fatec</span>
       <span class="badge-pill badge-blue">Administrador</span>
     </div>
-    <div class="test-what">O que testar: Não deixar o sistema ficar sem nenhum local de entrega ativo.</div>
+    <div class="test-what">O que testar: Impedir que o administrador principal seja desativado ou rebaixado por engano.</div>
     <div class="test-steps">
-      1. No painel de Admin (<span class="code-box">pages/tela-admin.html</span>), clique em <strong>Editar Local de Retirada</strong> (<span class="code-box">pages/editar-local.html</span>).<br>
-      2. Tente desativar ou excluir o único local ativo (Fatec Franco da Rocha).
+      1. Na tela de Usuários Cadastrados, tente desativar ou rebaixar o primeiro administrador cadastrado no sistema.
     </div>
-    <div class="test-result">✅ O que deve acontecer: O sistema não deixa e mostra o aviso: <em>"Ação Não Permitida: O sistema deve ter ao menos um ponto de coleta ativo."</em></div>
+    <div class="test-result">✅ O que deve acontecer: O sistema emite alerta e impede a ação por segurança do banco de dados.</div>
   </div>
 
   <div class="test-card blue-card">
     <div class="test-header">
-      <span class="test-id">Teste 14 — Configurar horários da Agenda e Sábados</span>
+      <span class="test-id">Teste 18 — Promover Cidadão para Administrador</span>
       <span class="badge-pill badge-blue">Administrador</span>
     </div>
-    <div class="test-what">O que testar: Adicionar novos horários de atendimento na semana e sábados.</div>
+    <div class="test-what">O que testar: Conceder permissão administrativa a outro usuário existente.</div>
     <div class="test-steps">
-      1. Acesse <strong>Definir Agenda</strong> (<span class="code-box">pages/editar-calendario.html</span>).<br>
-      2. Adicione horários para dias úteis ou sábados e salve.
+      1. Na tela de Usuários Cadastrados, localize um cidadão e clique em <strong>Promover a Administrador</strong>.<br>
+      2. Confirme e faça login com essa conta promovida.
     </div>
-    <div class="test-result">✅ O que deve acontecer: Os horários são salvos e aparecem certinho no agendamento do catador.</div>
+    <div class="test-result">✅ O que deve acontecer: A conta promovida passa a abrir o Painel de Administrador (<span class="code-box">pages/dashboard-admin.html</span>) com todas as opções de gestão.</div>
   </div>
 
   <div class="page-break"></div>
 
-  <!-- PÁGINA 4: BLOCO 5 (TESTES NO CELULAR E CHECKLIST FINAL) -->
-  <div class="section-title">📱 Bloco 5: Testes de Visual e Experiência no Celular</div>
+  <!-- PÁGINA 4: FINAL DO BLOCO 4 (ADMIN) + BLOCO 5 (MOBILE & LGPD) + FEEDBACK -->
+  <div class="section-title blue">🔵 Bloco 4 (Continuação): Testes do Administrador</div>
+
+  <div class="test-card blue-card">
+    <div class="test-header">
+      <span class="test-id">Teste 19 — Gerenciar Pontos de Coleta (Novo Local e Proteção do Último Ativo)</span>
+      <span class="badge-pill badge-blue">Administrador</span>
+    </div>
+    <div class="test-what">O que testar: Cadastrar novo ponto, gerenciar agenda e comprovar que o sistema impede desativar o último local.</div>
+    <div class="test-steps">
+      1. Em <strong>Editar Local</strong> (<span class="code-box">pages/editar-local.html</span>), tente desativar o único ponto ativo (Fatec Franco da Rocha).<br>
+      2. Veja o bloqueio com o aviso: <em>"O sistema deve ter ao menos um ponto de coleta ativo."</em><br>
+      3. Clique em <strong>Novo Local de Coleta</strong>, cadastre um segundo ponto (ex: <em>Ponto Centro</em>) e salve.<br>
+      4. Veja que agora existem dois locais ativos. Em <strong>Definir Agenda</strong> (<span class="code-box">pages/definir-agenda.html</span>), gere horários sem sobreposição.
+    </div>
+    <div class="test-result">✅ O que deve acontecer: O sistema não permite deixar a rede sem ponto ativo. O novo ponto é salvo e passa a receber doações e agendamentos.</div>
+  </div>
+
+  <div class="test-card blue-card">
+    <div class="test-header">
+      <span class="test-id">Teste 20 — Criar Publicação Educativa e Visualizar no Mural</span>
+      <span class="badge-pill badge-blue">Administrador</span>
+    </div>
+    <div class="test-what">O que testar: Administrador publicar conteúdos e campanhas de educação ambiental.</div>
+    <div class="test-steps">
+      1. No painel de Admin, clique em <strong>Publicações</strong> (<span class="code-box">pages/admin-publicacoes.html</span>).<br>
+      2. Preencha título, conteúdo educativo e clique em <strong>Publicar</strong>.<br>
+      3. Abra a tela pública de <strong>Publicações</strong> (<span class="code-box">pages/publicacoes.html</span>).
+    </div>
+    <div class="test-result">✅ O que deve acontecer: O artigo aparece publicado no feed com a data de hoje e o nome do administrador autor.</div>
+  </div>
+
+  <div class="test-card blue-card">
+    <div class="test-header">
+      <span class="test-id">Teste 21 — Central de Mensagens e Aviso de WhatsApp Futuro</span>
+      <span class="badge-pill badge-blue">Administrador</span>
+    </div>
+    <div class="test-what">O que testar: Troca de mensagens entre usuários e modal informativo ao clicar no WhatsApp de catadores sem app.</div>
+    <div class="test-steps">
+      1. Acesse <strong>Mensagens</strong> (<span class="code-box">pages/mensagens.html</span>) e veja que as conversas são restritas apenas aos participantes.<br>
+      2. Em <strong>Catadores Cadastrados</strong> (<span class="code-box">pages/catadores-cadastrados.html</span>), clique no botão verde <strong>WhatsApp</strong> de um catador sem app.
+    </div>
+    <div class="test-result">✅ O que deve acontecer: O chat funciona em tempo real. O botão de WhatsApp abre o modal <em>"Funcionalidade Futura"</em> avisando que a integração direta está em desenvolvimento e orientando o contato via telefone.</div>
+  </div>
+
+  <div class="section-title purple" style="margin-top: 14px;">📱 Bloco 5: Testes de Visual, Experiência no Celular e LGPD</div>
 
   <table>
     <thead>
       <tr>
-        <th style="width: 20%;">Item</th>
+        <th style="width: 22%;">Item</th>
         <th style="width: 25%;">O que verificar</th>
         <th style="width: 25%;">Como testar</th>
-        <th style="width: 30%;">Resultado Esperado</th>
+        <th style="width: 28%;">Resultado Esperado</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><strong>Visual no Celular</strong></td>
-        <td>Menu inferior e botões</td>
-        <td>Abra o site no navegador do smartphone</td>
-        <td>Botões fáceis de tocar. A barra inferior de 3 botões não tampa o rodapé.</td>
+        <td><strong>Todas as Telas (Web & Celular)</strong></td>
+        <td>Navegação completa em cada perfil</td>
+        <td>Abra todas as telas de Cidadão, Catador e Admin no computador e celular</td>
+        <td>Nenhum botão sobreposto, texto cortado ou erro visual. Barra inferior não tampa o rodapé.</td>
       </tr>
       <tr>
-        <td><strong>Campos Obrigatórios</strong></td>
-        <td>Asterisco vermelho (<span style="color: red; font-weight: bold;">*</span>)</td>
-        <td>Tente salvar formulários deixando campos com * vazios</td>
-        <td>O navegador avisa para preencher e não envia vazio.</td>
+        <td><strong>Campos & Senhas Divergentes</strong></td>
+        <td>Validações obrigatórias (*) e senhas</td>
+        <td>Tente enviar cadastros vazios ou com senhas que não coincidem</td>
+        <td>O sistema avisa qual campo preencher ou alerta que as senhas não coincidem.</td>
       </tr>
       <tr>
         <td><strong>Nomes Longos</strong></td>
-        <td>Textos compridos nos cartões</td>
-        <td>Veja nomes como <em>"Fatec Franco da Rocha"</em></td>
-        <td>O texto não corta a primeira letra e coloca reticências (<span class="code-box">...</span>) no final.</td>
+        <td>Adaptação de títulos compridos</td>
+        <td>Veja nomes como "Fatec Franco da Rocha" em cartões pequenos</td>
+        <td>O texto não corta a primeira letra e coloca reticências (...) no final.</td>
       </tr>
       <tr>
-        <td><strong>Avisos e Modais</strong></td>
-        <td>Ícones bonitos e amigáveis</td>
-        <td>Abra avisos de mapas ou informações</td>
-        <td>Aparecem ícones verdes de informação ou mapa, sem parecer tela de erro.</td>
+        <td><strong>Avisos e Modais (Pop-ups)</strong></td>
+        <td>Modais de confirmação e avisos do sistema</td>
+        <td>Teste ações críticas (ex: cancelar coleta, desativar usuário, logout) e avisos (termos, WhatsApp, atalho)</td>
+        <td>Abrem centralizados com fundo escurecido, ícone temático, texto claro e botões de ação ("Confirmar/Cancelar" ou "Entendido").</td>
+      </tr>
+      <tr>
+        <td><strong>Privacidade & LGPD</strong></td>
+        <td>Termos e transparência de dados</td>
+        <td>Acesse <strong>Política de Privacidade</strong> (<span class="code-box">pages/privacidade.html</span>)</td>
+        <td>Os termos explicam com clareza a finalidade, direitos do usuário e segurança dos dados.</td>
       </tr>
     </tbody>
   </table>
 
-  <div class="section-title green">📝 Como Relatar os Resultados dos Testes</div>
-
-  <div class="intro-box" style="background-color: #f8fafc; border-color: #cbd5e1; color: #1e293b;">
-    <strong>Para cada teste realizado, anote uma destas duas opções:</strong>
-    <div style="margin-top: 6px; font-size: 8.5pt;">
-      <p>✔️ <strong>Passou (OK):</strong> O sistema funcionou exatamente como descrito no resultado esperado.</p>
-      <p>❌ <strong>Deu Erro / Travou (Bug):</strong> Aconteceu algo diferente (ex: o botão não clicou, a tela ficou branca, etc.). Nesse caso, tire um <strong>print da tela</strong> e anote o número do teste (ex: <em>Teste 06</em>).</p>
+  <div class="test-card" style="border-left: 4px solid #16a34a; background-color: #f8fafc; margin-top: 10px;">
+    <div class="test-id" style="margin-bottom: 3px;">📝 Como Relatar os Resultados dos Testes</div>
+    <div style="font-size: 7.6pt; color: #475569;">
+      Para cada teste realizado, anote uma destas duas opções:<br>
+      <strong>✔️ Passou (OK):</strong> O sistema funcionou exatamente como descrito no resultado esperado.<br>
+      <strong>❌ Deu Erro / Travou (Bug):</strong> Aconteceu algo diferente (o botão não clicou, a tela ficou branca, etc.). Nesse caso, tire um print da tela e anote o número do teste (ex: <em>Teste 06</em>).
     </div>
-  </div>
-
-  <div class="test-result" style="text-align: center; margin-top: 18px; font-size: 9pt;">
-    🏁 <strong>Sistema Reciclagem Solidária:</strong> Pronto para a rodada de homologação pela equipe de QA!
   </div>
 
   <div class="footer">
     <span>Reciclagem Solidária — Fatec Franco da Rocha</span>
-    <span>Guia Prático e Passo a Passo de Testes QA</span>
+    <span>🏁 Guia Prático e Passo a Passo de Testes QA (21 Testes Completos)</span>
   </div>
 
 </body>

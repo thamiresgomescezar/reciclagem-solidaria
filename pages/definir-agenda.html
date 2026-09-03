@@ -126,6 +126,7 @@
   <script type="module">
     import { supabase } from '../js/lib/supabaseClient.js';
     import { getPerfilAtual } from '../js/services/auth.js';
+    import { proibirAcessoInvalido } from '../js/lib/routeGuard.js';
     import { listarAgendaPorLocal, salvarAgendaEmLote } from '../js/services/agenda.js';
     import { getLocalRetiradaPadrao } from '../js/services/coletas.js';
     import { renderCalendarGrid, resetCalendarPendingMap } from '../js/pages/calendarPicker.js';
@@ -214,22 +215,18 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Inicia a renderização do banco imediatamente
+      perfilAtual = await proibirAcessoInvalido(['administrador']);
+      if (!perfilAtual) return;
+
+      // Inicia a renderização do banco imediatamente para o administrador
       carregarEExibirCalendario();
 
-      perfilAtual = await getPerfilAtual().catch(() => null);
       const tituloEl = document.getElementById('titulo_pagina_agenda');
       const linkLeftEl = document.getElementById('link_left_agenda');
 
-      if (perfilAtual?.tipo === 'administrador') {
-        if (boxAdmin) boxAdmin.style.display = 'block';
-        if (tituloEl) tituloEl.textContent = 'Definir Agenda de Coletas & Horários';
-        if (linkLeftEl) linkLeftEl.innerHTML = '<i class="fa-solid fa-calendar-days"></i> Definir Agenda';
-      } else {
-        if (boxAdmin) boxAdmin.style.display = 'none';
-        if (tituloEl) tituloEl.textContent = 'Agenda & Horários de Atendimento';
-        if (linkLeftEl) linkLeftEl.innerHTML = '<i class="fa-solid fa-calendar-days"></i> Agenda & Horários';
-      }
+      if (boxAdmin) boxAdmin.style.display = 'block';
+      if (tituloEl) tituloEl.textContent = 'Definir Agenda de Coletas & Horários';
+      if (linkLeftEl) linkLeftEl.innerHTML = '<i class="fa-solid fa-calendar-days"></i> Definir Agenda';
 
       document.querySelectorAll('#weekdays-group button').forEach(btn => {
         const dayVal = parseInt(btn.dataset.day, 10);
