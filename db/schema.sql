@@ -461,6 +461,21 @@ begin
 end;
 $$;
 
+-- RPC 4: Verifica se um e-mail está cadastrado no sistema (para fluxo público de recuperação de senha)
+create or replace function public.verificar_email_cadastrado(p_email text)
+returns boolean
+language plpgsql
+security definer as $$
+begin
+  return exists (
+    select 1 from public.cidadao where lower(trim(email)) = lower(trim(p_email))
+    union
+    select 1 from public.catador where lower(trim(email)) = lower(trim(p_email))
+  );
+end;
+$$;
+grant execute on function public.verificar_email_cadastrado(text) to anon, authenticated;
+
 -- =============================================================================
 -- SCRIPT DE MIGRAÇÃO / ATUALIZAÇÃO INCREMENTAL
 -- Execute no SQL Editor do Supabase se a base já tiver sido criada anteriormente:

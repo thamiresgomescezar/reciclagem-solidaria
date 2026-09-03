@@ -154,16 +154,11 @@
         </div>
       </div>
 
-      <div style="text-align: right; margin-bottom: 1rem;">
-        <a href="recuperar-senha.html" style="color: var(--verde-700); font-weight: 600; font-size: 0.85rem; text-decoration: underline;">Esqueci a senha</a>
-      </div>
-
-      <button type="submit" class="btn-entrar-mobile" id="btnEntrarMobile">
+      <button type="submit" class="btn-entrar-mobile" id="btnEntrarMobile" style="margin-top: 1.25rem;">
         <i class="fa-solid fa-right-to-bracket"></i> Entrar
       </button>
 
       <p style="text-align: center; margin: 1.25rem 0 0; font-size: 0.88rem; font-weight: 600; color: var(--verde-800);">
-        Ainda não tem conta? <a href="cadastro-mobile.html" style="color: #ff5252; font-weight: 800;">Cadastre-se</a>
       </p>
     </form>
   </div>
@@ -205,7 +200,7 @@
         }
         redirectPorPerfil(resultado.perfil.tipo);
       } catch (err) {
-        mostrarErro('Erro inesperado: ' + err.message);
+        mostrarErro('Não foi possível realizar o login. Verifique sua conexão e tente novamente.');
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Entrar';
       }

@@ -20,7 +20,7 @@
     <div class="top-bar">
       <div></div>
       <a href="./login.html" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
-        <i class="fa-solid fa-arrow-left"></i> Ir para o Login
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Login
       </a>
     </div>
 
@@ -68,10 +68,6 @@
               </button>
 
               <div id="statusMsg" class="status-message" style="margin-top: 1rem;"></div>
-
-              <p style="text-align: center; margin-top: 1.25rem; font-size: 0.9rem; font-weight: 600; color: var(--verde-escuro, #1b6d24);">
-                Lembrou sua senha? <a href="./login.html" style="color: #ff5252; font-weight: 800; text-decoration: underline;">Voltar ao Login</a>
-              </p>
             </form>
           </div>
         </main>
@@ -85,10 +81,45 @@
   <script type="module">
     import { supabase } from '../js/lib/supabaseClient.js';
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       const form = document.getElementById('form_nova_senha');
       const statusMsg = document.getElementById('statusMsg');
       const btnSalvar = document.getElementById('btn_salvar_senha');
+      const inputNova = document.getElementById('nova_senha');
+      const inputConfirma = document.getElementById('confirma_nova_senha');
+
+      // 1. Verifica se há token de recuperação na URL ou sessão ativa
+      const hash = window.location.hash || '';
+      const hasRecoveryToken = hash.includes('type=recovery') || hash.includes('access_token');
+      const { data: { session } } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+
+      if (!session && !hasRecoveryToken) {
+        statusMsg.className = 'status-message info';
+        statusMsg.style.display = 'block';
+        statusMsg.innerHTML = `
+          <div style="font-weight: 700; margin-bottom: 4px; color: #1b6d24;">
+            <i class="fa-solid fa-circle-info"></i> Link de Recuperação Necessário
+          </div>
+          <div style="font-size: 0.84rem; line-height: 1.4; color: #333;">
+            Para cadastrar uma nova senha, utilize o link de autorização enviado ao seu e-mail.<br>
+            <span style="color: #666; font-size: 0.78rem; display: block; margin-top: 4px;">
+              Caso precise de um novo link de redefinição:
+            </span>
+          </div>
+          <div style="margin-top: 12px; display: flex; justify-content: center;">
+            <a href="./recuperar-senha.html" class="btn-avancar" style="font-size: 0.85rem; padding: 8px 18px; text-decoration: none; width: auto;">
+              <i class="fa-solid fa-paper-plane"></i> Solicitar Link de Recuperação
+            </a>
+          </div>
+        `;
+        if (inputNova) inputNova.disabled = true;
+        if (inputConfirma) inputConfirma.disabled = true;
+        if (btnSalvar) {
+          btnSalvar.disabled = true;
+          btnSalvar.style.opacity = '0.5';
+          btnSalvar.style.cursor = 'not-allowed';
+        }
+      }
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -129,8 +160,17 @@
 
         } catch (err) {
           console.error(err);
+          let msgAmigavel = 'Não foi possível cadastrar a nova senha. O link pode ter expirado ou já ter sido utilizado.';
+          const errLower = (err?.message || '').toLowerCase();
+          if (errLower.includes('different from the old password')) {
+            msgAmigavel = 'A nova senha deve ser diferente da senha anterior.';
+          } else if (errLower.includes('weak') || errLower.includes('short')) {
+            msgAmigavel = 'A senha informada é muito curta. Crie uma senha com pelo menos 6 caracteres.';
+          } else if (errLower.includes('session') || errLower.includes('expired')) {
+            msgAmigavel = 'O link de recuperação expirou. Por favor, solicite um novo link de recuperação.';
+          }
           statusMsg.className = 'status-message error';
-          statusMsg.textContent = err.message || 'Erro ao redefinir a senha. O link pode ter expirado.';
+          statusMsg.textContent = msgAmigavel;
           btnSalvar.disabled = false;
           btnSalvar.innerHTML = '<i class="fa-solid fa-key"></i> Salvar Nova Senha';
         }

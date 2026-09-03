@@ -76,11 +76,7 @@
                 </div>
               </div>
 
-              <div style="text-align: right; margin: 0.5rem 0 1.5rem;">
-                <a href="./recuperar-senha.html" style="color: var(--verde-escuro, #1b6d24); font-weight: 600; font-size: 0.85rem; text-decoration: underline;">Esqueci minha senha</a>
-              </div>
-
-              <button type="submit" class="btn-avancar" id="btnEntrar">
+              <button type="submit" class="btn-avancar" id="btnEntrar" style="margin-top: 1.5rem;">
                 <i class="fa-solid fa-right-to-bracket"></i> Login
               </button>
 
@@ -170,7 +166,7 @@
         }
         redirectPorPerfil(resultado.perfil.tipo);
       } catch (err) {
-        mostrarErro('Erro inesperado: ' + err.message);
+        mostrarErro('Não foi possível realizar o login. Verifique sua conexão e tente novamente.');
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login';
       }
