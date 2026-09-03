@@ -364,8 +364,10 @@ export async function getPerfilAtual() {
           localStorage.setItem('sys_user_names', JSON.stringify(cache));
         } catch (e) {}
       }
+      const tipo = cidadaoData.nivel_acesso === 'administrador' ? 'administrador' : 'cidadao';
+      try { localStorage.setItem('reciclagem_tipo_usuario', tipo); } catch (e) {}
       return {
-        tipo: cidadaoData.nivel_acesso === 'administrador' ? 'administrador' : 'cidadao',
+        tipo,
         dados: { ...cidadaoData, situacao: cidadaoData.situacao || 'ativo' },
         user: session.user
       };
@@ -380,6 +382,7 @@ export async function getPerfilAtual() {
     if (catadorErr) {
       console.warn('Erro ao consultar tabela catador:', catadorErr);
     } else if (catadorData) {
+      try { localStorage.setItem('reciclagem_tipo_usuario', 'catador'); } catch (e) {}
       return {
         tipo: 'catador',
         dados: { ...catadorData, situacao: catadorData.situacao || 'ativo' },
@@ -485,6 +488,7 @@ export async function resetPassword(email) {
 }
 
 export async function logout() {
+  try { localStorage.removeItem('reciclagem_tipo_usuario'); } catch (e) {}
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }

@@ -216,9 +216,64 @@ export function desativarNotificacoes() {
 }
 
 /**
+ * Verifica se o usuário atual tem o perfil de Catador ou está em telas de Catador.
+ * Garante que Cidadãos e Administradores NUNCA recebam alertas de ofertas de coleta.
+ */
+export function usuarioPodeReceberOfertasColeta() {
+  if (typeof window === 'undefined' || !window.location) return false;
+
+  const path = (window.location.pathname || '').toLowerCase();
+
+  // 1. Telas de cidadão ou administrador NUNCA recebem ofertas de coleta
+  const telasNaoCatador = [
+    'dashboard-cidadao',
+    'minhas-ofertas',
+    'inserir-material',
+    'cadastrar-catador',
+    'catadores-cadastrados',
+    'dashboard-admin',
+    'relatorios.html',
+    'usuarios-cadastrados',
+    'definir-agenda',
+    'editar-local',
+    'admin-publicacoes'
+  ];
+  if (telasNaoCatador.some(t => path.includes(t))) {
+    return false;
+  }
+
+  // 2. Se o tipo de usuário no storage for cidadão ou administrador, bloqueia
+  const tipoStorage = localStorage.getItem('reciclagem_tipo_usuario') || sessionStorage.getItem('reciclagem_tipo_usuario');
+  if (tipoStorage && tipoStorage !== 'catador') {
+    return false;
+  }
+
+  // 3. Telas específicas do Catador sempre recebem
+  const telasCatador = [
+    'dashboard-catador',
+    'catador-materiais',
+    'minhas-coletas-catador',
+    'relatorios-catador'
+  ];
+  if (telasCatador.some(t => path.includes(t))) {
+    return true;
+  }
+
+  // 4. Em telas neutras (ex: meu-perfil.html, mensagens.html, index.html),
+  // só permite se o perfil for comprovadamente catador
+  return tipoStorage === 'catador';
+}
+
+/**
  * Dispara notificação com In-App Toast prioritário + Web Notification do Sistema Operacional (se permitido)
  */
 export async function dispararNotificacao({ title, body, url }) {
+  // Ofertas de coleta são destinadas EXCLUSIVAMENTE a catadores
+  const ehAlertaOferta = (title || '').includes('Oferta') || (title || '').includes('Coleta') || (title || '').includes('Material');
+  if (ehAlertaOferta && !usuarioPodeReceberOfertasColeta()) {
+    return;
+  }
+
   const targetUrl = url || (window.location.pathname.includes('/pages/') ? './catador-materiais.html' : './pages/catador-materiais.html');
 
   // Dispara o evento de nova coleta no cliente para que as telas reajam instantaneamente
@@ -309,6 +364,7 @@ export function iniciarMonitoramentoColetasRealtime() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'coleta' },
         async (payload) => {
+          if (!usuarioPodeReceberOfertasColeta()) return;
           const id = payload.new?.cod_coleta;
           if (id) {
             if (coletasConhecidas.has(id)) return;
@@ -326,6 +382,7 @@ export function iniciarMonitoramentoColetasRealtime() {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'coleta' },
         async (payload) => {
+          if (!usuarioPodeReceberOfertasColeta()) return;
           const agoraDisponivel = payload.new && (payload.new.cod_status === 1 || payload.new.status === 'disponível') && !payload.new.catador_id;
           const eraOcupadoOuInativo = payload.old && (payload.old.cod_status !== 1 || payload.old.catador_id !== null);
 
@@ -367,6 +424,7 @@ export function iniciarPollingContingencia() {
   if (intervaloPolling) return;
 
   const verificarColetas = async () => {
+    if (!usuarioPodeReceberOfertasColeta()) return;
     if (localStorage.getItem('reciclagem_notificacoes_ativas') === 'false') return;
 
     try {
