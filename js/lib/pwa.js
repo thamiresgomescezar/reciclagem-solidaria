@@ -256,6 +256,35 @@ const coletasConhecidas = new Map();
 let primeiraCargaConcluida = false;
 let intervaloPolling = null;
 
+const NOMES_MATERIAIS_PADRAO = {
+  1: 'Papel',
+  2: 'Plástico',
+  3: 'Vidro',
+  4: 'Metal',
+  5: 'Material Reciclável'
+};
+const mapaMateriaisCarregados = new Map();
+
+async function obterNomeMaterial(codMaterial, objMateriais) {
+  if (objMateriais && objMateriais.tipo) return objMateriais.tipo;
+  if (codMaterial && mapaMateriaisCarregados.has(codMaterial)) {
+    return mapaMateriaisCarregados.get(codMaterial);
+  }
+  if (codMaterial && NOMES_MATERIAIS_PADRAO[codMaterial]) {
+    return NOMES_MATERIAIS_PADRAO[codMaterial];
+  }
+  if (codMaterial) {
+    try {
+      const { data } = await supabase.from('materiais').select('tipo').eq('cod_material', codMaterial).maybeSingle();
+      if (data?.tipo) {
+        mapaMateriaisCarregados.set(codMaterial, data.tipo);
+        return data.tipo;
+      }
+    } catch (e) {}
+  }
+  return 'Material Reciclável';
+}
+
 /**
  * Inicia a escuta em tempo real no Supabase para notificar novas ofertas
  * Utiliza sistema híbrido: WebSockets Realtime + Polling inteligente a cada 4 segundos.
@@ -277,10 +306,10 @@ export function iniciarMonitoramentoColetasRealtime() {
             if (coletasConhecidas.has(id)) return;
             coletasConhecidas.set(id, { disponivel: true, catador_id: null });
           }
-          const qtd = payload.new?.quantidade || 'Novo lote';
+          const materialNome = await obterNomeMaterial(payload.new?.cod_material);
           await dispararNotificacao({
-            title: '📦 Nova Oferta de Material!',
-            body: `Um material reciclável (${qtd}) foi disponibilizado para coleta.`,
+            title: 'Nova Oferta Disponível',
+            body: `Há uma nova oferta de ${materialNome} disponível para retirada.`,
             url: window.location.pathname.includes('/pages/') ? './catador-materiais.html' : './pages/catador-materiais.html'
           });
         }
@@ -299,20 +328,11 @@ export function iniciarMonitoramentoColetasRealtime() {
               if (jaNotificada) return;
               coletasConhecidas.set(id, { disponivel: true, catador_id: null });
             }
-            const qtd = payload.new?.quantidade || 'Material reciclável';
-            const eraCancelamentoCatador = Boolean(payload.old?.catador_id);
-
-            const titulo = eraCancelamentoCatador
-              ? '♻️ Coleta Disponível Novamente!'
-              : '♻️ Oferta Redisponibilizada!';
-
-            const mensagem = eraCancelamentoCatador
-              ? `O agendamento anterior foi cancelado e a oferta (${qtd}) foi liberada para retirada.`
-              : `Uma oferta (${qtd}) foi reaberta e está disponível para coleta.`;
+            const materialNome = await obterNomeMaterial(payload.new?.cod_material);
 
             await dispararNotificacao({
-              title: titulo,
-              body: mensagem,
+              title: 'Coleta Disponível Novamente',
+              body: `O agendamento foi cancelado e a oferta de ${materialNome} voltou a ficar disponível para retirada.`,
               url: window.location.pathname.includes('/pages/') ? './catador-materiais.html' : './pages/catador-materiais.html'
             });
           }
@@ -344,7 +364,7 @@ export function iniciarPollingContingencia() {
     try {
       const { data, error } = await supabase
         .from('coleta')
-        .select('cod_coleta, quantidade, cod_status, catador_id, criado_em')
+        .select('cod_coleta, cod_material, quantidade, cod_status, catador_id, criado_em, materiais:cod_material(tipo)')
         .order('criado_em', { ascending: false })
         .limit(20);
 
@@ -374,10 +394,10 @@ export function iniciarPollingContingencia() {
           if (!estadoAnterior) {
             coletasConhecidas.set(id, { disponivel: isDisp, catador_id: item.catador_id });
             if (isDisp) {
-              const qtd = item.quantidade || 'Novo lote';
+              const materialNome = await obterNomeMaterial(item.cod_material, item.materiais);
               await dispararNotificacao({
-                title: '📦 Nova Oferta de Material!',
-                body: `Um material reciclável (${qtd}) foi disponibilizado para coleta.`,
+                title: 'Nova Oferta Disponível',
+                body: `Há uma nova oferta de ${materialNome} disponível para retirada.`,
                 url: window.location.pathname.includes('/pages/') ? './catador-materiais.html' : './pages/catador-materiais.html'
               });
             }
@@ -385,13 +405,10 @@ export function iniciarPollingContingencia() {
           // Cenário 2: Oferta cujo agendamento foi cancelado e voltou a ficar disponível!
           else if (isDisp && estadoAnterior.disponivel === false) {
             coletasConhecidas.set(id, { disponivel: isDisp, catador_id: item.catador_id });
-            const qtd = item.quantidade || 'Material reciclável';
-            const eraCancelamentoCatador = Boolean(estadoAnterior.catador_id);
+            const materialNome = await obterNomeMaterial(item.cod_material, item.materiais);
             await dispararNotificacao({
-              title: eraCancelamentoCatador ? '♻️ Coleta Disponível Novamente!' : '♻️ Oferta Redisponibilizada!',
-              body: eraCancelamentoCatador 
-                ? `O agendamento anterior foi cancelado e a oferta (${qtd}) foi liberada para retirada.`
-                : `Uma oferta (${qtd}) foi reaberta e está disponível para coleta.`,
+              title: 'Coleta Disponível Novamente',
+              body: `O agendamento foi cancelado e a oferta de ${materialNome} voltou a ficar disponível para retirada.`,
               url: window.location.pathname.includes('/pages/') ? './catador-materiais.html' : './pages/catador-materiais.html'
             });
           } else {
