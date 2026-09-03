@@ -199,7 +199,7 @@
   <script type="module">
     import { protegerRota } from '../js/lib/routeGuard.js';
     import { logout, getPerfilAtual } from '../js/services/auth.js';
-    import { getStatusNotificacao, solicitarPermissaoNotificacao } from '../js/lib/pwa.js';
+    import { getStatusNotificacao, solicitarPermissaoNotificacao, tocarSomNotificacao } from '../js/lib/pwa.js';
     import { showConfirmModal } from '../js/lib/modal.js';
 
     const btnLogoutTop = document.getElementById('btn-logout-top');
@@ -223,8 +223,8 @@
         }
         if (descNotifBanner) {
           descNotifBanner.innerHTML = `
-            <div>Notificações de novas ofertas: <strong style="color: #1b6d24; font-weight: 700;">Ativadas</strong></div>
-            <div style="color: #666; font-size: 0.78rem;">(Ajuste suas preferências em <em>Meu Perfil</em>)</div>
+            <div>Notificações de novas ofertas: <strong style="color: #2e7d32; font-weight: 700;">Ativadas</strong></div>
+            <div style="color: #666; font-size: 0.78rem;">Você será avisado sempre que surgir material para coleta.</div>
           `;
         }
         if (acoesNotifBanner) {
@@ -253,6 +253,7 @@
               btn.disabled = true;
               btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
               const res = await solicitarPermissaoNotificacao();
+              tocarSomNotificacao();
               btn.disabled = false;
               verificarExibicaoBannerNotificacoes();
             });
