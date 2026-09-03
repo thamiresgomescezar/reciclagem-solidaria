@@ -5,7 +5,8 @@ import {
   listarTodasColetasAdmin, 
   confirmarRetirada, 
   reabrirColeta, 
-  cancelarColeta 
+  cancelarColeta,
+  cancelarAgendamento
 } from '../services/coletas.js';
 import { supabase } from '../lib/supabaseClient.js';
 import { showConfirmModal, showAlertModal } from '../lib/modal.js';
@@ -447,7 +448,7 @@ function vincularEventosCards(listaContainer, feedbackMsg, perfil) {
         icon: '<i class="fa-solid fa-calendar-xmark" style="color: #c62828; font-size: 1.25rem;"></i>',
         onConfirm: async () => {
           try {
-            await reabrirColeta(id);
+            await cancelarAgendamento(id);
             showSuccess(feedbackMsg, 'Agendamento cancelado. O material foi liberado para outros catadores.');
             carregarLista(listaContainer, feedbackMsg, perfil);
           } catch (err) {

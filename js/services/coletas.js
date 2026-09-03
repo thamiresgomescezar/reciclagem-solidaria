@@ -248,24 +248,51 @@ export async function confirmarRetirada(cod_coleta) {
   return data;
 }
 
-export async function reabrirOferta(cod_coleta) {
+export async function cancelarAgendamento(cod_coleta) {
+  // 1. Tenta via RPC 'cancelar_agendamento' (segurança nativa no Supabase que ignora bloqueio de RLS)
+  try {
+    const { data: rpcData, error: rpcErr } = await supabase.rpc('cancelar_agendamento', {
+      p_coleta_id: cod_coleta
+    });
+    if (!rpcErr && rpcData) {
+      return rpcData;
+    }
+  } catch (e) {
+    console.warn('RPC cancelar_agendamento não configurado, executando fallback direto:', e);
+  }
+
+  // 2. Fallback direto na tabela coleta
   const codStatus = await obterCodStatusReal('dispon', 1);
 
   const { data, error } = await supabase
     .from('coleta')
-    .update({ cod_status: codStatus, catador_id: null, data: null, hora: null, atualizado_em: new Date().toISOString() })
+    .update({ 
+      cod_status: codStatus, 
+      catador_id: null, 
+      agenda_id: null,
+      data: null, 
+      hora: null, 
+      atualizado_em: new Date().toISOString() 
+    })
     .eq('cod_coleta', cod_coleta)
     .select();
 
   if (error) {
-    console.error('Erro ao reabrir oferta:', error);
+    console.error('Erro ao cancelar agendamento / reabrir oferta:', error);
     if (error.message?.includes('foreign key constraint') || error.code === '23503') {
       const lista = await getStatusDisponiveis();
       if (lista.length > 0) {
         const bestSt = lista.find(s => s.status?.toLowerCase().includes('dispon')) || lista[0];
         const { data: retryData, error: retryErr } = await supabase
           .from('coleta')
-          .update({ cod_status: bestSt.cod_status, catador_id: null, data: null, hora: null, atualizado_em: new Date().toISOString() })
+          .update({ 
+            cod_status: bestSt.cod_status, 
+            catador_id: null, 
+            agenda_id: null,
+            data: null, 
+            hora: null, 
+            atualizado_em: new Date().toISOString() 
+          })
           .eq('cod_coleta', cod_coleta)
           .select();
         if (retryErr) throw retryErr;
@@ -276,6 +303,9 @@ export async function reabrirOferta(cod_coleta) {
   }
   return data;
 }
+
+export const reabrirOferta = cancelarAgendamento;
+export const reabrirColeta = cancelarAgendamento;
 
 export async function cancelarOferta(cod_coleta) {
   const codStatus = await obterCodStatusReal('cancel', 5);

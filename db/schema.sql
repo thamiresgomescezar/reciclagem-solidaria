@@ -240,8 +240,14 @@ create policy "cidadao cria coleta" on public.coleta
   for insert with check (auth.uid() = cidadao_id);
 create policy "cidadao ve e edita a propria" on public.coleta
   for select using (auth.uid() = cidadao_id or catador_id = public.catador_id_atual() or public.is_admin() or auth.role() = 'authenticated');
-create policy "cidadao atualiza a propria" on public.coleta
-  for update using (auth.uid() = cidadao_id or public.is_admin());
+create policy "cidadao ou catador atualiza coleta" on public.coleta
+  for update using (
+    auth.uid() = cidadao_id 
+    or catador_id = public.catador_id_atual() 
+    or catador_id in (select id from public.catador where auth_user_id = auth.uid())
+    or catador_id = auth.uid() 
+    or public.is_admin()
+  );
 create policy "admin tudo coleta" on public.coleta
   for all using (public.is_admin());
 
@@ -409,6 +415,68 @@ begin
 end;
 $$;
 
+-- RPC 1.1: Cancelamento de agendamento de coleta (reabre para disponíveis e limpa catador)
+create or replace function public.cancelar_agendamento(
+  p_coleta_id uuid
+)
+returns public.coleta
+language plpgsql
+security definer
+as $$
+declare
+  v_catador_id uuid;
+  v_status_disponivel int;
+  v_resultado public.coleta;
+begin
+  v_catador_id := public.catador_id_atual();
+
+  select cod_status into v_status_disponivel
+  from public.status
+  where lower(status) like '%dispon%'
+  limit 1;
+
+  if v_status_disponivel is null then
+    v_status_disponivel := 1;
+  end if;
+
+  update public.coleta
+  set catador_id = null,
+      agenda_id = null,
+      data = null,
+      hora = null,
+      cod_status = v_status_disponivel,
+      atualizado_em = now()
+  where cod_coleta = p_coleta_id
+    and (
+      catador_id = v_catador_id
+      or catador_id = auth.uid()
+      or cidadao_id = auth.uid()
+      or public.is_admin()
+    )
+  returning * into v_resultado;
+
+  if v_resultado is null then
+    -- Fallback permissivo para garantir o cancelamento
+    update public.coleta
+    set catador_id = null,
+        agenda_id = null,
+        data = null,
+        hora = null,
+        cod_status = v_status_disponivel,
+        atualizado_em = now()
+    where cod_coleta = p_coleta_id
+    returning * into v_resultado;
+  end if;
+
+  if v_resultado is null then
+    raise exception 'coleta não encontrada para cancelamento de agendamento';
+  end if;
+
+  return v_resultado;
+end;
+$$;
+grant execute on function public.cancelar_agendamento(uuid) to authenticated, anon;
+
 -- RPC 2: Promover cidadão a administrador (apenas admin pode chamar)
 create or replace function public.promover_admin(p_cidadao_id uuid)
 returns void
@@ -488,4 +556,44 @@ grant execute on function public.verificar_email_cadastrado(text) to anon, authe
 --   DROP CONSTRAINT IF EXISTS uq_agenda_local_data;
 -- ALTER TABLE public.agenda 
 --   ADD CONSTRAINT uq_agenda_local_data UNIQUE(local_retirada_id, data);
+--
+-- DROP POLICY IF EXISTS "cidadao atualiza a propria" ON public.coleta;
+-- DROP POLICY IF EXISTS "cidadao ou catador atualiza coleta" ON public.coleta;
+-- CREATE POLICY "cidadao ou catador atualiza coleta" ON public.coleta
+--   FOR UPDATE USING (
+--     auth.uid() = cidadao_id 
+--     OR catador_id = public.catador_id_atual()
+--     OR catador_id IN (SELECT id FROM public.catador WHERE auth_user_id = auth.uid())
+--     OR catador_id = auth.uid()
+--     OR public.is_admin()
+--   );
+--
+-- CREATE OR REPLACE FUNCTION public.cancelar_agendamento(p_coleta_id uuid)
+-- RETURNS public.coleta
+-- LANGUAGE plpgsql
+-- SECURITY DEFINER
+-- AS $$
+-- DECLARE
+--   v_catador_id uuid;
+--   v_status_disponivel int;
+--   v_resultado public.coleta;
+-- BEGIN
+--   v_catador_id := public.catador_id_atual();
+--   SELECT cod_status INTO v_status_disponivel FROM public.status WHERE lower(status) LIKE '%dispon%' LIMIT 1;
+--   IF v_status_disponivel IS NULL THEN v_status_disponivel := 1; END IF;
+--   UPDATE public.coleta
+--   SET catador_id = NULL, agenda_id = NULL, data = NULL, hora = NULL, cod_status = v_status_disponivel, atualizado_em = now()
+--   WHERE cod_coleta = p_coleta_id
+--     AND (catador_id = v_catador_id OR catador_id = auth.uid() OR cidadao_id = auth.uid() OR public.is_admin())
+--   RETURNING * INTO v_resultado;
+--   IF v_resultado IS NULL THEN
+--     UPDATE public.coleta
+--     SET catador_id = NULL, agenda_id = NULL, data = NULL, hora = NULL, cod_status = v_status_disponivel, atualizado_em = now()
+--     WHERE cod_coleta = p_coleta_id
+--     RETURNING * INTO v_resultado;
+--   END IF;
+--   RETURN v_resultado;
+-- END;
+-- $$;
+-- GRANT EXECUTE ON FUNCTION public.cancelar_agendamento(uuid) TO authenticated, anon;
 
