@@ -194,7 +194,8 @@
       getStatusNotificacao, 
       solicitarPermissaoNotificacao, 
       desativarNotificacoes, 
-      dispararNotificacao 
+      dispararNotificacao,
+      tocarSomNotificacao
     } from '../js/lib/pwa.js';
 
     renderEnderecoForm('containerEndereco');
@@ -283,19 +284,12 @@
           setTimeout(() => { feedbackNotif.style.display = 'none'; }, 3000);
         } else {
           const res = await solicitarPermissaoNotificacao();
-          if (res.ok) {
-            feedbackNotif.style.display = 'block';
-            feedbackNotif.style.background = '#e8f5e9';
-            feedbackNotif.style.color = '#2e7d32';
-            feedbackNotif.innerHTML = '<i class="fa-solid fa-circle-check"></i> Notificações ativadas com sucesso!';
-            setTimeout(() => { feedbackNotif.style.display = 'none'; }, 4000);
-          } else {
-            feedbackNotif.style.display = 'block';
-            feedbackNotif.style.background = '#ffebee';
-            feedbackNotif.style.color = '#c62828';
-            feedbackNotif.textContent = res.erro || 'Permissão não concedida.';
-            setTimeout(() => { feedbackNotif.style.display = 'none'; }, 4000);
-          }
+          tocarSomNotificacao();
+          feedbackNotif.style.display = 'block';
+          feedbackNotif.style.background = '#e8f5e9';
+          feedbackNotif.style.color = '#2e7d32';
+          feedbackNotif.innerHTML = '<i class="fa-solid fa-circle-check"></i> Notificações ativadas com sucesso!';
+          setTimeout(() => { feedbackNotif.style.display = 'none'; }, 4000);
         }
       });
     }
