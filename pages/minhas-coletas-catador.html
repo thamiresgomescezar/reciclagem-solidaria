@@ -44,7 +44,7 @@
     import { proibirAcessoInvalido } from '../js/lib/routeGuard.js';
     import { listarMinhasColetasCatador, cancelarAgendamento } from '../js/services/coletas.js';
     import { logout } from '../js/services/auth.js';
-    import { showConfirmModal } from '../js/lib/modal.js';
+    import { showConfirmModal, showAlertModal } from '../js/lib/modal.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const perfil = await proibirAcessoInvalido(['catador', 'administrador']);
@@ -145,6 +145,13 @@
                     if (feedbackMsg) {
                       feedbackMsg.textContent = 'Erro ao cancelar agendamento: ' + err.message;
                       feedbackMsg.className = 'feedback-msg error';
+                    }
+                    if (err.message?.includes('RLS') || err.message?.includes('banco de dados')) {
+                      showAlertModal({
+                        title: 'Ação Bloqueada pelo Banco de Dados',
+                        message: 'O Supabase não permitiu desvincular o material porque a regra de segurança (RLS) da tabela coleta ainda não autoriza o Catador a atualizar registros.\n\nPara liberar essa ação, basta rodar o comando SQL de permissão no SQL Editor do Supabase.',
+                        buttonText: 'Entendi'
+                      });
                     }
                   }
                 }

@@ -453,6 +453,13 @@ function vincularEventosCards(listaContainer, feedbackMsg, perfil) {
             carregarLista(listaContainer, feedbackMsg, perfil);
           } catch (err) {
             showError(feedbackMsg, 'Erro ao cancelar agendamento: ' + err.message);
+            if (err.message?.includes('RLS') || err.message?.includes('banco de dados')) {
+              showAlertModal({
+                title: 'Ação Bloqueada pelo Banco de Dados',
+                message: 'O Supabase não permitiu desvincular o material porque a política de segurança (RLS) da tabela coleta ainda não autoriza o Catador a atualizar registros.\n\nPara liberar essa ação, basta rodar o comando SQL de permissão no SQL Editor do Supabase.',
+                buttonText: 'Entendi'
+              });
+            }
           }
         }
       });
