@@ -296,11 +296,19 @@ export async function cancelarAgendamento(cod_coleta) {
           .eq('cod_coleta', cod_coleta)
           .select();
         if (retryErr) throw retryErr;
+        if (!retryErr && Array.isArray(retryData) && retryData.length === 0) {
+          throw new Error('O banco de dados (RLS) bloqueou a desvinculação do catador. É necessário executar o script SQL no Supabase para liberar o cancelamento.');
+        }
         return retryData;
       }
     }
     throw error;
   }
+
+  if (Array.isArray(data) && data.length === 0) {
+    throw new Error('O banco de dados (RLS) bloqueou a desvinculação do catador. É necessário executar o script SQL no Supabase para liberar o cancelamento.');
+  }
+
   return data;
 }
 
