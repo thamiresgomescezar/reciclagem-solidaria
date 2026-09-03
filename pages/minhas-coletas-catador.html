@@ -42,14 +42,16 @@
 
   <script type="module">
     import { proibirAcessoInvalido } from '../js/lib/routeGuard.js';
-    import { listarMinhasColetasCatador } from '../js/services/coletas.js';
+    import { listarMinhasColetasCatador, cancelarAgendamento } from '../js/services/coletas.js';
     import { logout } from '../js/services/auth.js';
+    import { showConfirmModal } from '../js/lib/modal.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
       const perfil = await proibirAcessoInvalido(['catador', 'administrador']);
       if (!perfil) return;
 
       const listaContainer = document.getElementById('lista-minhas-coletas-catador');
+      const feedbackMsg = document.getElementById('feedback-msg');
       const btnLogout = document.getElementById('btn-logout');
 
       if (btnLogout) {
@@ -60,64 +62,103 @@
         });
       }
 
-      try {
-        const coletas = await listarMinhasColetasCatador();
+      async function carregarColetas() {
+        try {
+          const coletas = await listarMinhasColetasCatador();
 
-        if (!coletas || coletas.length === 0) {
-          listaContainer.innerHTML = `
-            <div style="text-align: center; padding: 30px; background: white; border-radius: 16px; border: 1px dashed var(--cinza-borda);">
-              <p style="font-size: 20px;"></p>
-              <p style="font-weight: 600; color: var(--verde-escuro);">Você não possui coletas agendadas no momento</p>
-              <p style="font-size: 13px; color: var(--cinza-texto-aux); margin-top: 4px;">Acesse a aba "Ofertas" para agendar a retirada de novos materiais.</p>
-            </div>
-          `;
-          return;
+          if (!coletas || coletas.length === 0) {
+            listaContainer.innerHTML = `
+              <div style="text-align: center; padding: 30px; background: white; border-radius: 16px; border: 1px dashed var(--cinza-borda);">
+                <p style="font-size: 20px;"></p>
+                <p style="font-weight: 600; color: var(--verde-escuro);">Você não possui coletas agendadas no momento</p>
+                <p style="font-size: 13px; color: var(--cinza-texto-aux); margin-top: 4px;">Acesse a aba "Ofertas" para agendar a retirada de novos materiais.</p>
+              </div>
+            `;
+            return;
+          }
+
+          listaContainer.innerHTML = '';
+          coletas.forEach(coleta => {
+            const card = document.createElement('div');
+            card.style.cssText = `
+              background: white;
+              border-radius: 14px;
+              padding: 16px;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+              border: 1px solid var(--cinza-borda);
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            `;
+
+            const tipoMaterial = coleta.materiais?.tipo || 'Material';
+            const doadorNome = coleta.cidadao?.nome || 'Cidadão';
+            const doadorTel = coleta.cidadao?.telefone || 'Não informado';
+            const statusNome = coleta.status?.status || 'agendado';
+
+            card.innerHTML = `
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <strong style="color: var(--verde-escuro); font-size: 16px;">${tipoMaterial} (${coleta.quantidade})</strong>
+                <span style="font-size: 11px; font-weight: bold; background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 12px; text-transform: uppercase;">
+                  ${statusNome}
+                </span>
+              </div>
+
+              <div style="font-size: 13px; color: var(--cinza-texto); background: #f9fbf9; padding: 10px; border-radius: 8px; margin-top: 4px;">
+                <p><strong> Local:</strong> ${coleta.local_retirada?.nome || 'Fatec Franco da Rocha'}</p>
+                <p style="margin-top: 4px;"><strong> Doador:</strong> ${doadorNome}</p>
+              </div>
+
+              <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
+                <a href="./mensagens.html?coleta=${coleta.cod_coleta}" class="btn-pill" style="text-align: center; font-size: 12px; padding: 8px 12px; flex: 1; text-decoration: none;">
+                   CONTATAR DOADOR
+                </a>
+                ${(statusNome.toLowerCase() === 'agendado') ? `
+                  <button type="button" class="btn-cancelar-agendamento-mob" data-id="${coleta.cod_coleta}" style="background: #fff5f5; border: 1.5px solid #ef9a9a; color: #c62828; border-radius: 999px; font-weight: 700; font-size: 12px; padding: 8px 12px; cursor: pointer; flex: 1;">
+                     Cancelar Agendamento
+                  </button>
+                ` : ''}
+              </div>
+            `;
+
+            listaContainer.appendChild(card);
+          });
+
+          document.querySelectorAll('.btn-cancelar-agendamento-mob').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const id = e.currentTarget.getAttribute('data-id');
+              showConfirmModal({
+                title: 'Cancelar Agendamento',
+                message: 'Não conseguirá comparecer para retirar este material?\n\nAo cancelar seu agendamento, a coleta ficará disponível imediatamente para que outros catadores possam agendá-la.',
+                confirmText: 'Sim, Cancelar Agendamento',
+                cancelText: 'Voltar',
+                confirmColor: '#c62828',
+                onConfirm: async () => {
+                  try {
+                    await cancelarAgendamento(id);
+                    if (feedbackMsg) {
+                      feedbackMsg.textContent = 'Agendamento cancelado com sucesso. O material foi liberado para outros catadores.';
+                      feedbackMsg.className = 'feedback-msg success';
+                    }
+                    await carregarColetas();
+                  } catch (err) {
+                    if (feedbackMsg) {
+                      feedbackMsg.textContent = 'Erro ao cancelar agendamento: ' + err.message;
+                      feedbackMsg.className = 'feedback-msg error';
+                    }
+                  }
+                }
+              });
+            });
+          });
+
+        } catch (err) {
+          console.error(err);
+          listaContainer.innerHTML = `<div class="feedback-msg error">Erro ao carregar coletas agendadas.</div>`;
         }
-
-        listaContainer.innerHTML = '';
-        coletas.forEach(coleta => {
-          const card = document.createElement('div');
-          card.style.cssText = `
-            background: white;
-            border-radius: 14px;
-            padding: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border: 1px solid var(--cinza-borda);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-          `;
-
-          const tipoMaterial = coleta.materiais?.tipo || 'Material';
-          const doadorNome = coleta.cidadao?.nome || 'Cidadão';
-          const doadorTel = coleta.cidadao?.telefone || 'Não informado';
-          const statusNome = coleta.status?.status || 'agendado';
-
-          card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <strong style="color: var(--verde-escuro); font-size: 16px;">${tipoMaterial} (${coleta.quantidade})</strong>
-              <span style="font-size: 11px; font-weight: bold; background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 12px; text-transform: uppercase;">
-                ${statusNome}
-              </span>
-            </div>
-
-            <div style="font-size: 13px; color: var(--cinza-texto); background: #f9fbf9; padding: 10px; border-radius: 8px; margin-top: 4px;">
-              <p><strong> Local:</strong> ${coleta.local_retirada?.nome || 'Fatec Franco da Rocha'}</p>
-              <p style="margin-top: 4px;"><strong> Doador:</strong> ${doadorNome}</p>
-            </div>
-
-            <a href="./mensagens.html?coleta=${coleta.cod_coleta}" class="btn-pill" style="text-align: center; font-size: 13px; padding: 8px; margin-top: 6px;">
-               CONTATAR DOADOR
-            </a>
-          `;
-
-          listaContainer.appendChild(card);
-        });
-
-      } catch (err) {
-        console.error(err);
-        listaContainer.innerHTML = `<div class="feedback-msg error">Erro ao carregar coletas agendadas.</div>`;
       }
+
+      await carregarColetas();
     });
   </script>
 </body>
