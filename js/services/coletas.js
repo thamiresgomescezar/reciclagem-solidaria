@@ -306,6 +306,7 @@ export async function cancelarAgendamento(cod_coleta) {
 
 export const reabrirOferta = cancelarAgendamento;
 export const reabrirColeta = cancelarAgendamento;
+export const cancelarColeta = cancelarOferta;
 
 export async function cancelarOferta(cod_coleta) {
   const codStatus = await obterCodStatusReal('cancel', 5);
@@ -335,9 +336,6 @@ export async function cancelarOferta(cod_coleta) {
   }
   return data;
 }
-
-export const reabrirColeta = reabrirOferta;
-export const cancelarColeta = cancelarOferta;
 
 export async function atribuirCatadorColeta(coletaId, catadorId) {
   const catId = (catadorId && catadorId.trim() !== '') ? catadorId : null;

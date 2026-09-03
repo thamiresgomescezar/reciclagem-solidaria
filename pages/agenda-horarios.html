@@ -20,7 +20,7 @@
     <!-- Top Header -->
     <div class="top-bar">
       <div></div>
-      <a href="./dashboard-cidadao.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+      <a href="#" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
         <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
       </a>
     </div>
@@ -75,8 +75,10 @@
     async function atualizarBotaoVoltar() {
       try {
         perfilAtual = await getPerfilAtual().catch(() => null);
-        if (btnVoltarTop && perfilAtual?.tipo) {
-          const dest = perfilAtual.tipo === 'administrador' ? './dashboard-admin.html' : (perfilAtual.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+        const tipoStorage = localStorage.getItem('reciclagem_tipo_usuario') || sessionStorage.getItem('reciclagem_tipo_usuario');
+        const tipo = perfilAtual?.tipo || tipoStorage;
+        if (btnVoltarTop && tipo) {
+          const dest = tipo === 'administrador' ? './dashboard-admin.html' : (tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
           btnVoltarTop.href = dest;
         }
       } catch (e) {}
@@ -84,11 +86,11 @@
 
     if (btnVoltarTop) {
       btnVoltarTop.addEventListener('click', (e) => {
-        if (perfilAtual?.tipo) {
-          e.preventDefault();
-          const dest = perfilAtual.tipo === 'administrador' ? './dashboard-admin.html' : (perfilAtual.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
-          window.location.href = dest;
-        }
+        e.preventDefault();
+        const tipoStorage = localStorage.getItem('reciclagem_tipo_usuario') || sessionStorage.getItem('reciclagem_tipo_usuario');
+        const tipo = perfilAtual?.tipo || tipoStorage || 'catador';
+        const dest = tipo === 'administrador' ? './dashboard-admin.html' : (tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+        window.location.href = dest;
       });
     }
 

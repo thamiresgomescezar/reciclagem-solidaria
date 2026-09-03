@@ -20,7 +20,7 @@
     <!-- Top Header -->
     <div class="top-bar">
       <div></div>
-      <a href="./dashboard-cidadao.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+      <a href="#" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
         <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
       </a>
     </div>
@@ -102,6 +102,16 @@
     const btnPostar = document.getElementById('btn_postar');
 
     let perfilAtual = null;
+
+    if (btnVoltarTop) {
+      btnVoltarTop.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tipoStorage = localStorage.getItem('reciclagem_tipo_usuario') || sessionStorage.getItem('reciclagem_tipo_usuario');
+        const tipo = perfilAtual?.tipo || tipoStorage || 'cidadao';
+        const dest = tipo === 'administrador' ? './dashboard-admin.html' : (tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+        window.location.href = dest;
+      });
+    }
 
     function renderCards(data) {
       if (!data || data.length === 0) {
