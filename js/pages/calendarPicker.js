@@ -65,6 +65,7 @@ export function renderCalendarGrid(containerId, { agendaData = [], isAdmin = fal
   if (!container) return;
 
   const hoje = new Date();
+  const inicioHoje = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate(), 0, 0, 0, 0);
   if (ano !== null && ano !== undefined) {
     window._currentCalendarYear = ano;
   } else if (!window._currentCalendarYear) {
@@ -220,7 +221,7 @@ export function renderCalendarGrid(containerId, { agendaData = [], isAdmin = fal
       };
     }
 
-    const isPast = dataObj < new Date(hoje.setHours(0,0,0,0));
+    const isPast = dataObj < inicioHoje;
 
     let bgColor = isDisponivel ? '#e8f5e9' : '#fce8e6';
     let borderColor = isDisponivel ? '#33cc33' : '#f5c2c7';
@@ -329,7 +330,7 @@ export function renderCalendarGrid(containerId, { agendaData = [], isAdmin = fal
       const [y, m, d] = dateStr.split('-');
       const cellDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
 
-      if (cellDate >= new Date(hoje.setHours(0,0,0,0))) {
+      if (cellDate >= inicioHoje) {
         cell.addEventListener('click', (e) => {
           container.querySelectorAll('.calendar-day-cell').forEach(c => {
             c.style.transform = 'none';

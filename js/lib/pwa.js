@@ -159,14 +159,14 @@ export function getStatusNotificacao() {
   if (prefLocal === 'false') {
     return 'disabled_by_user';
   }
+  if ('Notification' in window && Notification.permission === 'denied') {
+    return 'denied';
+  }
   if (prefLocal === 'true') {
     return 'granted';
   }
   if ('Notification' in window && Notification.permission === 'granted') {
     return 'granted';
-  }
-  if ('Notification' in window && Notification.permission === 'denied') {
-    return 'denied';
   }
   return 'default';
 }
@@ -189,11 +189,49 @@ export async function solicitarPermissaoNotificacao() {
       } else if (Notification.permission === 'denied') {
         nativeStatus = 'denied';
       } else {
-        const permissao = await Notification.requestPermission();
-        nativeStatus = permissao;
+        let permissao = null;
+        try {
+          permissao = await Notification.requestPermission();
+        } catch (errReq) {
+          permissao = await new Promise((resolve) => {
+            try {
+              Notification.requestPermission(resolve);
+            } catch (errCb) {
+              resolve(Notification.permission);
+            }
+          });
+        }
+        nativeStatus = permissao || Notification.permission;
       }
     } catch (e) {
       console.warn('Erro ao solicitar Notification nativa:', e);
+    }
+  }
+
+  // Se a permissão nativa foi concedida, envia uma notificação de confirmação do navegador
+  if (nativeStatus === 'granted') {
+    try {
+      const iconPath = window.location.pathname.includes('/pages/') ? '../assets/icon-192.png' : './assets/icon-192.png';
+      const iconUrl = new URL(iconPath, window.location.origin).href;
+      let reg = swRegistration;
+      if (!reg && 'serviceWorker' in navigator) {
+        reg = await navigator.serviceWorker.ready.catch(() => null);
+      }
+      if (reg && 'showNotification' in reg) {
+        await reg.showNotification('Notificações Ativadas!', {
+          body: 'Você receberá avisos do navegador sempre que novas ofertas estiverem disponíveis.',
+          icon: iconUrl,
+          badge: iconUrl,
+          vibrate: [150, 80, 150]
+        });
+      } else if ('Notification' in window) {
+        new Notification('Notificações Ativadas!', {
+          body: 'Você receberá avisos do navegador sempre que novas ofertas estiverem disponíveis.',
+          icon: iconUrl
+        });
+      }
+    } catch (e) {
+      console.warn('Falha ao emitir notificação nativa de teste:', e);
     }
   }
 
@@ -202,7 +240,11 @@ export async function solicitarPermissaoNotificacao() {
     ok: true, 
     status: 'granted', 
     nativeStatus, 
-    mensagem: 'Notificações visuais e sonoras ativadas com sucesso!' 
+    mensagem: nativeStatus === 'granted'
+      ? 'Notificações do navegador e alertas sonoros ativados com sucesso!'
+      : (nativeStatus === 'denied'
+          ? 'Notificações ativadas no app, mas bloqueadas nas configurações do seu navegador.'
+          : 'Notificações visuais e sonoras ativadas com sucesso!')
   };
 }
 
@@ -285,32 +327,42 @@ export async function dispararNotificacao({ title, body, url }) {
   // 2. Se houver permissão no navegador/PWA, dispara também a notificação de sistema operacional
   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && localStorage.getItem('reciclagem_notificacoes_ativas') !== 'false') {
     const iconPath = window.location.pathname.includes('/pages/') ? '../assets/icon-192.png' : './assets/icon-192.png';
+    const iconUrl = new URL(iconPath, window.location.origin).href;
 
-    if (swRegistration && 'showNotification' in swRegistration) {
-      try {
-        await swRegistration.showNotification(title, {
+    let notificadoViaSW = false;
+    try {
+      let reg = swRegistration;
+      if (!reg && 'serviceWorker' in navigator) {
+        reg = await navigator.serviceWorker.ready.catch(() => null);
+      }
+      if (reg && 'showNotification' in reg) {
+        await reg.showNotification(title, {
           body,
-          icon: iconPath,
-          badge: iconPath,
+          icon: iconUrl,
+          badge: iconUrl,
           vibrate: [200, 100, 200],
           data: { url: targetUrl }
         });
-        return;
-      } catch (e) {
-        console.warn('Falha no ServiceWorker showNotification, usando Notification nativa:', e);
+        notificadoViaSW = true;
       }
+    } catch (e) {
+      console.warn('Falha no ServiceWorker showNotification, usando Notification nativa:', e);
     }
 
-    try {
-      const notif = new Notification(title, {
-        body,
-        icon: iconPath
-      });
-      notif.onclick = () => {
-        window.focus();
-        window.location.href = targetUrl;
-      };
-    } catch (e) {}
+    if (!notificadoViaSW) {
+      try {
+        const notif = new Notification(title, {
+          body,
+          icon: iconUrl
+        });
+        notif.onclick = () => {
+          window.focus();
+          window.location.href = targetUrl;
+        };
+      } catch (e) {
+        console.warn('Falha ao disparar Notification nativa:', e);
+      }
+    }
   }
 }
 
