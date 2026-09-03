@@ -241,17 +241,17 @@
 
   <div class="test-card red-card">
     <div class="test-header">
-      <span class="test-id">Teste 01 — Bloqueio Cruzado de Telas Restritas (Todos os Perfis e Anônimo)</span>
+      <span class="test-id">Teste 01 — Bloqueio Cruzado de Telas Restritas e Retorno Resiliente ao Painel</span>
       <span class="badge-pill badge-red">Prioridade Alta</span>
     </div>
-    <div class="test-what">O que testar: Garantir que ninguém consiga invadir telas de outros perfis digitando o link direto na barra de navegação.</div>
+    <div class="test-what">O que testar: Garantir que ninguém consiga invadir telas de outros perfis e comprovar que o botão "Voltar ao Painel" em telas compartilhadas retorna ao painel correto sem falso erro de acesso restrito.</div>
     <div class="test-steps">
       1. <strong>Anônimo:</strong> Em aba anônima, tente abrir: <span class="code-box">pages/dashboard-admin.html</span>, <span class="code-box">pages/definir-agenda.html</span> ou <span class="code-box">pages/mensagens.html</span>.<br>
       2. <strong>Cidadão no Admin:</strong> Logado como Cidadão, tente abrir: <span class="code-box">pages/relatorios.html</span>, <span class="code-box">pages/definir-agenda.html</span> ou <span class="code-box">pages/usuarios-cadastrados.html</span>.<br>
       3. <strong>Catador no Cidadão/Admin:</strong> Logado como Catador, tente abrir: <span class="code-box">pages/inserir-material.html</span> ou <span class="code-box">pages/dashboard-cidadao.html</span>.<br>
-      4. <strong>Admin em Operação:</strong> Logado como Admin, tente acessar <span class="code-box">pages/dashboard-cidadao.html</span> ou <span class="code-box">pages/dashboard-catador.html</span>.
+      4. <strong>Retorno Resiliente ao Painel:</strong> Logado como Catador, acesse <span class="code-box">pages/agenda-horarios.html</span> ou <span class="code-box">pages/publicacoes.html</span> e clique no botão <strong>Voltar ao Painel</strong>.
     </div>
-    <div class="test-result">✅ O que deve acontecer: Usuário sem login vai direto para <span class="code-box">pages/login.html</span>. Usuário logado sem permissão recebe aviso de acesso restrito e volta em segurança para seu próprio painel.</div>
+    <div class="test-result">✅ O que deve acontecer: Usuário sem login vai direto para <span class="code-box">pages/login.html</span>. Usuário logado sem permissão recebe aviso de acesso restrito e volta em segurança para seu próprio painel. Ao clicar em "Voltar ao Painel" nas telas compartilhadas, o Catador volta diretamente ao Painel do Catador sem falso alerta de restrição.</div>
   </div>
 
   <div class="test-card red-card">
@@ -329,17 +329,17 @@
 
   <div class="test-card amber-card">
     <div class="test-header">
-      <span class="test-id">Teste 07 — Doar / Ofertar Material Reciclável com Foto Opcional</span>
+      <span class="test-id">Teste 07 — Doar / Ofertar Material Reciclável com Foto Opcional e Isolamento de Alertas</span>
       <span class="badge-pill badge-amber">Cidadão</span>
     </div>
-    <div class="test-what">O que testar: Cadastro de uma doação com foto opcional e ponto de entrega ativo.</div>
+    <div class="test-what">O que testar: Cadastro de doação com foto opcional e comprovação de que o Cidadão NÃO recebe o alerta sonoro ou pop-up de nova oferta (exclusivo de catadores).</div>
     <div class="test-steps">
       1. No Painel do Cidadão, clique em <strong>Inserir Material</strong> (<span class="code-box">pages/inserir-material.html</span>).<br>
       2. Escolha o material (ex: <em>Papelão</em>) e o peso aproximado (ex: <em>15 kg</em>).<br>
       3. Anexe foto (opcional: o envio conclui normalmente sem foto). Se anexar, veja a prévia e o botão <strong>✕</strong> para remover.<br>
       4. Escolha o local de entrega (ex: <em>Fatec Franco da Rocha</em>) e clique em <strong>Disponibilizar Material</strong>.
     </div>
-    <div class="test-result">✅ O que deve acontecer: Mostra mensagem de sucesso e o material passa a aparecer na lista de coletas para os catadores.</div>
+    <div class="test-result">✅ O que deve acontecer: Mostra mensagem verde de sucesso e o material passa a constar na lista de coletas. O Cidadão não recebe pop-ups ou sons de "Nova Oferta Disponível", assegurando isolamento estrito de papéis.</div>
   </div>
 
   <div class="test-card amber-card">
@@ -372,98 +372,143 @@
 
   <div class="test-card amber-card">
     <div class="test-header">
-      <span class="test-id">Teste 10 — Concluir Retirada ou Cancelar/Reabrir Oferta</span>
+      <span class="test-id">Teste 10 — Concluir Retirada ou Cancelar/Reabrir Oferta pelo Cidadão</span>
       <span class="badge-pill badge-amber">Cidadão</span>
     </div>
-    <div class="test-what">O que testar: Conclusão do ciclo da doação ou cancelamento com reabertura para novos catadores.</div>
+    <div class="test-what">O que testar: Conclusão do ciclo da doação ou cancelamento com reabertura para novos catadores quando o catador agendado não comparecer.</div>
     <div class="test-steps">
       1. Em <strong>Minhas Ofertas</strong> (<span class="code-box">pages/minhas-ofertas.html</span>), localize uma oferta <em>Agendada</em>.<br>
-      2. <em>Cenário de Reabertura:</em> Se o agendamento for cancelado, a doação volta para <em>Disponível</em> para outros catadores.<br>
-      3. Ao confirmar a retirada pelo catador, o status é encerrado como <em>Concluído/Retirado</em> no histórico.
+      2. <em>Cenário de Reabertura:</em> Se o agendamento precisar ser desfeito, clique em <strong>Cancelar Agendamento / Reabrir Oferta</strong> e confirme.<br>
+      3. <em>Cenário de Conclusão:</em> Ao confirmar a retirada pelo catador, o status é encerrado como <em>Concluído/Retirado</em> no histórico.
     </div>
-    <div class="test-result">✅ O que deve acontecer: A doação não fica travada: volta para disponível se cancelada ou conclui com sucesso.</div>
+    <div class="test-result">✅ O que deve acontecer: Ao cancelar/reabrir, a doação volta para <em>Disponível</em> na rede e os catadores conectados são notificados na mesma hora. Se concluída, o histórico é atualizado com sucesso.</div>
   </div>
 
   <div class="section-title green" style="margin-top: 14px;">🟢 Bloco 3: Testes do Fluxo do Catador Autônomo</div>
 
   <div class="test-card green-card">
     <div class="test-header">
-      <span class="test-id">Teste 11 — Criar conta de Catador Autônomo</span>
+      <span class="test-id">Teste 11 — Criar conta de Catador e Ativar Alertas no PC e Celular</span>
       <span class="badge-pill badge-green">Catador</span>
     </div>
-    <div class="test-what">O que testar: Auto-cadastro de profissional da coleta com perfil específico.</div>
+    <div class="test-what">O que testar: Auto-cadastro de catador e ativação imediata de notificações no banner inicial e perfil no PC e smartphone (sem alerta falso de navegador incompatível).</div>
     <div class="test-steps">
-      1. Na tela de <strong>Cadastro</strong> (<span class="code-box">pages/cadastro.html</span>), selecione o perfil <strong>Catador Autônomo</strong>.<br>
-      2. Preencha seus dados e confirme o cadastro.
+      1. Em <strong>Cadastro</strong> (<span class="code-box">pages/cadastro.html</span>), selecione <strong>Catador Autônomo</strong> e conclua o cadastro.<br>
+      2. No Painel do Catador (<span class="code-box">pages/dashboard-catador.html</span>), localize o banner superior e clique em <strong>Ativar</strong>.<br>
+      3. No celular, veja que a ativação conclui com 1 toque sem travar a tela.
     </div>
-    <div class="test-result">✅ O que deve acontecer: O sistema cria o perfil e abre o Painel do Catador (<span class="code-box">pages/dashboard-catador.html</span>) com seus 8 cards de serviços.</div>
+    <div class="test-result">✅ O que deve acontecer: A conta é criada com painel completo. A faixa atualiza para <em>"Notificações de novas ofertas: Ativadas"</em> com sino verde e bipe sonoro de confirmação.</div>
+  </div>
+
+  <div class="test-card green-card">
+    <div class="test-header">
+      <span class="test-id">Teste 12 — Bloqueio Estrito de Horários Retroativos no Agendamento</span>
+      <span class="badge-pill badge-green">Catador</span>
+    </div>
+    <div class="test-what">O que testar: Impedir que o catador selecione horários que já passaram no relógio para o dia de hoje, garantindo coerência no agendamento.</div>
+    <div class="test-steps">
+      1. No Painel do Catador, clique em <strong>Materiais para Retirada</strong> (<span class="code-box">pages/catador-materiais.html</span>).<br>
+      2. Escolha qualquer oferta disponível e clique no botão <strong>Agendar Retirada</strong>.<br>
+      3. No calendário, clique na data de <strong>hoje</strong> (ex: se hoje é dia 03/09 e são 14:00).<br>
+      4. Abra o seletor de horários e observe: horários passados (ex: 08:00 às 13:30) foram removidos da lista.<br>
+      5. <em>Fim de Expediente:</em> Selecione a data de hoje após o encerramento do atendimento (ex: após 17:00).
+    </div>
+    <div class="test-result">✅ O que deve acontecer: O seletor remove horários passados e exibe apenas horários futuros. Após o término do expediente, exibe <em>"Nenhum horário disponível restante para hoje"</em>, desabilita a confirmação e orienta a escolher data futura.</div>
   </div>
 
   <div class="page-break"></div>
 
-  <!-- PÁGINA 3: RESTANTE DO BLOCO 3 (CATADOR) E BLOCO 4 (ADMINISTRADOR) -->
+  <!-- PÁGINA 3: CONTINUAÇÃO DO BLOCO 3 (CATADOR) -->
   <div class="section-title green">🟢 Bloco 3 (Continuação): Testes do Catador Autônomo</div>
 
   <div class="test-card green-card">
     <div class="test-header">
-      <span class="test-id">Teste 12 — Ver materiais disponíveis e agendar retirada</span>
+      <span class="test-id">Teste 13 — Notificação em Tempo Real no PC e Celular (Oferta de Cidadão ou Admin)</span>
       <span class="badge-pill badge-green">Catador</span>
     </div>
-    <div class="test-what">O que testar: Catador escolher um material e agendar dia/hora no calendário da Fatec.</div>
+    <div class="test-what">O que testar: Catador ser avisado na tela (Toast flutuante + som) e na lista quando uma oferta for postada por Cidadão ou reaberta por Admin.</div>
     <div class="test-steps">
-      1. Faça login como Catador e acesse o Painel (<span class="code-box">pages/dashboard-catador.html</span>).<br>
-      2. Clique em <strong>Materiais para Retirada</strong> (<span class="code-box">pages/catador-materiais.html</span>).<br>
-      3. Escolha um material e clique no botão <strong>Agendar Retirada</strong>.<br>
-      4. Escolha uma data e horário disponíveis no calendário e confirme.
+      1. Deixe o Painel do Catador aberto no computador ou celular.<br>
+      2. Em outro dispositivo, faça login como Cidadão e cadastre oferta de <em>Plástico</em>.<br>
+      3. Em seguida, entre como Admin e reabra uma coleta que estava cancelada.
     </div>
-    <div class="test-result">✅ O que deve acontecer: A coleta é agendada com sucesso e passa a aparecer na aba <em>Agendadas</em> em <em>Minhas Coletas</em> (<span class="code-box">pages/minhas-coletas-catador.html</span>).</div>
+    <div class="test-result">✅ O que deve acontecer: O Catador recebe no mesmo segundo um Toast verde flutuante com som suave, informando <em>"Nova Oferta Disponível"</em> e destacando o tipo de material (<em>Plástico</em>), sem emojis e sem focar no peso aproximado. A lista atualiza na hora sem recarregar a página (F5).</div>
   </div>
 
   <div class="test-card green-card">
     <div class="test-header">
-      <span class="test-id">Teste 13 — Aviso em tempo real de nova doação</span>
+      <span class="test-id">Teste 14 — Notificação Push do Navegador / SO e Teste de Confirmação</span>
       <span class="badge-pill badge-green">Catador</span>
     </div>
-    <div class="test-what">O que testar: Catador ser avisado na mesma hora quando alguém doar material.</div>
+    <div class="test-what">O que testar: Disparo da notificação nativa do sistema operacional (Windows, Android via Service Worker / PWA) e envio de confirmação imediata.</div>
     <div class="test-steps">
-      1. Deixe o painel do Catador aberto no seu celular ou computador.<br>
-      2. Em outro aparelho, entre como Cidadão e cadastre uma nova doação.
+      1. No Painel ou em <strong>Meu Perfil</strong>, clique em <strong>Ativar Notificações</strong> e autorize o pop-up nativo do navegador.<br>
+      2. Observe o disparo imediato da notificação nativa de boas-vindas (<em>"Notificações Ativadas!"</em>).<br>
+      3. Mude de aba ou minimize o navegador e poste uma oferta em outro aparelho como Cidadão.
     </div>
-    <div class="test-result">✅ O que deve acontecer: O Catador recebe um aviso na tela no mesmo instante dizendo <em>"Nova Oferta Disponível"</em> (informando o tipo do material) sem precisar apertar F5.</div>
+    <div class="test-result">✅ O que deve acontecer: O sistema operacional emite a notificação nativa com ícone e som/vibração. Ao clicar, o catador é levado diretamente para <span class="code-box">pages/catador-materiais.html</span>.</div>
   </div>
 
   <div class="test-card green-card">
     <div class="test-header">
-      <span class="test-id">Teste 14 — Concluir coleta e acompanhar métricas no relatório</span>
+      <span class="test-id">Teste 15 — Cancelar Coleta pelo Catador e Reabertura Automática</span>
       <span class="badge-pill badge-green">Catador</span>
     </div>
-    <div class="test-what">O que testar: Confirmar retirada e ver os indicadores e gráficos do catador atualizados.</div>
+    <div class="test-what">O que testar: Catador cancelar agendamento no PC (<span class="code-box">minhas-coletas.html</span>) ou celular (<span class="code-box">minhas-coletas-catador.html</span>), desvinculando seu ID e liberando o material para outros catadores.</div>
     <div class="test-steps">
-      1. Na tela Minhas Coletas do Catador, clique em <strong>Confirmar Retirada / Concluir</strong>.<br>
+      1. No painel, acesse <strong>Minhas Coletas</strong> e localize uma coleta agendada.<br>
+      2. Clique em <strong>Cancelar Agendamento</strong> e confirme no modal de segurança.
+    </div>
+    <div class="test-result">✅ O que deve acontecer: Abre modal de confirmação. Ao confirmar, o <span class="code-box">catador_id</span> é desvinculado no banco, a coleta sai de Minhas Coletas e volta para <em>Disponível</em>, avisando em tempo real os demais catadores da rede. Em caso de restrição de RLS, exibe alerta instrutivo.</div>
+  </div>
+
+  <div class="test-card green-card">
+    <div class="test-header">
+      <span class="test-id">Teste 16 — Concluir Retirada e Acompanhar Indicadores no Relatório</span>
+      <span class="badge-pill badge-green">Catador</span>
+    </div>
+    <div class="test-what">O que testar: Confirmar retirada e ver os indicadores e gráficos operacionais do catador atualizados na hora.</div>
+    <div class="test-steps">
+      1. Na tela Minhas Coletas, clique em <strong>Confirmar Retirada / Concluir</strong>.<br>
       2. Abra a tela de <strong>Relatórios do Catador</strong> (<span class="code-box">pages/relatorios-catador.html</span>).
     </div>
-    <div class="test-result">✅ O que deve acontecer: As coletas atribuídas, o percentual de retiradas e os gráficos de materiais são atualizados na hora.</div>
+    <div class="test-result">✅ O que deve acontecer: Coletas atribuídas, taxa percentual de retiradas, material predominante e gráficos são recalculados e atualizados instantaneamente.</div>
   </div>
 
   <div class="test-card green-card">
     <div class="test-header">
-      <span class="test-id">Teste 15 — Notificações Desativadas e Ajuste de Perfil do Catador</span>
+      <span class="test-id">Teste 17 — Notificações Desativadas e Ajuste de Perfil do Catador</span>
       <span class="badge-pill badge-green">Catador</span>
     </div>
-    <div class="test-what">O que testar: Comprovar que, ao desativar as notificações, o catador não recebe novos avisos na tela.</div>
+    <div class="test-what">O que testar: Comprovar que, ao desativar as notificações, o catador não recebe novos avisos sonoros ou visuais na tela.</div>
     <div class="test-steps">
-      1. Em <strong>Meu Perfil</strong> (<span class="code-box">pages/meu-perfil.html</span>), desative a opção de notificações e salve.<br>
-      2. No painel do Catador, veja a faixa do topo atualizar para <em>Notificações: Desativadas</em>.<br>
-      3. Em outro aparelho, cadastre uma nova doação como Cidadão.
+      1. Em <strong>Meu Perfil</strong> (<span class="code-box">pages/meu-perfil.html</span>), desative as notificações e volte ao Painel.<br>
+      2. Em outro aparelho, cadastre uma nova oferta como Cidadão.
     </div>
-    <div class="test-result">✅ O que deve acontecer: A faixa confirma o status "Desativadas" e nenhum aviso ou som de nova doação surge na tela do Catador.</div>
+    <div class="test-result">✅ O que deve acontecer: A faixa do painel passa a exibir <em>Notificações: Desativadas</em> (sino vermelho) e nenhum aviso ou som surge quando novas ofertas são postadas.</div>
   </div>
 
-  <div class="section-title blue" style="margin-top: 14px;">🔵 Bloco 4: Testes do Fluxo do Administrador</div>
+  <div class="test-card green-card">
+    <div class="test-header">
+      <span class="test-id">Teste 18 — Navegação Resiliente nas Telas Compartilhadas (Voltar ao Painel)</span>
+      <span class="badge-pill badge-green">Catador</span>
+    </div>
+    <div class="test-what">O que testar: Garantir que o botão "Voltar ao Painel" em páginas compartilhadas leve o Catador sempre ao Painel do Catador sem acusar acesso restrito.</div>
+    <div class="test-steps">
+      1. Logado como Catador, acesse <span class="code-box">pages/agenda-horarios.html</span>, <span class="code-box">pages/publicacoes.html</span> ou <span class="code-box">pages/catadores-cadastrados.html</span>.<br>
+      2. Em cada uma, clique no botão <strong>Voltar ao Painel</strong>.
+    </div>
+    <div class="test-result">✅ O que deve acontecer: O sistema identifica o perfil de Catador e direciona diretamente para <span class="code-box">pages/dashboard-catador.html</span> com total estabilidade.</div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- PÁGINA 4: BLOCO 4 (ADMINISTRADOR) -->
+  <div class="section-title blue">🔵 Bloco 4: Testes do Fluxo do Administrador</div>
 
   <div class="test-card blue-card">
     <div class="test-header">
-      <span class="test-id">Teste 16 — Desativação de Usuário e Tentativa de Login Bloqueada</span>
+      <span class="test-id">Teste 19 — Desativação de Usuário e Tentativa de Login Bloqueada</span>
       <span class="badge-pill badge-blue">Administrador</span>
     </div>
     <div class="test-what">O que testar: Administrador desativar conta de usuário e o sistema impedir seu acesso.</div>
@@ -477,7 +522,7 @@
 
   <div class="test-card blue-card">
     <div class="test-header">
-      <span class="test-id">Teste 17 — Proteção do Administrador Principal da Fatec</span>
+      <span class="test-id">Teste 20 — Proteção do Administrador Principal da Fatec</span>
       <span class="badge-pill badge-blue">Administrador</span>
     </div>
     <div class="test-what">O que testar: Impedir que o administrador principal seja desativado ou rebaixado por engano.</div>
@@ -489,7 +534,7 @@
 
   <div class="test-card blue-card">
     <div class="test-header">
-      <span class="test-id">Teste 18 — Promover Cidadão para Administrador</span>
+      <span class="test-id">Teste 21 — Promover Cidadão para Administrador</span>
       <span class="badge-pill badge-blue">Administrador</span>
     </div>
     <div class="test-what">O que testar: Conceder permissão administrativa a outro usuário existente.</div>
@@ -500,14 +545,9 @@
     <div class="test-result">✅ O que deve acontecer: A conta promovida passa a abrir o Painel de Administrador (<span class="code-box">pages/dashboard-admin.html</span>) com todas as opções de gestão.</div>
   </div>
 
-  <div class="page-break"></div>
-
-  <!-- PÁGINA 4: FINAL DO BLOCO 4 (ADMIN) + BLOCO 5 (MOBILE & LGPD) + FEEDBACK -->
-  <div class="section-title blue">🔵 Bloco 4 (Continuação): Testes do Administrador</div>
-
   <div class="test-card blue-card">
     <div class="test-header">
-      <span class="test-id">Teste 19 — Gerenciar Pontos de Coleta (Novo Local e Proteção do Último Ativo)</span>
+      <span class="test-id">Teste 22 — Gerenciar Pontos de Coleta (Novo Local e Proteção do Último Ativo)</span>
       <span class="badge-pill badge-blue">Administrador</span>
     </div>
     <div class="test-what">O que testar: Cadastrar novo ponto, gerenciar agenda e comprovar que o sistema impede desativar o último local.</div>
@@ -515,14 +555,28 @@
       1. Em <strong>Editar Local</strong> (<span class="code-box">pages/editar-local.html</span>), tente desativar o único ponto ativo (Fatec Franco da Rocha).<br>
       2. Veja o bloqueio com o aviso: <em>"O sistema deve ter ao menos um ponto de coleta ativo."</em><br>
       3. Clique em <strong>Novo Local de Coleta</strong>, cadastre um segundo ponto (ex: <em>Ponto Centro</em>) e salve.<br>
-      4. Veja que agora existem dois locais ativos. Em <strong>Definir Agenda</strong> (<span class="code-box">pages/definir-agenda.html</span>), gere horários sem sobreposição.
+      4. Veja que agora existem dois locais ativos e um deles pode ser desativado sem desamparar a rede.
     </div>
     <div class="test-result">✅ O que deve acontecer: O sistema não permite deixar a rede sem ponto ativo. O novo ponto é salvo e passa a receber doações e agendamentos.</div>
   </div>
 
   <div class="test-card blue-card">
     <div class="test-header">
-      <span class="test-id">Teste 20 — Criar Publicação Educativa e Visualizar no Mural</span>
+      <span class="test-id">Teste 23 — Definir Agenda de Atendimento e Horários Flexíveis</span>
+      <span class="badge-pill badge-blue">Administrador</span>
+    </div>
+    <div class="test-what">O que testar: Configurar dias de atendimento, aplicar horários a sábados e comprovar intervalos sem sobreposição.</div>
+    <div class="test-steps">
+      1. No Painel Admin, clique em <strong>Definir Agenda</strong> (<span class="code-box">pages/definir-agenda.html</span>).<br>
+      2. Configure horários da semana e aplique horários específicos a sábados ou datas especiais.<br>
+      3. Salve e confira no calendário interativo.
+    </div>
+    <div class="test-result">✅ O que deve acontecer: Os horários são salvos com sucesso e formatados em linha única sem quebras visuais para cidadãos e catadores.</div>
+  </div>
+
+  <div class="test-card blue-card">
+    <div class="test-header">
+      <span class="test-id">Teste 24 — Criar Publicação Educativa e Visualizar no Mural</span>
       <span class="badge-pill badge-blue">Administrador</span>
     </div>
     <div class="test-what">O que testar: Administrador publicar conteúdos e campanhas de educação ambiental.</div>
@@ -536,7 +590,7 @@
 
   <div class="test-card blue-card">
     <div class="test-header">
-      <span class="test-id">Teste 21 — Central de Mensagens e Aviso de WhatsApp Futuro</span>
+      <span class="test-id">Teste 25 — Central de Mensagens e Aviso de WhatsApp Futuro</span>
       <span class="badge-pill badge-blue">Administrador</span>
     </div>
     <div class="test-what">O que testar: Troca de mensagens entre usuários e modal informativo ao clicar no WhatsApp de catadores sem app.</div>
@@ -544,17 +598,20 @@
       1. Acesse <strong>Mensagens</strong> (<span class="code-box">pages/mensagens.html</span>) e veja que as conversas são restritas apenas aos participantes.<br>
       2. Em <strong>Catadores Cadastrados</strong> (<span class="code-box">pages/catadores-cadastrados.html</span>), clique no botão verde <strong>WhatsApp</strong> de um catador sem app.
     </div>
-    <div class="test-result">✅ O que deve acontecer: O chat funciona em tempo real. O botão de WhatsApp abre o modal <em>"Funcionalidade Futura"</em> avisando que a integração direta está em desenvolvimento e orientando o contato via telefone.</div>
+    <div class="test-result">✅ O que deve acontecer: O chat funciona em tempo real com isolamento de conversas. O botão de WhatsApp abre o modal <em>"Funcionalidade Futura"</em> orientando o contato via telefone.</div>
   </div>
 
-  <div class="section-title purple" style="margin-top: 14px;">📱 Bloco 5: Testes de Visual, Experiência no Celular e LGPD</div>
+  <div class="page-break"></div>
+
+  <!-- PÁGINA 5: BLOCO 5 (MOBILE, NOTIFICAÇÕES & LGPD) + FEEDBACK -->
+  <div class="section-title purple" style="margin-top: 14px;">📱 Bloco 5: Testes de Usabilidade, Mobile, Notificações e LGPD</div>
 
   <table>
     <thead>
       <tr>
-        <th style="width: 22%;">Item</th>
-        <th style="width: 25%;">O que verificar</th>
-        <th style="width: 25%;">Como testar</th>
+        <th style="width: 20%;">Item</th>
+        <th style="width: 26%;">O que verificar</th>
+        <th style="width: 26%;">Como testar</th>
         <th style="width: 28%;">Resultado Esperado</th>
       </tr>
     </thead>
@@ -564,6 +621,24 @@
         <td>Navegação completa em cada perfil</td>
         <td>Abra todas as telas de Cidadão, Catador e Admin no computador e celular</td>
         <td>Nenhum botão sobreposto, texto cortado ou erro visual. Barra inferior não tampa o rodapé.</td>
+      </tr>
+      <tr>
+        <td><strong>Notificações In-App vs Push</strong></td>
+        <td>Alertas em tempo real na tela e no sistema operacional</td>
+        <td>Dispare ofertas com catador logado no PC e no celular (Android / iOS)</td>
+        <td>Toast in-app verde com som suave na tela; notificação nativa do SO emitida no PC e celular Android com suporte a Service Worker.</td>
+      </tr>
+      <tr>
+        <td><strong>Trava de Horários Retroativos</strong></td>
+        <td>Bloqueio de agendamento no passado</td>
+        <td>Selecione a data de hoje e tente agendar horários já passados</td>
+        <td>Horários passados são filtrados do seletor e validação impede submissão no passado com aviso claro.</td>
+      </tr>
+      <tr>
+        <td><strong>Cancelamento de Coleta</strong></td>
+        <td>Desvinculação atômica e reabertura no Supabase</td>
+        <td>Cancele agendamento pelo catador ou pelo cidadão</td>
+        <td>Coleta volta a 'disponível', ID é desvinculado no banco e outros catadores são avisados em tempo real.</td>
       </tr>
       <tr>
         <td><strong>Campos & Senhas Divergentes</strong></td>
@@ -580,7 +655,7 @@
       <tr>
         <td><strong>Avisos e Modais (Pop-ups)</strong></td>
         <td>Modais de confirmação e avisos do sistema</td>
-        <td>Teste ações críticas (ex: cancelar coleta, desativar usuário, logout) e avisos (termos, WhatsApp, atalho)</td>
+        <td>Teste ações críticas (cancelar coleta, desativar usuário, logout) e avisos (termos, WhatsApp, atalho)</td>
         <td>Abrem centralizados com fundo escurecido, ícone temático, texto claro e botões de ação ("Confirmar/Cancelar" ou "Entendido").</td>
       </tr>
       <tr>
@@ -597,13 +672,13 @@
     <div style="font-size: 7.6pt; color: #475569;">
       Para cada teste realizado, anote uma destas duas opções:<br>
       <strong>✔️ Passou (OK):</strong> O sistema funcionou exatamente como descrito no resultado esperado.<br>
-      <strong>❌ Deu Erro / Travou (Bug):</strong> Aconteceu algo diferente (o botão não clicou, a tela ficou branca, etc.). Nesse caso, tire um print da tela e anote o número do teste (ex: <em>Teste 06</em>).
+      <strong>❌ Deu Erro / Travou (Bug):</strong> Aconteceu algo diferente (o botão não clicou, a tela ficou branca, etc.). Nesse caso, tire um print da tela e anote o número do teste (ex: <em>Teste 12</em>).
     </div>
   </div>
 
   <div class="footer">
     <span>Reciclagem Solidária — Fatec Franco da Rocha</span>
-    <span>🏁 Guia Prático e Passo a Passo de Testes QA (21 Testes Completos)</span>
+    <span>🏁 Guia Prático e Passo a Passo de Testes QA (25 Testes Completos)</span>
   </div>
 
 </body>

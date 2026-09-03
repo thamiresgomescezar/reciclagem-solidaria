@@ -19,8 +19,8 @@ Antes de começar os testes, é importante entender os 3 perfis que usam a plata
 
 ## 🔴 BLOCO 1: TESTES IMPORTANTES DE ACESSO, SEGURANÇA E SENHAS
 
-### 🧪 Teste 01: Bloqueio Cruzado de Telas Restritas (Todos os Perfis e Anônimo)
-* **O que testar:** Garantir que ninguém consiga invadir telas de outros perfis apenas digitando o link direto na barra de endereços do navegador.
+### 🧪 Teste 01: Bloqueio Cruzado de Telas Restritas e Retorno Resiliente ao Painel
+* **O que testar:** Garantir que ninguém consiga invadir telas de outros perfis pela URL direta e comprovar que os botões "Voltar ao Painel" em páginas compartilhadas levem cada perfil com 100% de precisão ao seu painel correto, sem falso aviso de "Acesso restrito".
 * **Como fazer (Passo a Passo):**
   1. **Teste Anônimo (Sem Login):** Em uma aba anônima, tente abrir direto:
      - `http://localhost:8080/pages/dashboard-admin.html`
@@ -37,11 +37,11 @@ Antes de começar os testes, é importante entender os 3 perfis que usam a plata
      - `http://localhost:8080/pages/dashboard-cidadao.html` (Cidadão)
      - `http://localhost:8080/pages/relatorios.html` (Admin)
      - `http://localhost:8080/pages/definir-agenda.html` (Admin)
-  4. **Teste Admin tentando ver Painéis de Operação:** Logado como **Admin**, tente abrir:
-     - `http://localhost:8080/pages/dashboard-cidadao.html` ou `http://localhost:8080/pages/dashboard-catador.html`.
+  4. **Teste de Retorno ao Painel a partir de Telas Compartilhadas:** Logado como **Catador**, acesse `pages/agenda-horarios.html`, `pages/publicacoes.html` ou `pages/catadores-cadastrados.html` e clique no botão **Voltar ao Painel**.
 * **O que deve acontecer na tela:**
   - Usuário sem login é mandado imediatamente para a tela de **Login** (`pages/login.html`).
   - Usuário logado que tentar ver tela de outro perfil recebe um aviso amigável na tela informando que **seu perfil não tem permissão para acessar aquela página** e é redirecionado de volta para o seu próprio painel.
+  - Ao clicar em "Voltar ao Painel" nas telas compartilhadas, o Catador volta com sucesso para o **Painel do Catador** (`pages/dashboard-catador.html`), sem receber falso alerta de acesso restrito.
 
 ---
 
@@ -98,14 +98,14 @@ Antes de começar os testes, é importante entender os 3 perfis que usam a plata
 
 ---
 
-### 🧪 Teste 07: Doar / Ofertar Material Reciclável com Foto Opcional
-* **O que testar:** Cadastro de uma doação com foto opcional e ponto de entrega ativo.
+### 🧪 Teste 07: Doar / Ofertar Material Reciclável com Foto Opcional e Isolamento de Alertas
+* **O que testar:** Cadastro de uma doação com foto opcional, ponto de entrega ativo e comprovação de que o Cidadão que posta NÃO recebe o alerta de nova oferta (alerta exclusivo de catadores).
 * **Como fazer (Passo a Passo):**
   1. No Painel do Cidadão, clique no card **Inserir Material** (`pages/inserir-material.html`).
   2. Escolha o tipo de material (ex: *Papelão*, *Plástico*) e o peso aproximado (ex: *15 kg*).
   3. Anexe uma foto (opcional: o sistema conclui normalmente sem foto). Se anexar, veja a prévia e o botão **✕** para remover.
   4. Escolha o ponto de entrega ativo (ex: *Fatec Franco da Rocha*) e clique em **Disponibilizar Material**.
-* **O que deve acontecer na tela:** Mostra mensagem de sucesso e o material passa a constar na lista de coletas para os catadores.
+* **O que deve acontecer na tela:** Mostra mensagem verde de sucesso e o material passa a constar na lista de coletas para os catadores. O Cidadão **não** recebe pop-ups ou sons de *"Nova Oferta Disponível"* (garantindo o isolamento estrito de perfis).
 
 ---
 
@@ -129,69 +129,114 @@ Antes de começar os testes, é importante entender os 3 perfis que usam a plata
 
 ---
 
-### 🧪 Teste 10: Concluir Retirada ou Cancelar/Reabrir Oferta
-* **O que testar:** Conclusão do ciclo da doação ou cancelamento com reabertura para novos catadores.
+### 🧪 Teste 10: Concluir Retirada ou Cancelar/Reabrir Oferta pelo Cidadão
+* **O que testar:** Conclusão do ciclo da doação ou cancelamento com reabertura para novos catadores caso o catador agendado não compareça.
 * **Como fazer (Passo a Passo):**
   1. Em **Minhas Ofertas** (`pages/minhas-ofertas.html`), localize uma oferta com status *Agendada*.
-  2. *Cenário de Reabertura:* Se o agendamento for cancelado, a doação volta para *Disponível* para que outros catadores possam pegá-la.
-  3. Ao confirmar a retirada pelo catador, o status é encerrado como *Concluído/Retirado* no histórico.
-* **O que deve acontecer na tela:** A doação nunca fica travada em estado inconsistente: volta para disponível se cancelada ou conclui com sucesso.
+  2. *Cenário de Reabertura:* Se o agendamento precisar ser desfeito, clique em **Cancelar Agendamento / Reabrir Oferta**.
+  3. Confirme no modal de aviso.
+  4. *Cenário de Conclusão:* Ao confirmar a retirada pelo catador, o status é encerrado como *Concluído/Retirado* no histórico.
+* **O que deve acontecer na tela:** A doação nunca fica travada em estado inconsistente: ao cancelar/reabrir, ela volta para *Disponível* na rede e os catadores conectados são notificados em tempo real de que o material está livre para novo agendamento. Se concluída, o histórico é atualizado com sucesso.
 
 ---
 
 ## 🟢 BLOCO 3: TESTES DO FLUXO DO CATADOR AUTÔNOMO
 
-### 🧪 Teste 11: Criar conta de Catador Autônomo
-* **O que testar:** Auto-cadastro de um catador autônomo com perfil específico de coleta.
+### 🧪 Teste 11: Criar conta de Catador Autônomo e Ativar Alertas no Computador e Celular
+* **O que testar:** Auto-cadastro de um catador autônomo e ativação imediata de notificações no banner inicial e nas configurações de perfil, tanto no computador quanto no celular (sem mensagem indevida de incompatibilidade de navegador).
 * **Como fazer (Passo a Passo):**
-  1. Na tela de **Cadastro** (`pages/cadastro.html`), selecione o perfil **Catador Autônomo**.
-  2. Preencha os dados e finalize o cadastro.
-* **O que deve acontecer na tela:** A conta é criada com perfil de catador e o sistema abre o **Painel do Catador** (`pages/dashboard-catador.html`) com os 8 cards de serviços.
+  1. Na tela de **Cadastro** (`pages/cadastro.html`), selecione o perfil **Catador Autônomo**, preencha os dados e confirme.
+  2. Ao entrar no **Painel do Catador** (`pages/dashboard-catador.html`), localize a faixa de notificações no topo e clique no botão **Ativar**.
+  3. No celular, veja que a ativação ocorre com 1 toque sem travar a tela ou alertar falsamente que o navegador não suporta.
+* **O que deve acontecer na tela:** A conta é criada com o painel do catador completo. A faixa atualiza para *Notificações de novas ofertas: Ativadas* com ícone de sino verde, e um som suave de confirmação é reproduzido.
 
 ---
 
-### 🧪 Teste 12: Ver materiais disponíveis e agendar retirada
-* **O que testar:** Catador escolher um material e agendar dia/hora na agenda da Fatec.
+### 🧪 Teste 12: Bloqueio Estrito de Horários Retroativos no Agendamento de Coletas
+* **O que testar:** Impedir terminantemente que o catador selecione horários que já passaram no relógio para a data de hoje, garantindo integridade e coerência no agendamento.
 * **Como fazer (Passo a Passo):**
-  1. Faça login como Catador e acesse o Painel (`pages/dashboard-catador.html`).
-  2. Clique no card **Materiais para Retirada** (`pages/catador-materiais.html`).
-  3. Escolha um material e clique no botão **Agendar Retirada**.
-  4. Escolha uma data e horário disponíveis no calendário e confirme.
-* **O que deve acontecer na tela:** A coleta é agendada com sucesso e passa a aparecer na aba *Agendadas* em *Minhas Coletas* (`pages/minhas-coletas-catador.html`).
+  1. No Painel do Catador, clique em **Materiais para Retirada** (`pages/catador-materiais.html`).
+  2. Escolha qualquer material com status *Disponível* e clique em **Agendar Retirada**.
+  3. No calendário do modal, clique no dia de **hoje** (ex: se hoje é dia 03/09 e são 14:00).
+  4. Abra a lista suspensa de horários de retirada e confira as opções apresentadas.
+  5. *Cenário de Fim de Expediente:* Selecione a data de hoje após o término do horário de atendimento (ex: após as 17:00).
+* **O que deve acontecer na tela:**
+  - O seletor de horários remove automaticamente todos os horários retroativos da manhã e da tarde (ex: 08:00, 08:30, ..., 13:30 não aparecem). Apenas horários futuros a partir da hora atual ficam selecionáveis.
+  - Caso todos os horários do dia de hoje já tenham se encerrado, o campo exibe *"Nenhum horário disponível restante para hoje"*, o botão de confirmação fica desabilitado e a interface orienta a selecionar uma data futura no calendário.
+  - O sistema impede a confirmação no passado e protege o banco contra agendamentos retroativos.
 
 ---
 
-### 🧪 Teste 13: Aviso em tempo real de nova doação
-* **O que testar:** Catador ser avisado na mesma hora quando alguém doar material.
+### 🧪 Teste 13: Notificação em Tempo Real no Computador e Celular (Oferta postada por Cidadão ou Admin)
+* **O que testar:** O catador ser avisado instantaneamente na tela (Toast flutuante + som sintetizado) e na lista de materiais quando uma oferta for disponibilizada por um Cidadão ou reaberta por um Administrador, tanto no computador quanto no celular.
 * **Como fazer (Passo a Passo):**
-  1. Deixe o painel do Catador aberto no seu celular ou computador.
-  2. Em outro aparelho, entre como Cidadão e cadastre uma nova doação.
-* **O que deve acontecer na tela:** O Catador recebe um aviso na tela no mesmo instante dizendo *"Nova Oferta Disponível"* (informando o tipo do material) sem precisar apertar F5.
+  1. Deixe o Painel do Catador ou a tela de materiais aberta no computador ou celular.
+  2. Em outro dispositivo ou aba, faça login como Cidadão e cadastre uma oferta de material (ex: *Plástico*).
+  3. Em seguida, entre como Administrador e reabra uma coleta que estava cancelada.
+* **O que deve acontecer na tela:**
+  - No mesmo instante (em tempo real, sem precisar apertar F5 ou recarregar a página), surge na tela do Catador um Toast flutuante verde acompanhado de um bipe harmônico sutil.
+  - A notificação apresenta o título *"Nova Oferta Disponível"* e destaca o **tipo de material** (ex: *Plástico*), de forma profissional, sem emojis e sem focar no peso aproximado.
+  - A lista de materiais disponíveis atualiza na hora com a nova oferta.
 
 ---
 
-### 🧪 Teste 14: Concluir coleta e acompanhar métricas no relatório
-* **O que testar:** Confirmar retirada e ver os indicadores e gráficos do catador atualizados.
+### 🧪 Teste 14: Notificação Push do Navegador / Sistema Operacional e Teste Imediato de Confirmação
+* **O que testar:** O disparo da notificação nativa do sistema operacional (Windows, Android via Service Worker / PWA, macOS) e o envio imediato da notificação de boas-vindas do navegador ao autorizar o serviço.
 * **Como fazer (Passo a Passo):**
-  1. Na tela **Minhas Coletas** do Catador, clique em **Confirmar Retirada / Concluir**.
-  2. Abra a tela de **Relatórios do Catador** (`pages/relatorios-catador.html`).
-* **O que deve acontecer na tela:** As coletas atribuídas, o percentual de retiradas e os gráficos de materiais são atualizados na hora.
+  1. No Painel do Catador ou em **Meu Perfil** (`pages/meu-perfil.html`), clique em **Ativar Notificações** e autorize a permissão nativa do navegador (*Permitir*).
+  2. Observe a notificação imediata emitida pelo sistema operacional (*"Notificações Ativadas! Você receberá avisos do navegador sempre que novas ofertas estiverem disponíveis."*).
+  3. Minimize o navegador ou mude para outra aba/aplicativo.
+  4. Em outro dispositivo, publique uma nova oferta como Cidadão.
+* **O que deve acontecer na tela:** O sistema operacional emite a notificação nativa com o ícone oficial da plataforma, vibração (em celulares Android) e som, permitindo que o catador clique na notificação e seja direcionado diretamente para a tela de materiais disponíveis (`catador-materiais.html`).
 
 ---
 
-### 🧪 Teste 15: Notificações Desativadas e Ajuste de Perfil do Catador
-* **O que testar:** Comprovar que, ao desativar as notificações, o catador não recebe novos avisos na tela.
+### 🧪 Teste 15: Cancelar Agendamento de Coleta pelo Catador e Reabertura Automática
+* **O que testar:** O catador cancelar um agendamento prévio pelo computador (`minhas-coletas.html`) ou pelo celular (`minhas-coletas-catador.html`), desvinculando seu ID no banco de dados e redisponibilizando o material na rede para outros catadores.
 * **Como fazer (Passo a Passo):**
-  1. Em **Meu Perfil** (`pages/meu-perfil.html`), desative a opção de notificações e salve.
-  2. No painel do Catador, veja a faixa do topo atualizar para *Notificações: Desativadas*.
-  3. Em outro aparelho, cadastre uma nova doação como Cidadão.
-* **O que deve acontecer na tela:** A faixa confirma o status "Desativadas" e nenhum aviso ou som de nova doação surge na tela do Catador.
+  1. Faça login como Catador e acesse **Minhas Coletas**.
+  2. Localize um card de coleta com status *Agendada* e clique no botão **Cancelar Agendamento**.
+  3. No modal de confirmação, leia o aviso e clique em **Confirmar Cancelamento**.
+* **O que deve acontecer na tela:**
+  - Abre um modal de confirmação seguro perguntando se deseja cancelar e liberar o material para outros catadores.
+  - Ao confirmar, o agendamento é desfeito no banco de dados Supabase: o `catador_id` é desvinculado e o status volta a ser *Disponível*.
+  - A coleta desaparece da aba *Agendadas* do catador e volta imediatamente para a tela de *Materiais Disponíveis*.
+  - Outros catadores conectados recebem na hora o alerta de que a oferta voltou a ficar disponível para agendamento.
+  - Caso o banco de dados Supabase possua restrição de RLS, a tela exibe um aviso instrutivo (`showAlertModal`) orientando a execução da política SQL em vez de um falso sucesso.
+
+---
+
+### 🧪 Teste 16: Concluir Retirada e Acompanhar Indicadores no Relatório do Catador
+* **O que testar:** Confirmar a retirada de um material e verificar a atualização instantânea de todos os indicadores operacionais do catador.
+* **Como fazer (Passo a Passo):**
+  1. Na tela **Minhas Coletas** do Catador, localize uma coleta agendada e clique em **Confirmar Retirada / Concluir**.
+  2. Acesse a tela de **Relatórios do Catador** (`pages/relatorios-catador.html`).
+* **O que deve acontecer na tela:** A coleta é marcada como concluída e os números de coletas atribuídas, a taxa percentual de retiradas, o tipo de material predominante e os gráficos de desempenho são atualizados na hora.
+
+---
+
+### 🧪 Teste 17: Notificações Desativadas e Ajuste de Preferências no Perfil
+* **O que testar:** Comprovar que, ao optar por desativar as notificações, o catador não recebe novos avisos sonoros ou visuais na tela.
+* **Como fazer (Passo a Passo):**
+  1. Em **Meu Perfil** (`pages/meu-perfil.html`), localize a seção de notificações e clique no botão para desativar.
+  2. Volte ao Painel do Catador e confira a faixa do topo.
+  3. Em outro aparelho, cadastre uma nova oferta como Cidadão.
+* **O que deve acontecer na tela:** A faixa do painel passa a exibir *Notificações: Desativadas* com ícone de sino cortado vermelho. Nenhum pop-up ou som é reproduzido na tela do catador quando novas ofertas são postadas.
+
+---
+
+### 🧪 Teste 18: Navegação Resiliente do Catador nas Telas Compartilhadas (Voltar ao Painel)
+* **O que testar:** Garantir que o Catador consiga navegar e retornar ao seu painel a partir de qualquer tela de consulta compartilhada sem ser direcionado para o painel do cidadão.
+* **Como fazer (Passo a Passo):**
+  1. Logado como Catador, acesse as telas compartilhadas: **Horários de Atendimento** (`pages/agenda-horarios.html`), **Publicações** (`pages/publicacoes.html`) ou **Catadores Cadastrados** (`pages/catadores-cadastrados.html`).
+  2. Em cada uma delas, clique no botão **Voltar ao Painel**.
+* **O que deve acontecer na tela:** O sistema reconhece o perfil de Catador ativo e redireciona com 100% de precisão para o **Painel do Catador** (`pages/dashboard-catador.html`), sem exibir falso alerta de "Acesso restrito".
 
 ---
 
 ## 🔵 BLOCO 4: TESTES DO FLUXO DO ADMINISTRADOR
 
-### 🧪 Teste 16: Desativação de Usuário e Tentativa de Login Bloqueada
+### 🧪 Teste 19: Desativação de Usuário e Tentativa de Login Bloqueada
 * **O que testar:** O administrador desativar um usuário e o sistema impedir seu login.
 * **Como fazer (Passo a Passo):**
   1. Faça login como **Administrador** e clique em **Usuários Cadastrados** (`pages/usuarios-cadastrados.html`).
@@ -201,7 +246,7 @@ Antes de começar os testes, é importante entender os 3 perfis que usam a plata
 
 ---
 
-### 🧪 Teste 17: Proteção do Administrador Principal da Fatec
+### 🧪 Teste 20: Proteção do Administrador Principal da Fatec
 * **O que testar:** Impedir que o administrador principal do sistema seja desativado ou rebaixado por engano.
 * **Como fazer (Passo a Passo):**
   1. Na tela de **Usuários Cadastrados**, tente desativar ou remover o cargo de administrador do primeiro admin do sistema.
@@ -209,7 +254,7 @@ Antes de começar os testes, é importante entender os 3 perfis que usam a plata
 
 ---
 
-### 🧪 Teste 18: Promover Cidadão para Administrador
+### 🧪 Teste 21: Promover Cidadão para Administrador
 * **O que testar:** Conceder permissão de administrador a um usuário existente.
 * **Como fazer (Passo a Passo):**
   1. Na tela de **Usuários Cadastrados**, localize um cidadão e clique em **Promover a Administrador**.
@@ -219,18 +264,28 @@ Antes de começar os testes, é importante entender os 3 perfis que usam a plata
 
 ---
 
-### 🧪 Teste 19: Gerenciar Pontos de Coleta (Novo Local e Proteção do Último Ativo)
+### 🧪 Teste 22: Gerenciar Pontos de Coleta (Novo Local e Proteção do Último Ativo)
 * **O que testar:** Cadastrar novo local, gerenciar agenda e comprovar que o sistema impede desativar o último local ativo.
 * **Como fazer (Passo a Passo):**
   1. Em **Editar Local** (`pages/editar-local.html`), tente desativar o único ponto ativo (Fatec Franco da Rocha).
   2. Veja o bloqueio com o aviso: *"O sistema deve ter ao menos um ponto de coleta ativo."*
   3. Clique em **Novo Local de Coleta**, preencha os dados de um novo ponto (ex: *Ponto Centro*) e salve.
-  4. Veja que agora existem dois locais ativos e um deles pode ser desativado sem desamparar o sistema. Em **Definir Agenda** (`pages/definir-agenda.html`), gere horários de atendimento sem sobreposição.
+  4. Veja que agora existem dois locais ativos e um deles pode ser desativado sem desamparar o sistema.
 * **O que deve acontecer na tela:** O sistema não permite deixar a rede sem ponto ativo. O novo ponto é cadastrado com sucesso e passa a receber doações e agendamentos.
 
 ---
 
-### 🧪 Teste 20: Criar Publicação Educativa e Visualizar no Mural
+### 🧪 Teste 23: Definir Agenda de Atendimento e Horários Flexíveis
+* **O que testar:** Configurar dias de atendimento, aplicar horários flexíveis e comprovar a geração correta de intervalos sem sobreposição.
+* **Como fazer (Passo a Passo):**
+  1. No painel de Admin, clique em **Definir Agenda** (`pages/definir-agenda.html`).
+  2. Configure os horários de atendimento da semana e aplique horários a sábados ou datas especiais.
+  3. Salve as alterações e confira no calendário interativo.
+* **O que deve acontecer na tela:** Os dias e horários são salvos com sucesso e exibidos de forma clara aos cidadãos e catadores, formatados em linha única sem quebras visuais.
+
+---
+
+### 🧪 Teste 24: Criar Publicação Educativa e Visualizar no Mural
 * **O que testar:** Administrador publicar conteúdos e campanhas de educação ambiental.
 * **Como fazer (Passo a Passo):**
   1. No painel de Admin, clique em **Publicações** (`pages/admin-publicacoes.html`).
@@ -240,7 +295,7 @@ Antes de começar os testes, é importante entender os 3 perfis que usam a plata
 
 ---
 
-### 🧪 Teste 21: Central de Mensagens e Aviso de WhatsApp Futuro
+### 🧪 Teste 25: Central de Mensagens e Aviso de WhatsApp Futuro
 * **O que testar:** Troca de mensagens entre usuários e modal informativo ao clicar no WhatsApp de catadores sem app.
 * **Como fazer (Passo a Passo):**
   1. Acesse **Mensagens** (`pages/mensagens.html`) e troque mensagens em tempo real (veja que cada usuário só acessa suas próprias conversas).
@@ -249,11 +304,14 @@ Antes de começar os testes, é importante entender os 3 perfis que usam a plata
 
 ---
 
-## 📱 BLOCO 5: TESTES DE USABILIDADE, MOBILE E LGPD
+## 📱 BLOCO 5: TESTES DE USABILIDADE, MOBILE, NOTIFICAÇÕES E LGPD
 
 | Item | O que verificar | Como testar | Resultado esperado |
 |---|---|---|---|
 | **Todas as Telas (Web & Celular)** | Navegação completa em cada perfil | Abra todas as telas de Cidadão, Catador e Admin no computador e celular | Nenhum botão sobreposto, texto cortado ou erro visual. Barra inferior não tampa o rodapé. |
+| **Notificações In-App vs Push** | Alertas em tempo real na tela e no sistema operacional | Dispare ofertas com catador logado no PC e no celular (Android / iOS) | Toast in-app verde com som suave na tela; notificação nativa do SO emitida no PC e celular Android com suporte a Service Worker. |
+| **Trava de Horários Retroativos** | Bloqueio de agendamento no passado | Selecione a data de hoje e tente agendar horários já passados | Horários passados são filtrados do seletor e validação impede submissão no passado com aviso claro. |
+| **Cancelamento de Coleta** | Desvinculação atômica e reabertura no Supabase | Cancele agendamento pelo catador ou pelo cidadão | Coleta volta a 'disponível', ID é desvinculado no banco e outros catadores são avisados em tempo real. |
 | **Campos & Senhas Divergentes** | Validações obrigatórias (`*`) e senhas | Tente enviar cadastros vazios ou com senhas que não coincidem | O sistema avisa qual campo preencher ou alerta que as senhas não coincidem. |
 | **Nomes Longos** | Adaptação de títulos compridos | Veja nomes como *"Fatec Franco da Rocha"* em cartões pequenos | O texto não corta a primeira letra e coloca reticências (`...`) no final. |
 | **Avisos e Modais (Pop-ups)** | Modais de confirmação e avisos do sistema | Teste ações críticas (ex: cancelar coleta, desativar usuário, logout) e avisos (termos, WhatsApp, atalho) | Abrem centralizados com fundo escurecido, ícone temático, texto claro e botões de ação ("Confirmar/Cancelar" ou "Entendido"). |
@@ -265,6 +323,6 @@ Antes de começar os testes, é importante entender os 3 perfis que usam a plata
 
 Para cada teste realizado, anote uma destas duas opções:
 * **✔️ Passou (OK):** O sistema funcionou exatamente como descrito no resultado esperado.
-* **❌ Deu Erro / Travou (Bug):** Aconteceu algo diferente (ex: o botão não clicou, a tela ficou branca, etc.). Nesse caso, tire um print da tela e anote o número do teste (ex: *Teste 06*).
+* **❌ Deu Erro / Travou (Bug):** Aconteceu algo diferente (ex: o botão não clicou, a tela ficou branca, etc.). Nesse caso, tire um print da tela e anote o número do teste (ex: *Teste 12*).
 
 🏁 **Sistema Reciclagem Solidária: Pronto para a rodada de homologação pela equipe de QA e usuários finais!**

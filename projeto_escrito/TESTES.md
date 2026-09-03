@@ -34,3 +34,8 @@ Documentação completa de testes funcionais, políticas RLS, triggers e edge ca
 | EC-11 | Oferta de material com local inativo | Usuário tenta cadastrar oferta quando não há locais ativos disponíveis | O formulário desabilita o seletor de locais e bloqueia o botão de envio com alerta explicativo | Passou ✅ |
 | EC-12 | Enquadramento e flexibilidade da agenda | Admin configura horários aos sábados e alterna dias da semana no mobile | Horários formatados em linha única sem quebrar e modal permite aplicar horários a sábados ou datas específicas | Passou ✅ |
 | EC-13 | Identificação do autor nas publicações | Admin cria campanha e usuários consultam feed de publicações | Nome real do administrador exibido corretamente no card sem erro de consulta | Passou ✅ |
+| EC-14 | Bloqueio de agendamento em horários retroativos | Catador seleciona data de hoje e tenta agendar horário já ultrapassado | Horários passados são filtrados do seletor e validação estrita impede submissão no passado | Passou ✅ |
+| EC-15 | Cancelamento de agendamento pelo Catador | Catador aciona "Cancelar Agendamento" em sua coleta no mobile/web | `catador_id` é desvinculado (`NULL`), coleta volta a 'disponível' e outros catadores são notificados | Passou ✅ |
+| EC-16 | Notificações em tempo real e push com isolamento de papéis | Nova oferta criada por Cidadão ou Admin no computador/celular | Catador recebe notificação in-app e push com tipo do material; Cidadão e Admin não recebem alertas | Passou ✅ |
+| EC-17 | Retorno resiliente ao painel do usuário | Catador clica em "Voltar ao Painel" em agenda ou publicações | Usuário é redirecionado dinamicamente para `dashboard-catador.html` sem alerta de acesso restrito | Passou ✅ |
+
