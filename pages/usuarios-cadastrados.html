@@ -224,25 +224,39 @@
 
       selSituacao.value = usuario.situacao || 'ativo';
 
-      const temLoginApp = usuario.isCidadaoTable || Boolean(usuario.auth_user_id || usuario.rawDados?.auth_user_id);
+      const isCidadao = Boolean(usuario.isCidadaoTable);
+      const catadorTemLogin = !isCidadao && Boolean(usuario.auth_user_id || usuario.rawDados?.auth_user_id);
+      const temLoginApp = isCidadao || catadorTemLogin;
 
-      if (temLoginApp) {
+      if (isCidadao) {
         inputEmail.value = usuario.email || '';
         inputEmail.disabled = true;
         inputEmail.readOnly = true;
         inputEmail.style.opacity = '0.7';
         inputEmail.style.backgroundColor = '#f0f0f0';
-        if (emailHint) emailHint.innerHTML = '<i class="fa-solid fa-lock" style="color: #666;"></i> E-mail vinculado ao login da conta do usuário no aplicativo.';
+        inputEmail.style.cursor = 'not-allowed';
+        if (emailHint) emailHint.innerHTML = '<span style="color: #666; display: inline-flex; align-items: center; gap: 5px;"><i class="fa-solid fa-lock"></i> E-mail vinculado à conta do usuário no aplicativo (edição bloqueada).</span>';
+      } else if (catadorTemLogin) {
+        // Catador já possui login próprio criado no app: BLOQUEIA EDIÇÃO
+        const emailCadastrado = usuario.rawDados?.email || usuario.email || '';
+        inputEmail.value = (emailCadastrado !== 'Catador Autônomo' && emailCadastrado !== 'Sem e-mail cadastrado' && emailCadastrado !== 'Não informado') ? emailCadastrado : '';
+        inputEmail.disabled = true;
+        inputEmail.readOnly = true;
+        inputEmail.style.opacity = '0.7';
+        inputEmail.style.backgroundColor = '#f0f0f0';
+        inputEmail.style.cursor = 'not-allowed';
+        if (emailHint) emailHint.innerHTML = '<span style="color: #4b5563; display: inline-flex; align-items: center; gap: 5px;"><i class="fa-solid fa-lock" style="color: #6b7280;"></i> Este catador já criou login no aplicativo. A alteração de e-mail está bloqueada.</span>';
       } else {
-        // Catador sem login próprio (cadastrado por terceiros)
-        const emailReal = (usuario.rawDados?.email && usuario.rawDados.email !== 'Catador Autônomo' && usuario.rawDados.email !== 'Sem e-mail cadastrado') ? usuario.rawDados.email : '';
+        // Catador sem login próprio (cadastrado por terceiros): ADMIN PODE DEFINIR OU ALTERAR O E-MAIL
+        const emailReal = (usuario.rawDados?.email && usuario.rawDados.email !== 'Catador Autônomo' && usuario.rawDados.email !== 'Sem e-mail cadastrado' && usuario.rawDados.email !== 'Não informado') ? usuario.rawDados.email : '';
         inputEmail.value = emailReal;
         inputEmail.disabled = false;
         inputEmail.readOnly = false;
         inputEmail.style.opacity = '1';
         inputEmail.style.backgroundColor = 'transparent';
+        inputEmail.style.cursor = 'text';
         inputEmail.placeholder = 'catador@exemplo.com (Opcional)';
-        if (emailHint) emailHint.innerHTML = '<i class="fa-solid fa-lightbulb" style="color: #f59e0b;"></i> <b>Dica:</b> Ao definir um e-mail aqui, quando o catador criar uma conta no aplicativo com este mesmo e-mail, todo o histórico de coletas e dados será associado automaticamente!';
+        if (emailHint) emailHint.innerHTML = '<span style="color: #1b5e20; display: inline-flex; align-items: flex-start; gap: 6px; line-height: 1.35;"><i class="fa-solid fa-circle-info" style="margin-top: 2px; flex-shrink: 0; color: #2e7d32;"></i> <span>Se o catador criar uma conta com este e-mail, o histórico de coletas será vinculado à ele automaticamente.</span></span>';
       }
 
       if (usuario.isMainAdmin) {
@@ -264,7 +278,7 @@
         selNivel.style.display = 'none';
         if (badgeCatador) badgeCatador.style.display = 'flex';
         selSituacao.disabled = false;
-        if (papelHint) papelHint.innerHTML = '<i class="fa-solid fa-truck-ramp-box" style="color: #1b6d24;"></i> Catadores possuem cadastro autônomo próprio. Para novos catadores, use o menu "Cadastrar Catador".';
+        if (papelHint) papelHint.innerHTML = '';
       }
 
       preencherEndereco(usuario.rawDados || {});
@@ -389,7 +403,7 @@
               sem_residencia: end.sem_residencia
             };
 
-            // Permite atualizar o e-mail se o catador ainda não possui login no app
+            // Permite atualizar o e-mail apenas se o catador ainda não possui login no app
             if (!temLoginApp) {
               const emailNorm = email ? email.trim().toLowerCase() : null;
               if (emailNorm) {
@@ -415,6 +429,8 @@
                 }
               }
               updatePayloadCat.email = emailNorm;
+            } else if (email && usuarioEmEdicao.rawDados?.email && email.toLowerCase() !== usuarioEmEdicao.rawDados.email.toLowerCase()) {
+              throw new Error('O e-mail deste catador não pode ser alterado pois ele já possui conta e login ativo no aplicativo.');
             }
 
             const { error } = await supabase
