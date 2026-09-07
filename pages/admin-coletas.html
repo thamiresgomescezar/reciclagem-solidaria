@@ -77,7 +77,12 @@
             `;
 
             const tipoMaterial = coleta.materiais?.tipo || 'Material';
-            const statusNome = coleta.status?.status || 'desconhecido';
+            let statusNome = (coleta.status?.status || '').toLowerCase();
+            if (statusNome.includes('agend')) statusNome = 'Agendada';
+            else if (statusNome.includes('retirad') || statusNome.includes('conclu')) statusNome = 'Retirada';
+            else if (statusNome.includes('cancel')) statusNome = 'Cancelada';
+            else if (statusNome.includes('dispon')) statusNome = 'Disponível';
+            else statusNome = statusNome ? (statusNome.charAt(0).toUpperCase() + statusNome.slice(1)) : 'Desconhecido';
             const cidadonome = coleta.cidadao?.nome || 'Anônimo';
             const catadorNome = coleta.catador?.nome || 'Nenhum';
 
@@ -90,7 +95,7 @@
               <div style="font-size: 11px; color: var(--cinza-texto-aux);">Criado em: ${new Date(coleta.criado_em).toLocaleString('pt-BR')}</div>
 
               <div style="display: flex; gap: 6px; margin-top: 6px;">
-                <button class="btn-pill btn-admin-confirmar" data-id="${coleta.cod_coleta}" style="padding: 4px 8px; font-size: 11px;">Concluir</button>
+                <button class="btn-pill btn-admin-confirmar" data-id="${coleta.cod_coleta}" style="padding: 4px 8px; font-size: 11px;">Marcar como Retirada</button>
                 <button class="btn-pill btn-secondary-pill btn-admin-reabrir" data-id="${coleta.cod_coleta}" style="padding: 4px 8px; font-size: 11px;">Reabrir</button>
                 <button class="btn-pill btn-secondary-pill btn-admin-cancelar" data-id="${coleta.cod_coleta}" style="padding: 4px 8px; font-size: 11px; border-color: #dc3545; color: #dc3545;">Cancelar</button>
               </div>
@@ -102,14 +107,19 @@
           document.querySelectorAll('.btn-admin-confirmar').forEach(b => b.addEventListener('click', (e) => {
             const id = e.target.getAttribute('data-id');
             showConfirmModal({
-              title: 'Concluir Coleta',
-              message: 'Deseja realmente confirmar a retirada e concluir esta coleta?',
-              confirmText: 'Sim, Concluir',
+              title: 'Confirmar Retirada',
+              message: 'Deseja realmente confirmar a retirada desta coleta?',
+              confirmText: 'Sim, Confirmar Retirada',
               cancelText: 'Cancelar',
               confirmColor: '#1b6d24',
               onConfirm: async () => {
-                await confirmarRetirada(id);
-                carregarLista();
+                try {
+                  await confirmarRetirada(id);
+                  carregarLista();
+                } catch (err) {
+                  feedbackMsg.className = 'feedback-msg error';
+                  feedbackMsg.textContent = err.message || 'Erro ao confirmar retirada.';
+                }
               }
             });
           }));

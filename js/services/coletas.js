@@ -228,6 +228,17 @@ async function obterCodStatusReal(termoStatus, fallbackNum = 1) {
 }
 
 export async function confirmarRetirada(cod_coleta) {
+  // Validação: a coleta precisa ter um catador alocado para ser marcada como retirada
+  const { data: col } = await supabase
+    .from('coleta')
+    .select('catador_id')
+    .eq('cod_coleta', cod_coleta)
+    .maybeSingle();
+
+  if (!col || !col.catador_id) {
+    throw new Error('A coleta precisa ter um catador alocado para ser confirmada como retirada.');
+  }
+
   const codStatus = await obterCodStatusReal('retirad', 3);
 
   const { data, error } = await supabase
