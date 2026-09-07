@@ -55,20 +55,18 @@ export async function proibirAcessoInvalido(perfisPermitidos = []) {
 }
 
 export function redirecionarPorPerfil(tipo) {
-  const inPages = window.location.pathname.includes('/pages/');
-  const p = (target) => inPages ? `./${target}` : `./pages/${target}`;
-
-  switch (tipo) {
-    case 'administrador':
-      window.location.href = p('dashboard-admin.html');
-      break;
-    case 'catador':
-      window.location.href = p('dashboard-catador.html');
-      break;
-    case 'cidadao':
-    default:
-      window.location.href = p('dashboard-cidadao.html');
-      break;
+  const destinos = {
+    cidadao: 'dashboard-cidadao.html',
+    administrador: 'dashboard-admin.html',
+    catador: 'dashboard-catador.html'
+  };
+  const target = destinos[tipo] || 'dashboard-cidadao.html';
+  const path = window.location.pathname;
+  if (path.includes('/pages/')) {
+    const base = path.substring(0, path.indexOf('/pages/') + 7);
+    window.location.href = `${base}${target}`;
+  } else {
+    window.location.href = `./pages/${target}`;
   }
 }
 

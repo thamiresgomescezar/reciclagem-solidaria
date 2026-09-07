@@ -303,6 +303,8 @@ export async function cadastrarCatadorPorTerceiros({ nome, email, telefone, ende
       const valTel = validarENormalizarTelefone(telefone.trim());
       if (!valTel.ok) return { ok: false, erro: valTel.erro };
       telPadrao = valTel.valor || null;
+    }
+
     if (emailPadrao) {
       const { data: cidExiste } = await supabase
         .from('cidadao')
@@ -367,6 +369,9 @@ export async function cadastrarCatadorPorTerceiros({ nome, email, telefone, ende
 export async function login(email, password) {
   try {
     const emailLimpo = (email || '').trim().toLowerCase();
+    if (!emailLimpo) return { ok: false, erro: 'Informe seu e-mail.' };
+    if (!password) return { ok: false, erro: 'Informe sua senha.' };
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email: emailLimpo,
       password
@@ -379,18 +384,26 @@ export async function login(email, password) {
       if (error.message?.includes('Email not confirmed')) {
         return { ok: false, erro: 'E-mail pendente de confirmação. Desative a opção "Confirm email" em Authentication -> Providers -> Email no Supabase para permitir login imediato.' };
       }
-      return { ok: false, erro: error.message };
+      return { ok: false, erro: error.message || 'Falha ao autenticar.' };
     }
 
-    if (!data.session) {
+    if (!data.session || !data.session.user) {
       return { ok: false, erro: 'Não foi possível iniciar sessão. Tente novamente.' };
     }
 
-    const perfil = await getPerfilAtual();
+    // Busca perfil com timeout de segurança de 8s para não travar a tela
+    const perfilPromise = getPerfilAtual();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Tempo de resposta excedido ao buscar dados do perfil.')), 8000)
+    );
+    const perfil = await Promise.race([perfilPromise, timeoutPromise]).catch(err => {
+      console.warn('Falha ou timeout ao buscar perfil no login:', err);
+      return null;
+    });
 
     if (!perfil) {
       await logout();
-      return { ok: false, erro: 'Perfil de usuário não encontrado na base de dados.' };
+      return { ok: false, erro: 'Perfil de usuário não encontrado ou inativo no banco de dados.' };
     }
 
     if (perfil.dados && perfil.dados.situacao === 'bloqueado') {
@@ -414,9 +427,15 @@ export async function login(email, password) {
       }
     }
 
+    try {
+      localStorage.setItem('reciclagem_tipo_usuario', perfil.tipo);
+      sessionStorage.setItem('reciclagem_tipo_usuario', perfil.tipo);
+    } catch (e) {}
+
     sessionStorage.setItem('reciclagem_acabou_de_logar', 'true');
     return { ok: true, session: data.session, perfil };
   } catch (err) {
+    console.error('Exceção ao realizar login:', err);
     return { ok: false, erro: err.message || 'Erro ao realizar login.' };
   }
 }
@@ -432,7 +451,7 @@ export async function getPerfilAtual() {
 
   try {
     // 1. Verifica se é Administrador na tabela cidadao
-    const { data: cidadaoData, error: cidadaoErr } = await supabase
+    const { data: cidadaoData } = await supabase
       .from('cidadao')
       .select('*')
       .eq('id', userId)
@@ -446,7 +465,10 @@ export async function getPerfilAtual() {
           localStorage.setItem('sys_user_names', JSON.stringify(cache));
         } catch (e) {}
       }
-      try { localStorage.setItem('reciclagem_tipo_usuario', 'administrador'); } catch (e) {}
+      try { 
+        localStorage.setItem('reciclagem_tipo_usuario', 'administrador');
+        sessionStorage.setItem('reciclagem_tipo_usuario', 'administrador');
+      } catch (e) {}
       return {
         tipo: 'administrador',
         dados: { ...cidadaoData, situacao: cidadaoData.situacao || 'ativo' },
@@ -455,69 +477,85 @@ export async function getPerfilAtual() {
       };
     }
 
-    // 2. Busca na tabela catador por auth_user_id, id ou email
-    let catQuery = supabase.from('catador').select('*');
-    if (userEmail) {
-      catQuery = catQuery.or(`auth_user_id.eq.${userId},id.eq.${userId},email.ilike.${userEmail}`);
-    } else {
-      catQuery = catQuery.or(`auth_user_id.eq.${userId},id.eq.${userId}`);
+    // 2. Se o usuário explicitamente se cadastrou como Catador OU não possui registro de Cidadão:
+    let catRecords = [];
+    if (metaPerfil === 'catador' || !cidadaoData) {
+      let catQuery = supabase.from('catador').select('*');
+      if (userEmail) {
+        catQuery = catQuery.or(`auth_user_id.eq.${userId},email.ilike.${userEmail}`);
+      } else {
+        catQuery = catQuery.eq('auth_user_id', userId);
+      }
+      const { data: cats } = await catQuery.order('criado_em', { ascending: true });
+      catRecords = cats || [];
     }
-    const { data: catRecords, error: catErr } = await catQuery.order('criado_em', { ascending: true });
 
-    if (catRecords && catRecords.length > 0) {
-      // O registro principal é o original (mais antigo, onde as coletas foram vinculadas)
+    if (catRecords.length > 0) {
+      // O registro principal é o mais antigo (onde as coletas originais estão associadas)
       const catPrincipal = catRecords[0];
 
-      // Garante que o auth_user_id está vinculado ao registro principal
-      if (catPrincipal.auth_user_id !== userId) {
-        try {
-          await supabase.from('catador').update({ auth_user_id: userId }).eq('id', catPrincipal.id);
-          catPrincipal.auth_user_id = userId;
-        } catch (e) {
-          console.warn('Erro ao atualizar auth_user_id no catador:', e);
-        }
-      }
-
-      // Se houver duplicatas de catador com mesmo email, migra as coletas para o principal e deleta duplicatas
+      // Se houver múltiplos registros para este mesmo e-mail (duplicatas criadas antes):
       if (catRecords.length > 1) {
+        // Encontra o registro que atualmente possui o auth_user_id do usuário logado (duplicata vazia)
+        const catComAuth = catRecords.find(c => c.id !== catPrincipal.id && c.auth_user_id === userId);
+        if (catComAuth) {
+          // 1. Libera o auth_user_id da duplicata para não violar a constraint UNIQUE
+          try {
+            await supabase.from('catador').update({ auth_user_id: null, situacao: 'desabilitado' }).eq('id', catComAuth.id);
+            catComAuth.auth_user_id = null;
+          } catch (e) {
+            console.warn('Erro ao desvincular auth_user_id do catador duplicado:', e);
+          }
+        }
+
+        // 2. Migra quaisquer coletas dos outros registros para o principal
         for (let i = 1; i < catRecords.length; i++) {
           const catDup = catRecords[i];
           if (catDup.id !== catPrincipal.id) {
             try {
               await supabase.from('coleta').update({ catador_id: catPrincipal.id }).eq('catador_id', catDup.id);
-              await supabase.from('catador').delete().eq('id', catDup.id);
             } catch (e) {}
           }
         }
       }
 
-      // Se o usuário tinha um registro de cidadão criado indevidamente:
-      // se o metadado é catador OU se ele é catador com email vinculado, limpa a entrada conflitante de cidadão
-      if (cidadaoData && (metaPerfil === 'catador' || !metaPerfil)) {
+      // Garante que o auth_user_id está vinculado no banco ao registro principal
+      if (catPrincipal.auth_user_id !== userId) {
         try {
-          await supabase.from('cidadao').delete().eq('id', userId);
+          const { error: upErr } = await supabase
+            .from('catador')
+            .update({ auth_user_id: userId, situacao: 'ativo' })
+            .eq('id', catPrincipal.id);
+
+          if (!upErr) {
+            catPrincipal.auth_user_id = userId;
+          }
+        } catch (e) {
+          console.warn('Erro ao associar auth_user_id ao catador principal:', e);
+        }
+      }
+
+      if (catPrincipal.nome) {
+        try {
+          const cache = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
+          cache[userId] = catPrincipal.nome;
+          localStorage.setItem('sys_user_names', JSON.stringify(cache));
         } catch (e) {}
       }
+      try { 
+        localStorage.setItem('reciclagem_tipo_usuario', 'catador');
+        sessionStorage.setItem('reciclagem_tipo_usuario', 'catador');
+      } catch (e) {}
 
-      if (metaPerfil === 'catador' || !cidadaoData || catPrincipal.auth_user_id === userId) {
-        if (catPrincipal.nome) {
-          try {
-            const cache = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
-            cache[userId] = catPrincipal.nome;
-            localStorage.setItem('sys_user_names', JSON.stringify(cache));
-          } catch (e) {}
-        }
-        try { localStorage.setItem('reciclagem_tipo_usuario', 'catador'); } catch (e) {}
-        return {
-          tipo: 'catador',
-          dados: { ...catPrincipal, auth_user_id: userId, situacao: catPrincipal.situacao || 'ativo' },
-          user: session.user,
-          id: catPrincipal.id
-        };
-      }
+      return {
+        tipo: 'catador',
+        dados: { ...catPrincipal, auth_user_id: userId, situacao: catPrincipal.situacao || 'ativo' },
+        user: session.user,
+        id: catPrincipal.id
+      };
     }
 
-    // 3. Se não é catador, mas possui registro de Cidadão
+    // 3. Se possui registro de Cidadão e não é catador
     if (cidadaoData) {
       if (cidadaoData.nome) {
         try {
@@ -526,7 +564,11 @@ export async function getPerfilAtual() {
           localStorage.setItem('sys_user_names', JSON.stringify(cache));
         } catch (e) {}
       }
-      try { localStorage.setItem('reciclagem_tipo_usuario', 'cidadao'); } catch (e) {}
+      try { 
+        localStorage.setItem('reciclagem_tipo_usuario', 'cidadao');
+        sessionStorage.setItem('reciclagem_tipo_usuario', 'cidadao');
+      } catch (e) {}
+
       return {
         tipo: 'cidadao',
         dados: { ...cidadaoData, situacao: cidadaoData.situacao || 'ativo' },
@@ -535,76 +577,76 @@ export async function getPerfilAtual() {
       };
     }
 
-    if (cidadaoErr || catErr) {
-      return null;
+    // 4. Auto-heal seguro apenas se não existir em nenhuma tabela
+    if (metaPerfil === 'catador') {
+      const autoCat = {
+        auth_user_id: userId,
+        nome: session.user.user_metadata?.nome || session.user.email?.split('@')[0] || 'Catador',
+        email: userEmail,
+        telefone: session.user.user_metadata?.telefone || null,
+        situacao: 'ativo'
+      };
+      try {
+        const { data: createdCat } = await supabase.from('catador').insert([autoCat]).select().maybeSingle();
+        if (createdCat) {
+          try { 
+            localStorage.setItem('reciclagem_tipo_usuario', 'catador');
+            sessionStorage.setItem('reciclagem_tipo_usuario', 'catador');
+          } catch (e) {}
+          return {
+            tipo: 'catador',
+            dados: createdCat,
+            user: session.user,
+            id: createdCat.id
+          };
+        }
+      } catch (e) {}
     }
+
+    const nivelInicial = metaPerfil === 'administrador' ? 'administrador' : 'cidadao';
+    const nomeAuto = session.user.user_metadata?.nome || session.user.email?.split('@')[0] || 'Cidadão';
+    const autoProfile = {
+      id: userId,
+      nome: nomeAuto,
+      email: session.user.email,
+      telefone: session.user.user_metadata?.telefone || null,
+      cidade: null,
+      estado: null,
+      sem_residencia: false,
+      nivel_acesso: nivelInicial,
+      situacao: 'ativo'
+    };
+
+    try {
+      const { data: created } = await supabase
+        .from('cidadao')
+        .insert([autoProfile])
+        .select()
+        .maybeSingle();
+
+      if (created) {
+        return {
+          tipo: created.nivel_acesso || 'cidadao',
+          dados: created,
+          user: session.user,
+          id: created.id
+        };
+      }
+    } catch (e) {
+      console.warn('Auto-heal seguro falhou:', e);
+    }
+
+    return {
+      tipo: autoProfile.nivel_acesso,
+      dados: autoProfile,
+      user: session.user,
+      id: userId
+    };
+
   } catch (err) {
     console.warn('Erro ao consultar perfil no banco:', err);
     return null;
   }
-
-  // AUTO-HEAL SEGURO: Apenas se o perfil realmente não existir em nenhuma tabela
-  if (metaPerfil === 'catador') {
-    const autoCat = {
-      auth_user_id: userId,
-      nome: session.user.user_metadata?.nome || session.user.email?.split('@')[0] || 'Catador',
-      email: userEmail,
-      telefone: session.user.user_metadata?.telefone || null,
-      situacao: 'ativo'
-    };
-    try {
-      const { data: createdCat } = await supabase.from('catador').insert([autoCat]).select().maybeSingle();
-      if (createdCat) {
-        try { localStorage.setItem('reciclagem_tipo_usuario', 'catador'); } catch (e) {}
-        return {
-          tipo: 'catador',
-          dados: createdCat,
-          user: session.user,
-          id: createdCat.id
-        };
-      }
-    } catch (e) {}
-  }
-
-  const nivelInicial = metaPerfil === 'administrador' ? 'administrador' : 'cidadao';
-  const nomeAuto = session.user.user_metadata?.nome || session.user.email?.split('@')[0] || 'Cidadão';
-  const autoProfile = {
-    id: userId,
-    nome: nomeAuto,
-    email: session.user.email,
-    telefone: session.user.user_metadata?.telefone || null,
-    cidade: null,
-    estado: null,
-    sem_residencia: false,
-    nivel_acesso: nivelInicial,
-    situacao: 'ativo'
-  };
-
-  try {
-    const { data: created, error: insertErr } = await supabase
-      .from('cidadao')
-      .insert([autoProfile])
-      .select()
-      .maybeSingle();
-
-    if (!insertErr && created) {
-      return {
-        tipo: created.nivel_acesso || 'cidadao',
-        dados: created,
-        user: session.user,
-        id: created.id
-      };
-    }
-  } catch (e) {
-    console.warn('Auto-heal seguro falhou:', e);
-  }
-
-  return {
-    tipo: autoProfile.nivel_acesso,
-    dados: autoProfile,
-    user: session.user,
-    id: userId
-  };
 }
 
 export function redirectPorPerfil(tipo) {
@@ -614,10 +656,12 @@ export function redirectPorPerfil(tipo) {
     catador: 'dashboard-catador.html'
   };
   const target = destinos[tipo] || 'dashboard-cidadao.html';
-  if (window.location.pathname.includes('/pages/')) {
-    window.location.href = target;
+  const path = window.location.pathname;
+  if (path.includes('/pages/')) {
+    const base = path.substring(0, path.indexOf('/pages/') + 7);
+    window.location.href = `${base}${target}`;
   } else {
-    window.location.href = `pages/${target}`;
+    window.location.href = `./pages/${target}`;
   }
 }
 

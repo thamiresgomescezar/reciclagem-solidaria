@@ -97,6 +97,7 @@
 
   <script type="module" src="../js/lib/navMenu.js"></script>
   <script type="module">
+    import { supabase } from '../js/lib/supabaseClient.js';
     import { login, redirectPorPerfil, getPerfilAtual } from '../js/services/auth.js';
 
     const form = document.getElementById('formLogin');
@@ -126,8 +127,11 @@
       if (urlParams.has('redirect') || urlParams.has('logout')) return;
 
       try {
+        const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+        if (!data?.session?.user) return;
+
         const perfilPromise = getPerfilAtual();
-        const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout')), 3000));
+        const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout')), 2500));
         const perfil = await Promise.race([perfilPromise, timeoutPromise]).catch(() => null);
 
         if (perfil && perfil.tipo && (!perfil.dados || perfil.dados.situacao === 'ativo')) {
@@ -149,11 +153,13 @@
     const mostrarErro = (m) => {
       statusMsg.className = 'status-message error';
       statusMsg.textContent = m;
+      statusMsg.style.display = 'block';
     };
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       statusMsg.className = 'status-message';
+      statusMsg.style.display = 'none';
 
       const email = document.getElementById('email').value.trim().toLowerCase();
       const senha = document.getElementById('senha').value;
@@ -174,6 +180,7 @@
         }
         redirectPorPerfil(resultado.perfil.tipo);
       } catch (err) {
+        console.error('Erro na submissão do login:', err);
         mostrarErro('Não foi possível realizar o login. Verifique sua conexão e tente novamente.');
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login';
