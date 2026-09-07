@@ -158,19 +158,27 @@ export async function listarMinhasColetasCatador() {
   if (!session || !session.user) return [];
 
   const currentUserId = session.user.id;
+  const userEmail = session.user.email ? session.user.email.trim().toLowerCase() : null;
   const idsParaBuscar = [currentUserId];
 
   try {
-    const { data: cat } = await supabase
-      .from('catador')
-      .select('id')
-      .or(`auth_user_id.eq.${currentUserId},id.eq.${currentUserId}`)
-      .maybeSingle();
-
-    if (cat && cat.id && !idsParaBuscar.includes(cat.id)) {
-      idsParaBuscar.push(cat.id);
+    let q = supabase.from('catador').select('id');
+    if (userEmail) {
+      q = q.or(`auth_user_id.eq.${currentUserId},id.eq.${currentUserId},email.ilike.${userEmail}`);
+    } else {
+      q = q.or(`auth_user_id.eq.${currentUserId},id.eq.${currentUserId}`);
     }
-  } catch (e) {}
+    const { data: cats } = await q;
+    if (cats && cats.length > 0) {
+      cats.forEach(c => {
+        if (c.id && !idsParaBuscar.includes(c.id)) {
+          idsParaBuscar.push(c.id);
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('Erro ao buscar IDs de catador para listar coletas:', e);
+  }
 
   try {
     const { data, error } = await supabase
@@ -362,13 +370,21 @@ export async function atribuirCatadorColeta(coletaId, catadorId) {
     novoCodStatus = 1; // Altera para 'disponível' ao remover o catador
   }
 
+  const updatePayload = {
+    catador_id: catId,
+    cod_status: novoCodStatus,
+    atualizado_em: new Date().toISOString()
+  };
+
+  if (!catId) {
+    updatePayload.agenda_id = null;
+    updatePayload.data = null;
+    updatePayload.hora = null;
+  }
+
   const { data, error } = await supabase
     .from('coleta')
-    .update({
-      catador_id: catId,
-      cod_status: novoCodStatus,
-      atualizado_em: new Date().toISOString()
-    })
+    .update(updatePayload)
     .eq('cod_coleta', coletaId)
     .select();
 

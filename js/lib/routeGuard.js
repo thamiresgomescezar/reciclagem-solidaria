@@ -10,7 +10,12 @@ export async function proibirAcessoInvalido(perfisPermitidos = []) {
   const loginUrl = inPages ? './login.html' : './pages/login.html';
 
   try {
-    const perfil = await getPerfilAtual();
+    const perfilPromise = getPerfilAtual();
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout de autenticação')), 5000));
+    const perfil = await Promise.race([perfilPromise, timeoutPromise]).catch(err => {
+      console.warn('Timeout ou erro ao verificar perfil na rota:', err);
+      return null;
+    });
 
     // Se não estiver logado, redireciona para login
     if (!perfil) {

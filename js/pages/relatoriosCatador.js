@@ -41,15 +41,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // Localiza o ID de registro do catador
-      const { data: catRecord } = await supabase
-        .from('catador')
-        .select('id')
-        .eq('auth_user_id', currentUserId)
-        .maybeSingle();
-
+      // Localiza todos os IDs de registro vinculados a este catador (incluindo cadastro prévio por terceiros)
+      const userEmail = perfil?.user?.email ? perfil.user.email.trim().toLowerCase() : null;
       const catadorIds = [currentUserId];
-      if (catRecord && catRecord.id) catadorIds.push(catRecord.id);
+
+      try {
+        let q = supabase.from('catador').select('id');
+        if (userEmail) {
+          q = q.or(`auth_user_id.eq.${currentUserId},id.eq.${currentUserId},email.ilike.${userEmail}`);
+        } else {
+          q = q.or(`auth_user_id.eq.${currentUserId},id.eq.${currentUserId}`);
+        }
+        const { data: cats } = await q;
+        if (cats && cats.length > 0) {
+          cats.forEach(c => {
+            if (c.id && !catadorIds.includes(c.id)) {
+              catadorIds.push(c.id);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Erro ao localizar registros de catador para relatórios:', e);
+      }
 
       // Busca todas as coletas vinculadas a este catador
       const { data: coletasData, error: errColetas } = await supabase

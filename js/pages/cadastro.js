@@ -1,4 +1,4 @@
-import { renderEnderecoForm, getEnderecoValues } from './enderecoForm.js';
+import { renderEnderecoForm, getEnderecoValues, validarEndereco } from './enderecoForm.js';
 import { cadastrarCidadao, cadastrarCatador } from '../services/auth.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -52,8 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (!endereco.sem_residencia && (!endereco.rua || !endereco.bairro || !endereco.cidade)) {
-      showError('Por favor, preencha a rua, bairro e cidade ou marque "Não possuo residência".');
+    const erroEndereco = validarEndereco();
+    if (erroEndereco) {
+      showError(erroEndereco);
       return;
     }
 

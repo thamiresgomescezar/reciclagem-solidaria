@@ -398,11 +398,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             resErr = e;
           }
 
-          // Atualiza a hora e a data exatas selecionadas pelo catador
+          const catadorIdReal = perfil.dados?.id || perfil.id || perfil.user?.id;
           const { error: errUpdate } = await supabase
             .from('coleta')
             .update({
-              catador_id: perfil.id,
+              catador_id: catadorIdReal,
               cod_status: 2,
               data: dataSelecionadaStr,
               hora: horaVal,

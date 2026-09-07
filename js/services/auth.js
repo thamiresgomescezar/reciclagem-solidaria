@@ -60,6 +60,25 @@ export async function cadastrarCidadao(dados) {
     }
   }
 
+  // Verifica se este e-mail já pertence a um Catador cadastrado no sistema
+  try {
+    const { data: catExistente } = await supabase
+      .from('catador')
+      .select('id, nome, email')
+      .ilike('email', emailPadrao)
+      .limit(1);
+
+    if (catExistente && catExistente.length > 0) {
+      await supabase.auth.signOut();
+      return {
+        ok: false,
+        erro: 'Este e-mail já está associado a um perfil de Catador no sistema. Entre em contato com a administração para alterações.'
+      };
+    }
+  } catch (errCheckCat) {
+    console.warn('Erro ao checar se email pertence a catador:', errCheckCat);
+  }
+
   const { error: profileError } = await supabase
     .from('cidadao')
     .insert([{
@@ -130,12 +149,19 @@ export async function cadastrarCatador(dados) {
 
   if (error) {
     if (error.message?.includes('User already registered')) {
-      return { ok: false, erro: 'Este e-mail já está cadastrado no sistema. Tente fazer login ou use outro e-mail.' };
-    }
-    if (error.message?.includes('rate limit') || error.message?.includes('Rate limit')) {
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+        email: emailPadrao,
+        password: pwd
+      });
+      if (signInErr || !signInData?.user) {
+        return { ok: false, erro: 'Este e-mail já está cadastrado no sistema com outra senha. Tente fazer login ou use outro e-mail.' };
+      }
+      data = signInData;
+    } else if (error.message?.includes('rate limit') || error.message?.includes('Rate limit')) {
       return { ok: false, erro: 'Limite de envio de e-mails de confirmação excedido pelo Supabase. Aguarde alguns minutos para tentar novamente.' };
+    } else {
+      return { ok: false, erro: error.message };
     }
-    return { ok: false, erro: error.message };
   }
 
   if (!data.user) return { ok: false, erro: 'Não foi possível registrar o usuário no Supabase Auth.' };
@@ -148,41 +174,76 @@ export async function cadastrarCatador(dados) {
     }
   }
 
-  // Verifica se já existe um registro pré-existente de catador cadastrado por terceiros com este e-mail
-  let catadorExistente = null;
+  // Verifica se o e-mail pertence a um Administrador
   try {
-    const { data: catPre } = await supabase
-      .from('catador')
-      .select('id, auth_user_id')
+    const { data: admCheck } = await supabase
+      .from('cidadao')
+      .select('id, nivel_acesso')
       .ilike('email', emailPadrao)
-      .is('auth_user_id', null)
-      .maybeSingle();
-    catadorExistente = catPre;
+      .limit(1);
+
+    if (admCheck && admCheck.length > 0 && admCheck[0].nivel_acesso === 'administrador') {
+      await supabase.auth.signOut();
+      return { ok: false, erro: 'Este e-mail pertence a um Administrador do sistema. Não é possível criar um perfil de Catador.' };
+    }
   } catch (e) {}
+
+  // Localiza todos os registros pré-existentes de catador cadastrados com este e-mail
+  let catadoresExistentes = [];
+  try {
+    const { data: cats } = await supabase
+      .from('catador')
+      .select('*')
+      .ilike('email', emailPadrao)
+      .order('criado_em', { ascending: true });
+    catadoresExistentes = cats || [];
+  } catch (e) {
+    console.warn('Erro ao consultar catadores existentes:', e);
+  }
 
   let profileError = null;
 
-  if (catadorExistente) {
-    // Vincula a nova conta de login ao registro pré-existente do catador (preservando o ID, histórico de coletas e agendamentos)
+  if (catadoresExistentes.length > 0) {
+    // Vincula a nova conta de login ao registro ORIGINAL do catador (preservando o ID, coletas e agendamentos)
+    const catOriginal = catadoresExistentes[0];
     const { error: updateErr } = await supabase
       .from('catador')
       .update({
         auth_user_id: data.user.id,
         nome: nomePadrao,
-        telefone: telPadrao,
-        rua: endPadrao.rua,
-        numero: endPadrao.numero,
-        complemento: endPadrao.complemento,
-        bairro: endPadrao.bairro,
-        cidade: endPadrao.cidade,
-        estado: endPadrao.estado,
-        cep: endPadrao.cep,
-        sem_residencia: endPadrao.sem_residencia,
+        telefone: telPadrao || catOriginal.telefone,
+        rua: endPadrao.rua || catOriginal.rua,
+        numero: endPadrao.numero || catOriginal.numero,
+        complemento: endPadrao.complemento || catOriginal.complemento,
+        bairro: endPadrao.bairro || catOriginal.bairro,
+        cidade: endPadrao.cidade || catOriginal.cidade,
+        estado: endPadrao.estado || catOriginal.estado,
+        cep: endPadrao.cep || catOriginal.cep,
+        sem_residencia: endPadrao.sem_residencia !== undefined ? endPadrao.sem_residencia : catOriginal.sem_residencia,
         situacao: 'ativo'
       })
-      .eq('id', catadorExistente.id);
+      .eq('id', catOriginal.id);
 
     profileError = updateErr;
+
+    // Se houver registros duplicados, migra todas as coletas para o original e remove as duplicatas
+    if (catadoresExistentes.length > 1) {
+      for (let i = 1; i < catadoresExistentes.length; i++) {
+        const catDup = catadoresExistentes[i];
+        if (catDup.id !== catOriginal.id) {
+          try {
+            await supabase.from('coleta').update({ catador_id: catOriginal.id }).eq('catador_id', catDup.id);
+            await supabase.from('catador').delete().eq('id', catDup.id);
+          } catch (e) {}
+        }
+      }
+    }
+
+    // Se havia registro de cidadão criado indevidamente com este user id, remove-o
+    try {
+      await supabase.from('cidadao').delete().eq('id', data.user.id);
+    } catch (e) {}
+
   } else {
     // Insere novo catador caso não exista cadastro prévio
     const { error: insertErr } = await supabase
@@ -242,6 +303,26 @@ export async function cadastrarCatadorPorTerceiros({ nome, email, telefone, ende
       const valTel = validarENormalizarTelefone(telefone.trim());
       if (!valTel.ok) return { ok: false, erro: valTel.erro };
       telPadrao = valTel.valor || null;
+    if (emailPadrao) {
+      const { data: cidExiste } = await supabase
+        .from('cidadao')
+        .select('id')
+        .ilike('email', emailPadrao)
+        .limit(1);
+
+      if (cidExiste && cidExiste.length > 0) {
+        return { ok: false, erro: 'Este e-mail já está associado a uma conta de Cidadão no sistema.' };
+      }
+
+      const { data: catExiste } = await supabase
+        .from('catador')
+        .select('id')
+        .ilike('email', emailPadrao)
+        .limit(1);
+
+      if (catExiste && catExiste.length > 0) {
+        return { ok: false, erro: 'Já existe um catador cadastrado com este e-mail.' };
+      }
     }
 
     const endPadrao = formatarEndereco(endereco || {});
@@ -346,17 +427,18 @@ export async function getPerfilAtual() {
   if (!session || !session.user) return null;
 
   const userId = session.user.id;
+  const userEmail = session.user.email ? session.user.email.trim().toLowerCase() : null;
+  const metaPerfil = session.user.user_metadata?.perfil;
 
   try {
+    // 1. Verifica se é Administrador na tabela cidadao
     const { data: cidadaoData, error: cidadaoErr } = await supabase
       .from('cidadao')
       .select('*')
       .eq('id', userId)
       .maybeSingle();
 
-    if (cidadaoErr) {
-      console.warn('Erro ao consultar tabela cidadao:', cidadaoErr);
-    } else if (cidadaoData) {
+    if (cidadaoData && cidadaoData.nivel_acesso === 'administrador') {
       if (cidadaoData.nome) {
         try {
           const cache = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
@@ -364,56 +446,96 @@ export async function getPerfilAtual() {
           localStorage.setItem('sys_user_names', JSON.stringify(cache));
         } catch (e) {}
       }
-      const tipo = cidadaoData.nivel_acesso === 'administrador' ? 'administrador' : 'cidadao';
-      try { localStorage.setItem('reciclagem_tipo_usuario', tipo); } catch (e) {}
+      try { localStorage.setItem('reciclagem_tipo_usuario', 'administrador'); } catch (e) {}
       return {
-        tipo,
+        tipo: 'administrador',
         dados: { ...cidadaoData, situacao: cidadaoData.situacao || 'ativo' },
-        user: session.user
+        user: session.user,
+        id: cidadaoData.id
       };
     }
 
-    const { data: catadorData, error: catadorErr } = await supabase
-      .from('catador')
-      .select('*')
-      .or(`auth_user_id.eq.${userId},id.eq.${userId}`)
-      .maybeSingle();
+    // 2. Busca na tabela catador por auth_user_id, id ou email
+    let catQuery = supabase.from('catador').select('*');
+    if (userEmail) {
+      catQuery = catQuery.or(`auth_user_id.eq.${userId},id.eq.${userId},email.ilike.${userEmail}`);
+    } else {
+      catQuery = catQuery.or(`auth_user_id.eq.${userId},id.eq.${userId}`);
+    }
+    const { data: catRecords, error: catErr } = await catQuery.order('criado_em', { ascending: true });
 
-    if (catadorErr) {
-      console.warn('Erro ao consultar tabela catador:', catadorErr);
-    } else if (catadorData) {
-      try { localStorage.setItem('reciclagem_tipo_usuario', 'catador'); } catch (e) {}
-      return {
-        tipo: 'catador',
-        dados: { ...catadorData, situacao: catadorData.situacao || 'ativo' },
-        user: session.user
-      };
-    } else if (session.user.email) {
-      // Fallback: se o catador foi cadastrado pelo e-mail e ainda não tinha o auth_user_id preenchido
-      try {
-        const { data: catByEmail } = await supabase
-          .from('catador')
-          .select('*')
-          .ilike('email', session.user.email.trim())
-          .maybeSingle();
+    if (catRecords && catRecords.length > 0) {
+      // O registro principal é o original (mais antigo, onde as coletas foram vinculadas)
+      const catPrincipal = catRecords[0];
 
-        if (catByEmail) {
-          if (!catByEmail.auth_user_id) {
-            await supabase.from('catador').update({ auth_user_id: userId }).eq('id', catByEmail.id);
-          }
-          return {
-            tipo: 'catador',
-            dados: { ...catByEmail, auth_user_id: userId, situacao: catByEmail.situacao || 'ativo' },
-            user: session.user
-          };
+      // Garante que o auth_user_id está vinculado ao registro principal
+      if (catPrincipal.auth_user_id !== userId) {
+        try {
+          await supabase.from('catador').update({ auth_user_id: userId }).eq('id', catPrincipal.id);
+          catPrincipal.auth_user_id = userId;
+        } catch (e) {
+          console.warn('Erro ao atualizar auth_user_id no catador:', e);
         }
-      } catch (e) {
-        console.warn('Erro no fallback de catador por email:', e);
+      }
+
+      // Se houver duplicatas de catador com mesmo email, migra as coletas para o principal e deleta duplicatas
+      if (catRecords.length > 1) {
+        for (let i = 1; i < catRecords.length; i++) {
+          const catDup = catRecords[i];
+          if (catDup.id !== catPrincipal.id) {
+            try {
+              await supabase.from('coleta').update({ catador_id: catPrincipal.id }).eq('catador_id', catDup.id);
+              await supabase.from('catador').delete().eq('id', catDup.id);
+            } catch (e) {}
+          }
+        }
+      }
+
+      // Se o usuário tinha um registro de cidadão criado indevidamente:
+      // se o metadado é catador OU se ele é catador com email vinculado, limpa a entrada conflitante de cidadão
+      if (cidadaoData && (metaPerfil === 'catador' || !metaPerfil)) {
+        try {
+          await supabase.from('cidadao').delete().eq('id', userId);
+        } catch (e) {}
+      }
+
+      if (metaPerfil === 'catador' || !cidadaoData || catPrincipal.auth_user_id === userId) {
+        if (catPrincipal.nome) {
+          try {
+            const cache = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
+            cache[userId] = catPrincipal.nome;
+            localStorage.setItem('sys_user_names', JSON.stringify(cache));
+          } catch (e) {}
+        }
+        try { localStorage.setItem('reciclagem_tipo_usuario', 'catador'); } catch (e) {}
+        return {
+          tipo: 'catador',
+          dados: { ...catPrincipal, auth_user_id: userId, situacao: catPrincipal.situacao || 'ativo' },
+          user: session.user,
+          id: catPrincipal.id
+        };
       }
     }
 
-    // Se houve erro na consulta ao banco, NÃO execute auto-heal para não sobrescrever dados legítimos
-    if (cidadaoErr || catadorErr) {
+    // 3. Se não é catador, mas possui registro de Cidadão
+    if (cidadaoData) {
+      if (cidadaoData.nome) {
+        try {
+          const cache = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
+          cache[userId] = cidadaoData.nome;
+          localStorage.setItem('sys_user_names', JSON.stringify(cache));
+        } catch (e) {}
+      }
+      try { localStorage.setItem('reciclagem_tipo_usuario', 'cidadao'); } catch (e) {}
+      return {
+        tipo: 'cidadao',
+        dados: { ...cidadaoData, situacao: cidadaoData.situacao || 'ativo' },
+        user: session.user,
+        id: cidadaoData.id
+      };
+    }
+
+    if (cidadaoErr || catErr) {
       return null;
     }
   } catch (err) {
@@ -422,7 +544,28 @@ export async function getPerfilAtual() {
   }
 
   // AUTO-HEAL SEGURO: Apenas se o perfil realmente não existir em nenhuma tabela
-  const metaPerfil = session.user.user_metadata?.perfil;
+  if (metaPerfil === 'catador') {
+    const autoCat = {
+      auth_user_id: userId,
+      nome: session.user.user_metadata?.nome || session.user.email?.split('@')[0] || 'Catador',
+      email: userEmail,
+      telefone: session.user.user_metadata?.telefone || null,
+      situacao: 'ativo'
+    };
+    try {
+      const { data: createdCat } = await supabase.from('catador').insert([autoCat]).select().maybeSingle();
+      if (createdCat) {
+        try { localStorage.setItem('reciclagem_tipo_usuario', 'catador'); } catch (e) {}
+        return {
+          tipo: 'catador',
+          dados: createdCat,
+          user: session.user,
+          id: createdCat.id
+        };
+      }
+    } catch (e) {}
+  }
+
   const nivelInicial = metaPerfil === 'administrador' ? 'administrador' : 'cidadao';
   const nomeAuto = session.user.user_metadata?.nome || session.user.email?.split('@')[0] || 'Cidadão';
   const autoProfile = {
@@ -438,7 +581,6 @@ export async function getPerfilAtual() {
   };
 
   try {
-    // Usar insert com ignoreDuplicates para NUNCA sobrescrever registros existentes
     const { data: created, error: insertErr } = await supabase
       .from('cidadao')
       .insert([autoProfile])
@@ -449,7 +591,8 @@ export async function getPerfilAtual() {
       return {
         tipo: created.nivel_acesso || 'cidadao',
         dados: created,
-        user: session.user
+        user: session.user,
+        id: created.id
       };
     }
   } catch (e) {
@@ -459,7 +602,8 @@ export async function getPerfilAtual() {
   return {
     tipo: autoProfile.nivel_acesso,
     dados: autoProfile,
-    user: session.user
+    user: session.user,
+    id: userId
   };
 }
 

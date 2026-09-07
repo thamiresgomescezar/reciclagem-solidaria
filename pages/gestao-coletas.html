@@ -82,6 +82,7 @@
     import { protegerRota } from '../js/lib/routeGuard.js';
     import { getPerfilAtual } from '../js/services/auth.js';
     import { listarTodasColetasAdmin, listarCatadoresParaVincular, vincularCatadorColeta, getStatusDisponiveis } from '../js/services/coletas.js';
+    import { showConfirmModal } from '../js/lib/modal.js';
 
     const container = document.getElementById('lista_coletas_container');
     const statusMsg = document.getElementById('statusMsg');
@@ -199,7 +200,7 @@
                 <label style="font-size: 0.78rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
                   <i class="fa-solid fa-list-check"></i> Status da Coleta:
                 </label>
-                <select class="select-status-coleta" data-id="${item.cod_coleta || item.id}" style="font-size: 0.88rem;">
+                <select class="select-status-coleta" data-id="${item.cod_coleta || item.id}" data-valor-anterior="${item.cod_status || ''}" style="font-size: 0.88rem;">
                   ${statusOptionsHtml}
                 </select>
               </div>
@@ -233,20 +234,62 @@
           });
         });
 
-        // Eventos de alteração de status
+        // Eventos de alteração de status com confirmação
         document.querySelectorAll('.select-status-coleta').forEach(sel => {
-          sel.addEventListener('change', async () => {
+          sel.dataset.valorAnterior = sel.value;
+
+          sel.addEventListener('change', () => {
             const id = sel.dataset.id;
+            const valorAnterior = sel.dataset.valorAnterior;
             const novoCodStatus = parseInt(sel.value, 10);
-            const { error } = await supabase.from('coleta').update({ cod_status: novoCodStatus, atualizado_em: new Date().toISOString() }).eq('cod_coleta', id);
-            if (error) {
-              statusMsg.className = 'status-message error';
-              statusMsg.textContent = 'Erro ao atualizar status: ' + error.message;
-            } else {
-              statusMsg.className = 'status-message success';
-              statusMsg.textContent = 'Status da coleta atualizado com sucesso!';
-              carregarColetas(filtroStatus);
-            }
+            const nomeNovoStatus = sel.options[sel.selectedIndex]?.text || 'novo status';
+
+            if (String(novoCodStatus) === String(valorAnterior)) return;
+
+            showConfirmModal({
+              title: 'Confirmar Alteração de Status',
+              message: `Deseja realmente alterar o status desta coleta para "${nomeNovoStatus}"?`,
+              confirmText: 'Sim, Alterar',
+              cancelText: 'Cancelar',
+              icon: '<i class="fa-solid fa-arrows-rotate" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>',
+              confirmColor: '#1b6d24',
+              onConfirm: async () => {
+                const isDisponivel = novoCodStatus === 1 || nomeNovoStatus.toLowerCase().includes('dispon');
+                const updatePayload = {
+                  cod_status: novoCodStatus,
+                  atualizado_em: new Date().toISOString()
+                };
+
+                // Se voltar a coleta para disponível, desvincula o catador automaticamente
+                if (isDisponivel) {
+                  updatePayload.catador_id = null;
+                  updatePayload.agenda_id = null;
+                  updatePayload.data = null;
+                  updatePayload.hora = null;
+                }
+
+                const { error } = await supabase
+                  .from('coleta')
+                  .update(updatePayload)
+                  .eq('cod_coleta', id);
+
+                if (error) {
+                  statusMsg.className = 'status-message error';
+                  statusMsg.textContent = 'Erro ao atualizar status: ' + error.message;
+                  sel.value = valorAnterior;
+                } else {
+                  sel.dataset.valorAnterior = String(novoCodStatus);
+                  statusMsg.className = 'status-message success';
+                  statusMsg.textContent = isDisponivel
+                    ? `Status da coleta alterado para "${nomeNovoStatus}" e catador desvinculado com sucesso!`
+                    : `Status da coleta alterado para "${nomeNovoStatus}" com sucesso!`;
+                  carregarColetas(filtroStatus);
+                }
+              },
+              onCancel: () => {
+                sel.value = valorAnterior;
+              }
+            });
           });
         });
 

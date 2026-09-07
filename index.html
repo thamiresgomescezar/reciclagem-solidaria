@@ -77,9 +77,24 @@
     <img src="assets/logo.jpg" alt="Reciclagem Solidária Logo">
     <h1>Reciclagem Solidária</h1>
     <p>Conectando cidadãos conscientes a catadores</p>
-    <div class="spinner-container">
+    <div class="spinner-container" id="spinner-box">
       <i class="fa-solid fa-circle-notch spinner-icon"></i>
-      <span>Carregando...</span>
+      <span id="spinner-text">Carregando...</span>
+    </div>
+
+    <!-- Fallback Box quando o carregamento demorar mais de 2 segundos -->
+    <div id="splash-fallback" style="display: none; margin-top: 1.75rem; animation: fadeIn 0.3s ease;">
+      <p style="font-size: 0.88rem; color: #444; margin-bottom: 0.85rem; line-height: 1.4;">
+        O carregamento está demorando mais do que o esperado.
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 8px; max-width: 260px; margin: 0 auto;">
+        <button type="button" id="btn-ir-login" style="background: var(--verde-escuro, #1b6d24); color: white; border: none; border-radius: 999px; padding: 11px 20px; font-size: 0.92rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(27,109,36,0.25); font-family: inherit;">
+          <i class="fa-solid fa-right-to-bracket"></i> Ir para o Login
+        </button>
+        <button type="button" id="btn-recarregar" style="background: white; color: var(--verde-escuro, #1b6d24); border: 1.5px solid var(--verde-escuro, #1b6d24); border-radius: 999px; padding: 9px 20px; font-size: 0.88rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit;">
+          <i class="fa-solid fa-arrows-rotate"></i> Recarregar Página
+        </button>
+      </div>
     </div>
   </div>
 
@@ -87,30 +102,102 @@
     import { supabase } from './js/lib/supabaseClient.js';
     import { getPerfilAtual } from './js/services/auth.js';
 
+    let jaRedirecionou = false;
+
+    function irPara(url) {
+      if (jaRedirecionou) return;
+      jaRedirecionou = true;
+      window.location.href = url;
+    }
+
+    // Exibe botões de fallback se demorar mais de 2.2 segundos
+    const timerFallback = setTimeout(() => {
+      const box = document.getElementById('splash-fallback');
+      if (box && !jaRedirecionou) {
+        box.style.display = 'block';
+        const txt = document.getElementById('spinner-text');
+        if (txt) txt.textContent = 'Conectando ao sistema...';
+      }
+    }, 2200);
+
+    // Timeout máximo de segurança (4.5 segundos) — garante que NUNCA fique travado
+    const timerHardTimeout = setTimeout(() => {
+      if (!jaRedirecionou) {
+        console.warn('Splash: timeout atingido. Redirecionando para login.');
+        irPara('pages/login.html');
+      }
+    }, 4500);
+
+    document.getElementById('btn-ir-login')?.addEventListener('click', async () => {
+      clearTimeout(timerFallback);
+      clearTimeout(timerHardTimeout);
+      try { await supabase.auth.signOut(); } catch (e) {}
+      irPara('pages/login.html');
+    });
+
+    document.getElementById('btn-recarregar')?.addEventListener('click', () => {
+      window.location.reload();
+    });
+
     async function redirecionar() {
-      // Delay suave de 1.5s para exibição da tela de abertura e animação de carregamento
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      try {
+        // Pausa suave de 1s para o splash ser visível
+        await new Promise(r => setTimeout(r, 1000));
 
-      const { data: { session } } = await supabase.auth.getSession();
+        // Busca a sessão com timeout de proteção de 3 segundos
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout sessão')), 3000));
+        
+        let session = null;
+        try {
+          const res = await Promise.race([sessionPromise, timeoutPromise]);
+          session = res?.data?.session;
+        } catch (e) {
+          console.warn('Falha ou timeout ao consultar sessão:', e);
+        }
 
-      if (!session) {
-        window.location.href = 'pages/login.html';
-        return;
+        if (!session || !session.user) {
+          clearTimeout(timerFallback);
+          clearTimeout(timerHardTimeout);
+          irPara('pages/login.html');
+          return;
+        }
+
+        // Se há sessão ativa, busca o perfil com timeout de proteção
+        const perfilPromise = getPerfilAtual();
+        const perfilTimeout = new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout perfil')), 3000));
+        
+        let perfil = null;
+        try {
+          perfil = await Promise.race([perfilPromise, perfilTimeout]);
+        } catch (e) {
+          console.warn('Falha ou timeout ao consultar perfil:', e);
+        }
+
+        clearTimeout(timerFallback);
+        clearTimeout(timerHardTimeout);
+
+        if (!perfil || perfil.erro || (perfil.dados && perfil.dados.situacao && perfil.dados.situacao !== 'ativo')) {
+          try { await supabase.auth.signOut(); } catch (e) {}
+          irPara('pages/login.html');
+          return;
+        }
+
+        const destinos = {
+          cidadao: 'pages/dashboard-cidadao.html',
+          administrador: 'pages/dashboard-admin.html',
+          catador: 'pages/dashboard-catador.html',
+        };
+
+        const rotaDestino = destinos[perfil.tipo] || 'pages/login.html';
+        irPara(rotaDestino);
+
+      } catch (err) {
+        console.error('Erro na inicialização do splash:', err);
+        clearTimeout(timerFallback);
+        clearTimeout(timerHardTimeout);
+        irPara('pages/login.html');
       }
-
-      const perfil = await getPerfilAtual();
-      if (perfil.erro || (perfil.dados && perfil.dados.situacao && perfil.dados.situacao !== 'ativo')) {
-        await supabase.auth.signOut();
-        window.location.href = 'pages/login.html';
-        return;
-      }
-
-      const destinos = {
-        cidadao: 'pages/dashboard-cidadao.html',
-        administrador: 'pages/dashboard-admin.html',
-        catador: 'pages/dashboard-catador.html',
-      };
-      window.location.href = destinos[perfil.tipo] || 'pages/login.html';
     }
 
     redirecionar();

@@ -17,8 +17,8 @@ export function renderEnderecoForm(containerId) {
         <!-- Linha 1: CEP -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="campo">
-            <label for="end_cep">CEP <span style="font-size: 0.8rem; font-weight: 500; color: #777;">- Opcional</span>:</label>
-            <input type="text" id="end_cep" class="input-underline" placeholder="00000-000" maxlength="9">
+            <label for="end_cep">CEP:<span class="req">*</span></label>
+            <input type="text" id="end_cep" class="input-underline" placeholder="00000-000" maxlength="9" required>
           </div>
           <div></div>
         </div>
@@ -80,10 +80,29 @@ export function renderEnderecoForm(containerId) {
     });
   }
 
-  // Formatação em tempo real do CEP (máscara 00000-000)
+  // Formatação em tempo real do CEP (máscara 00000-000) e busca automática no ViaCEP
   if (inputCep) {
-    inputCep.addEventListener('input', (e) => {
+    inputCep.addEventListener('input', async (e) => {
       e.target.value = aplicarMascaraCep(e.target.value);
+      const cepLimpo = e.target.value.replace(/\D/g, '');
+      if (cepLimpo.length === 8) {
+        try {
+          const resp = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+          if (resp.ok) {
+            const data = await resp.json();
+            if (!data.erro) {
+              if (inputRua && data.logradouro) inputRua.value = formatarNomeTitleCase(data.logradouro);
+              if (inputBairro && data.bairro) inputBairro.value = formatarNomeTitleCase(data.bairro);
+              if (inputCidade && data.localidade) inputCidade.value = formatarNomeTitleCase(data.localidade);
+              if (inputEstado && data.uf) inputEstado.value = data.uf.toUpperCase();
+              const inputNum = document.getElementById('end_numero');
+              if (inputNum && !inputNum.value) inputNum.focus();
+            }
+          }
+        } catch (err) {
+          // Permite preenchimento manual
+        }
+      }
     });
   }
 
@@ -172,12 +191,14 @@ export function validarEndereco() {
   const semRes = document.getElementById('sem_residencia')?.checked || false;
   if (semRes) return null; // Sem moradia é válido
 
+  const cep = (document.getElementById('end_cep')?.value || '').replace(/\D/g, '');
   const cidade = document.getElementById('end_cidade')?.value.trim();
   const estado = document.getElementById('end_estado')?.value.trim();
   const bairro = document.getElementById('end_bairro')?.value.trim();
   const rua = document.getElementById('end_rua')?.value.trim();
   const numero = document.getElementById('end_numero')?.value.trim();
 
+  if (!cep || cep.length !== 8) return 'Informe um CEP válido com 8 dígitos (ex: 00000-000).';
   if (!cidade) return 'Informe a cidade no endereço.';
   if (!estado) return 'Informe o estado (UF) no endereço.';
   if (!bairro) return 'Informe o bairro no endereço.';

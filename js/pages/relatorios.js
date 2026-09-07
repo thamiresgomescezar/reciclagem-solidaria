@@ -1,8 +1,12 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { showAlertModal } from '../lib/modal.js';
 import { formatarNomeTitleCase } from '../lib/validation.js';
+import { protegerRota } from '../lib/routeGuard.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  const acesso = await protegerRota(['administrador']);
+  if (!acesso.permitido) return;
+
   const container = document.getElementById('relatorio_conteudo_container');
   const btnExportarCsv = document.getElementById('btn_exportar_csv');
   const tabs = document.querySelectorAll('#tabs_relatorios button');

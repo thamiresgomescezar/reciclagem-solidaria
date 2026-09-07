@@ -154,9 +154,10 @@ export function showAlertModal({
     if (onOk) await onOk();
   });
 
-  backdrop.addEventListener('click', (e) => {
+  backdrop.addEventListener('click', async (e) => {
     if (e.target === backdrop) {
       backdrop.remove();
+      if (onOk) await onOk();
     }
   });
 }
