@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Reciclagem Solidária</title>
   
   <!-- Configurações de PWA, Ícone e Nome do App -->
@@ -83,63 +86,110 @@
     </div>
   </div>
 
+  <!-- SCRIPT SÍNCRONO IMEDIATO (Executa instantaneamente, independente de CDN, módulos ou rede) -->
+  <script>
+    (function() {
+      var redirecionado = false;
+      function navegar(url) {
+        if (redirecionado) return;
+        redirecionado = true;
+        window.location.href = url;
+      }
+
+      // 1. TIMEOUT DE SEGURANÇA MÁXIMO (1.8s):
+      // Garante que o usuário NUNCA fique preso na tela inicial, mesmo se o CDN falhar
+      var timerGarantia = setTimeout(function() {
+        navegar('./pages/login.html');
+      }, 1800);
+
+      // 2. VERIFICAÇÃO INSTANTÂNEA DE SESSÃO NO LOCALSTORAGE:
+      var temSessao = false;
+      try {
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf('sb-') === 0 && k.indexOf('-auth-token') !== -1) {
+            var val = localStorage.getItem(k);
+            if (val && val.indexOf('access_token') !== -1) {
+              temSessao = true;
+              break;
+            }
+          }
+        }
+      } catch (e) {}
+
+      // Se não há sessão salva, redireciona suavemente em 600ms direto para o login
+      if (!temSessao) {
+        setTimeout(function() {
+          navegar('./pages/login.html');
+        }, 600);
+        return;
+      }
+
+      // Se há sessão e o tipo de usuário está em cache, encaminha diretamente para seu painel
+      var tipoSalvo = null;
+      try { tipoSalvo = localStorage.getItem('reciclagem_tipo_usuario'); } catch (e) {}
+      if (tipoSalvo) {
+        var rotas = {
+          cidadao: './pages/dashboard-cidadao.html',
+          administrador: './pages/dashboard-admin.html',
+          catador: './pages/dashboard-catador.html'
+        };
+        if (rotas[tipoSalvo]) {
+          setTimeout(function() {
+            clearTimeout(timerGarantia);
+            navegar(rotas[tipoSalvo]);
+          }, 600);
+        }
+      }
+
+      window.__cancelarGarantia = function() {
+        clearTimeout(timerGarantia);
+      };
+      window.__navegarDireto = navegar;
+    })();
+  </script>
+
+  <!-- VALIDAÇÃO ASSÍNCRONA COMPLETA COM SUPABASE -->
   <script type="module">
     import { supabase } from './js/lib/supabaseClient.js';
     import { getPerfilAtual } from './js/services/auth.js';
 
-    let redirecionado = false;
-
-    function navegarPara(url) {
-      if (redirecionado) return;
-      redirecionado = true;
-      window.location.href = url;
-    }
-
-    // Timeout de segurança: no máximo 2.5 segundos de splash antes de direcionar
-    const timeoutSeguranca = setTimeout(() => {
-      navegarPara('pages/login.html');
-    }, 2500);
-
-    async function redirecionar() {
+    async function validarESincronizar() {
       try {
-        // Pausa suave de 600ms para exibição visual do logo
-        await new Promise(resolve => setTimeout(resolve, 600));
-
-        const { data: { session } } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+        const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+        const session = data?.session;
 
         if (!session || !session.user) {
-          clearTimeout(timeoutSeguranca);
-          navegarPara('pages/login.html');
+          if (window.__navegarDireto) window.__navegarDireto('./pages/login.html');
           return;
         }
 
         const perfil = await getPerfilAtual().catch(() => null);
 
-        clearTimeout(timeoutSeguranca);
+        if (window.__cancelarGarantia) window.__cancelarGarantia();
 
         if (!perfil || perfil.erro || (perfil.dados && perfil.dados.situacao && perfil.dados.situacao !== 'ativo')) {
           try { await supabase.auth.signOut(); } catch (e) {}
-          navegarPara('pages/login.html');
+          if (window.__navegarDireto) window.__navegarDireto('./pages/login.html');
           return;
         }
 
         const destinos = {
-          cidadao: 'pages/dashboard-cidadao.html',
-          administrador: 'pages/dashboard-admin.html',
-          catador: 'pages/dashboard-catador.html',
+          cidadao: './pages/dashboard-cidadao.html',
+          administrador: './pages/dashboard-admin.html',
+          catador: './pages/dashboard-catador.html',
         };
 
-        const rota = destinos[perfil.tipo] || 'pages/login.html';
-        navegarPara(rota);
+        const rota = destinos[perfil.tipo] || './pages/login.html';
+        if (window.__navegarDireto) window.__navegarDireto(rota);
 
       } catch (err) {
-        console.error('Erro no redirecionamento inicial:', err);
-        clearTimeout(timeoutSeguranca);
-        navegarPara('pages/login.html');
+        console.warn('Falha na validação assíncrona:', err);
+        if (window.__navegarDireto) window.__navegarDireto('./pages/login.html');
       }
     }
 
-    redirecionar();
+    validarESincronizar();
   </script>
 </body>
 </html>
