@@ -122,10 +122,18 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      const perfil = await getPerfilAtual();
-      if (perfil) {
-        redirectPorPerfil(perfil.tipo);
-      }
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('redirect') || urlParams.has('logout')) return;
+
+      try {
+        const perfilPromise = getPerfilAtual();
+        const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout')), 3000));
+        const perfil = await Promise.race([perfilPromise, timeoutPromise]).catch(() => null);
+
+        if (perfil && perfil.tipo && (!perfil.dados || perfil.dados.situacao === 'ativo')) {
+          redirectPorPerfil(perfil.tipo);
+        }
+      } catch (e) {}
     });
 
     const inputEmail = document.getElementById('email');

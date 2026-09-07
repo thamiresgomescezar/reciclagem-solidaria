@@ -355,7 +355,30 @@
 
             // Permite atualizar o e-mail se o catador ainda não possui login no app
             if (!temLoginApp) {
-              updatePayloadCat.email = email ? email.toLowerCase() : null;
+              const emailNorm = email ? email.trim().toLowerCase() : null;
+              if (emailNorm) {
+                const { data: cidCheck } = await supabase
+                  .from('cidadao')
+                  .select('id, nome')
+                  .ilike('email', emailNorm)
+                  .limit(1);
+
+                if (cidCheck && cidCheck.length > 0) {
+                  throw new Error(`O e-mail "${emailNorm}" já está associado a uma conta de Cidadão no sistema.`);
+                }
+
+                const { data: catCheck } = await supabase
+                  .from('catador')
+                  .select('id, nome')
+                  .ilike('email', emailNorm)
+                  .neq('id', userId)
+                  .limit(1);
+
+                if (catCheck && catCheck.length > 0) {
+                  throw new Error(`O e-mail "${emailNorm}" já está cadastrado para outro catador ("${catCheck[0].nome}").`);
+                }
+              }
+              updatePayloadCat.email = emailNorm;
             }
 
             const { error } = await supabase

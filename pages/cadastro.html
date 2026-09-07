@@ -481,12 +481,22 @@
 
         if (!res.ok) {
           const msgErro = res.erro || 'Erro ao realizar cadastro.';
+          if (msgErro.includes('Catador') || msgErro.includes('administração') || msgErro.includes('administrador') || msgErro.includes('Cidadão')) {
+            statusMsg.className = 'status-message error';
+            statusMsg.textContent = msgErro;
+            statusMsg.style.display = 'block';
+            statusMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            btnCadastrar.disabled = false;
+            btnCadastrar.innerHTML = '<i class="fa-solid fa-user-plus"></i> Realizar Cadastro';
+            return;
+          }
           if (msgErro.includes('já está cadastrado') || msgErro.includes('already registered') || msgErro.includes('User already registered')) {
             if (modalExistente) {
               modalExistente.style.display = 'flex';
             } else {
               statusMsg.className = 'status-message error';
               statusMsg.textContent = msgErro;
+              statusMsg.style.display = 'block';
             }
             btnCadastrar.disabled = false;
             btnCadastrar.innerHTML = '<i class="fa-solid fa-user-plus"></i> Realizar Cadastro';

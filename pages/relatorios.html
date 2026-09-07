@@ -20,7 +20,7 @@
     <!-- Top Header -->
     <div class="top-bar">
       <div></div>
-      <a href="#" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+      <a href="./dashboard-admin.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
         <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
       </a>
     </div>
@@ -95,15 +95,5 @@
 
   <script type="module" src="../js/lib/navMenu.js"></script>
   <script type="module" src="../js/pages/relatorios.js"></script>
-  <script type="module">
-    import { getPerfilAtual } from '../js/services/auth.js';
-    document.addEventListener('DOMContentLoaded', async () => {
-      const btnVoltarTop = document.getElementById('btn-voltar-top');
-      const perfil = await getPerfilAtual();
-      if (perfil?.tipo) {
-        btnVoltarTop.href = perfil.tipo === 'administrador' ? './dashboard-admin.html' : (perfil.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
-      }
-    });
-  </script>
 </body>
 </html>

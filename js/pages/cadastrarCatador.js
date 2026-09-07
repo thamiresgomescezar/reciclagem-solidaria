@@ -1,5 +1,5 @@
 import { proibirAcessoInvalido, redirecionarPorPerfil } from '../lib/routeGuard.js';
-import { renderEnderecoForm, getEnderecoValues } from './enderecoForm.js';
+import { renderEnderecoForm, getEnderecoValues, validarEndereco } from './enderecoForm.js';
 import { cadastrarCatadorPorTerceiros } from '../services/auth.js';
 import { aplicarMascaraTelefone, formatarNomeTitleCase } from '../lib/validation.js';
 
@@ -59,6 +59,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!nome) {
       showError('O nome do catador é obrigatório.');
       inputNome?.focus();
+      return;
+    }
+
+    const erroEndereco = validarEndereco();
+    if (erroEndereco) {
+      showError(erroEndereco);
       return;
     }
 
