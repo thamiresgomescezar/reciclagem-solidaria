@@ -116,7 +116,7 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
 
       if (btnTodas) btnTodas.innerHTML = `<i class="fa-solid fa-list-ul"></i> Todas (${countTodas})`;
       if (btnAgendadas) btnAgendadas.innerHTML = `<i class="fa-solid fa-calendar-check"></i> Agendadas (${countAgendadas})`;
-      if (btnConcluidas) btnConcluidas.innerHTML = `<i class="fa-solid fa-circle-check"></i> Concluídas (${countConcluidas})`;
+      if (btnConcluidas) btnConcluidas.innerHTML = `<i class="fa-solid fa-circle-check"></i> Retiradas (${countConcluidas})`;
 
       toolbarFiltros.querySelectorAll('.btn-tab').forEach(btn => {
         btn.onclick = (e) => {
@@ -240,9 +240,14 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
         let badgeCor = '#e8f5e9';
         let badgeTexto = '#1b5e20';
 
-        if (stNome === 'agendado') { badgeCor = '#fff8e1'; badgeTexto = '#b78103'; }
-        else if (stNome === 'retirado' || stNome === 'concluído') { badgeCor = '#e8f5e9'; badgeTexto = '#1b5e20'; }
-        else if (stNome === 'cancelado') { badgeCor = '#ffebee'; badgeTexto = '#c62828'; }
+        if (stNome.includes('agend')) { badgeCor = '#fff8e1'; badgeTexto = '#b78103'; }
+        else if (stNome.includes('retirad') || stNome.includes('conclu')) { badgeCor = '#e8f5e9'; badgeTexto = '#1b5e20'; }
+        else if (stNome.includes('cancel')) { badgeCor = '#ffebee'; badgeTexto = '#c62828'; }
+
+        let stFormatado = 'DISPONÍVEL';
+        if (stNome.includes('agend')) stFormatado = 'AGENDADA';
+        else if (stNome.includes('retirad') || stNome.includes('conclu')) stFormatado = 'RETIRADA';
+        else if (stNome.includes('cancel')) stFormatado = 'CANCELADA';
 
         let acoesHtml = '';
         if (éCatador) {
@@ -265,7 +270,7 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
           } else if (stNome === 'retirado' || stNome === 'concluído') {
             acoesHtml = `
               <div style="font-size: 0.85rem; color: #2e7d32; font-weight: 800; background: #e8f5e9; padding: 8px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="fa-solid fa-circle-check"></i> Coleta Retirada e Concluída
+                <i class="fa-solid fa-circle-check"></i> Coleta Retirada
               </div>
             `;
           }
@@ -316,7 +321,7 @@ async function carregarLista(listaContainer, feedbackMsg, perfil) {
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
             <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.05rem;">${tipoMaterial} — ${coleta.quantidade || 'Aproximada'}</strong>
             <span style="font-size: 0.75rem; font-weight: 800; background: ${badgeCor}; color: ${badgeTexto}; padding: 4px 10px; border-radius: 8px; text-transform: uppercase;">
-              ${stNome}
+              ${stFormatado}
             </span>
           </div>
 

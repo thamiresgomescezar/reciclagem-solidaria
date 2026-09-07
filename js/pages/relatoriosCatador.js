@@ -272,7 +272,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       // TAB 3: Resumo por Status de Coleta
       const contagemStatus = {};
       coletasCatador.forEach(c => {
-        const st = c.status?.status ? c.status.status.toUpperCase() : 'AGENDADO';
+        const rawSt = (c.status?.status || 'agendada').toLowerCase();
+        let st = 'DISPONÍVEL';
+        if (rawSt.includes('agend')) st = 'AGENDADA';
+        else if (rawSt.includes('retirad') || rawSt.includes('conclu')) st = 'RETIRADA';
+        else if (rawSt.includes('cancel')) st = 'CANCELADA';
         contagemStatus[st] = (contagemStatus[st] || 0) + 1;
       });
 

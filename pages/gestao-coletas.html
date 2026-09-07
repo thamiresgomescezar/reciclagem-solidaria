@@ -57,7 +57,7 @@
               <button class="btn-tab active" data-status="todos"><i class="fa-solid fa-layer-group"></i> Todas</button>
               <button class="btn-tab" data-status="disponível"><i class="fa-solid fa-clock"></i> Disponíveis</button>
               <button class="btn-tab" data-status="agendado"><i class="fa-solid fa-calendar-check"></i> Agendadas</button>
-              <button class="btn-tab" data-status="retirado"><i class="fa-solid fa-circle-check"></i> Concluídas</button>
+              <button class="btn-tab" data-status="retirado"><i class="fa-solid fa-circle-check"></i> Retiradas</button>
               <button class="btn-tab" data-status="cancelado"><i class="fa-solid fa-ban"></i> Canceladas</button>
             </div>
 
@@ -82,7 +82,7 @@
     import { protegerRota } from '../js/lib/routeGuard.js';
     import { getPerfilAtual } from '../js/services/auth.js';
     import { listarTodasColetasAdmin, listarCatadoresParaVincular, vincularCatadorColeta, getStatusDisponiveis } from '../js/services/coletas.js';
-    import { showConfirmModal } from '../js/lib/modal.js';
+    import { showConfirmModal, showAlertModal } from '../js/lib/modal.js';
 
     const container = document.getElementById('lista_coletas_container');
     const statusMsg = document.getElementById('statusMsg');
@@ -144,14 +144,20 @@
           if (listaStatus && listaStatus.length > 0) {
             listaStatus.forEach(st => {
               const isSelected = (item.cod_status === st.cod_status) || (stNome.toLowerCase() === (st.status || '').toLowerCase());
-              const nomeCapitalizado = (st.status || '').charAt(0).toUpperCase() + (st.status || '').slice(1);
-              statusOptionsHtml += `<option value="${st.cod_status}" ${isSelected ? 'selected' : ''}>${nomeCapitalizado}</option>`;
+              let nomeFormatado = (st.status || '').toLowerCase();
+              if (nomeFormatado.includes('agend')) nomeFormatado = 'Agendada';
+              else if (nomeFormatado.includes('retirad') || nomeFormatado.includes('conclu')) nomeFormatado = 'Retirada';
+              else if (nomeFormatado.includes('cancel')) nomeFormatado = 'Cancelada';
+              else if (nomeFormatado.includes('dispon')) nomeFormatado = 'Disponível';
+              else nomeFormatado = (st.status || '').charAt(0).toUpperCase() + (st.status || '').slice(1);
+              statusOptionsHtml += `<option value="${st.cod_status}" ${isSelected ? 'selected' : ''}>${nomeFormatado}</option>`;
             });
           } else {
             statusOptionsHtml = `
               <option value="1" ${stNome === 'disponível' ? 'selected' : ''}>Disponível</option>
-              <option value="2" ${stNome === 'agendado' ? 'selected' : ''}>Agendado</option>
-              <option value="3" ${stNome === 'retirado' ? 'selected' : ''}>Retirado (Concluído)</option>
+              <option value="2" ${stNome === 'agendado' || stNome === 'agendada' ? 'selected' : ''}>Agendada</option>
+              <option value="3" ${stNome === 'retirado' || stNome === 'retirada' || stNome === 'concluído' ? 'selected' : ''}>Retirada</option>
+              <option value="4" ${stNome === 'cancelado' || stNome === 'cancelada' ? 'selected' : ''}>Cancelada</option>
             `;
           }
 
@@ -170,6 +176,11 @@
                  <span>Sem foto anexada</span>
                </div>`;
 
+          let statusTextoDisplay = 'DISPONÍVEL';
+          if (/agend/i.test(stNome)) statusTextoDisplay = 'AGENDADA';
+          else if (/retirad|conclu/i.test(stNome)) statusTextoDisplay = 'RETIRADA';
+          else if (/cancel/i.test(stNome)) statusTextoDisplay = 'CANCELADA';
+
           card.innerHTML = `
             ${fotoTag}
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
@@ -179,7 +190,7 @@
                   <span><strong>Ofertante:</strong> ${cidNome}${cidTel}</span> | <span><strong>Ponto de Retirada:</strong> ${localNome}</span>
                 </div>
                 <div style="font-size: 0.78rem; color: var(--cinza-texto-aux); margin-top: 2px;">
-                  Status Atual: <strong style="color: #1b6d24; text-transform: uppercase;">${stNome}</strong> | Data de Cadastro: ${new Date(item.criado_em).toLocaleDateString('pt-BR')}
+                  Status Atual: <strong style="color: #1b6d24; text-transform: uppercase;">${statusTextoDisplay}</strong> | Data de Cadastro: ${new Date(item.criado_em).toLocaleDateString('pt-BR')}
                 </div>
               </div>
             </div>
@@ -190,7 +201,7 @@
                 <label style="font-size: 0.78rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
                   <i class="fa-solid fa-user-check"></i> Catador Atribuído:
                 </label>
-                <select class="select-vincular-catador" data-id="${item.cod_coleta || item.id}" ${disabledCatador} style="font-size: 0.88rem; ${styleCatador}">
+                <select class="select-vincular-catador" data-id="${item.cod_coleta || item.id}" data-valor-anterior="${item.catador_id || ''}" ${disabledCatador} style="font-size: 0.88rem; ${styleCatador}">
                   ${catadorOptionsHtml}
                 </select>
                 ${fraseBloqueio ? `<span style="font-size: 0.75rem; color: #c62828; font-weight: 600; margin-top: 5px; display: flex; align-items: center; gap: 4px;"><i class="fa-solid fa-lock" style="font-size: 0.7rem;"></i> ${fraseBloqueio}</span>` : ''}
@@ -217,24 +228,77 @@
           });
         });
 
-        // Eventos de alteração de catador vinculado
+        // Eventos de alteração de catador vinculado com confirmação
         document.querySelectorAll('.select-vincular-catador').forEach(sel => {
-          sel.addEventListener('change', async () => {
+          sel.dataset.valorAnterior = sel.value;
+
+          sel.addEventListener('change', () => {
             const id = sel.dataset.id;
             const catadorId = sel.value;
-            try {
-              await vincularCatadorColeta(id, catadorId);
-              statusMsg.className = 'status-message success';
-              statusMsg.textContent = 'Catador vinculado à coleta com sucesso!';
-              carregarColetas(filtroStatus);
-            } catch (err) {
-              statusMsg.className = 'status-message error';
-              statusMsg.textContent = 'Erro ao vincular catador: ' + err.message;
+            const valorAnterior = sel.dataset.valorAnterior || '';
+            const nomeNovoCatador = sel.options[sel.selectedIndex]?.text || '';
+
+            if (catadorId === valorAnterior) return;
+
+            // Identifica status atual da coleta no card
+            const selStatus = document.querySelector(`.select-status-coleta[data-id="${id}"]`);
+            const codStatusAtual = selStatus ? parseInt(selStatus.value, 10) : 1;
+            const nomeStatusAtual = selStatus?.options[selStatus.selectedIndex]?.text || '';
+            const ehDisponivelAtual = codStatusAtual === 1 || /dispon/i.test(nomeStatusAtual);
+
+            let tituloModal = 'Confirmar Atribuição de Catador';
+            let msgModal = '';
+            let textoConfirmar = 'Sim, Confirmar';
+            let iconeModal = '<i class="fa-solid fa-user-check" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>';
+
+            if (!catadorId) {
+              // Desvinculação de catador -> volta para disponível
+              tituloModal = 'Desvincular Catador';
+              msgModal = `Deseja realmente desvincular o catador desta coleta? Ela retornará automaticamente ao status "Disponível".`;
+              textoConfirmar = 'Sim, Desvincular';
+              iconeModal = '<i class="fa-solid fa-recycle" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>';
+            } else if (ehDisponivelAtual) {
+              // Transição de Disponível para Agendado ao alocar catador
+              tituloModal = 'Vincular Catador e Agendar';
+              msgModal = `A coleta está atualmente com status "Disponível".\n\nAo atribuir o catador "${nomeNovoCatador}", o status da coleta passará para "Agendada". Deseja confirmar?`;
+              textoConfirmar = 'Sim, Atribuir e Agendar';
+            } else {
+              // Reatribuição para outro catador
+              tituloModal = 'Alterar Catador Atribuído';
+              msgModal = `Deseja realmente reatribuir esta coleta para "${nomeNovoCatador}"?`;
+              textoConfirmar = 'Sim, Alterar Catador';
             }
+
+            showConfirmModal({
+              title: tituloModal,
+              message: msgModal,
+              confirmText: textoConfirmar,
+              cancelText: 'Cancelar',
+              icon: iconeModal,
+              confirmColor: '#1b6d24',
+              onConfirm: async () => {
+                try {
+                  await vincularCatadorColeta(id, catadorId);
+                  sel.dataset.valorAnterior = catadorId;
+                  statusMsg.className = 'status-message success';
+                  statusMsg.textContent = !catadorId
+                    ? 'Catador desvinculado e coleta retornada para Disponível com sucesso!'
+                    : `Catador "${nomeNovoCatador}" vinculado e coleta agendada com sucesso!`;
+                  carregarColetas(filtroStatus);
+                } catch (err) {
+                  sel.value = valorAnterior;
+                  statusMsg.className = 'status-message error';
+                  statusMsg.textContent = 'Erro ao vincular catador: ' + err.message;
+                }
+              },
+              onCancel: () => {
+                sel.value = valorAnterior;
+              }
+            });
           });
         });
 
-        // Eventos de alteração de status com confirmação
+        // Eventos de alteração de status com validação estrita de catador e confirmação
         document.querySelectorAll('.select-status-coleta').forEach(sel => {
           sel.dataset.valorAnterior = sel.value;
 
@@ -243,25 +307,68 @@
             const valorAnterior = sel.dataset.valorAnterior;
             const novoCodStatus = parseInt(sel.value, 10);
             const nomeNovoStatus = sel.options[sel.selectedIndex]?.text || 'novo status';
+            const optAnterior = sel.querySelector(`option[value="${valorAnterior}"]`);
+            const nomeStatusAnterior = optAnterior ? optAnterior.text : 'status anterior';
 
             if (String(novoCodStatus) === String(valorAnterior)) return;
 
+            // 1. REGRA: Para agendada ou retirada, é OBRIGATÓRIO ter um catador alocado
+            const ehAgendadaOuRetirada = novoCodStatus === 2 || novoCodStatus === 3 || 
+                                         /agend|retirad|conclu/i.test(nomeNovoStatus);
+
+            const selCatador = document.querySelector(`.select-vincular-catador[data-id="${id}"]`);
+            const catadorId = selCatador ? (selCatador.value || '').trim() : '';
+
+            if (ehAgendadaOuRetirada && !catadorId) {
+              sel.value = valorAnterior;
+              showAlertModal({
+                title: 'Catador Obrigatório',
+                message: `Para a coleta ter o status alterado para "${nomeNovoStatus}", é obrigatório ter um catador alocado.\n\nPor favor, selecione e atribua um catador no campo "Catador Atribuído" antes de avançar.`,
+                buttonText: 'Entendido',
+                confirmColor: '#c62828',
+                icon: '<i class="fa-solid fa-triangle-exclamation" style="color: #c62828; font-size: 1.25rem;"></i>'
+              });
+              statusMsg.className = 'status-message error';
+              statusMsg.textContent = `A coleta precisa ter um catador alocado para ser marcada como "${nomeNovoStatus}".`;
+              return;
+            }
+
+            // 2. CONFIRMAÇÃO: Sempre pedir confirmação (com destaque ao trocar de Disponível para outro status)
+            const eraDisponivel = valorAnterior === '1' || /dispon/i.test(nomeStatusAnterior);
+            const vaiSerDisponivel = novoCodStatus === 1 || /dispon/i.test(nomeNovoStatus);
+
+            let tituloModal = 'Confirmar Alteração de Status';
+            let mensagemModal = '';
+            let textoConfirmar = 'Sim, Alterar';
+            let iconeModal = '<i class="fa-solid fa-arrows-rotate" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>';
+
+            if (eraDisponivel) {
+              tituloModal = 'Alterar Status de Coleta Disponível';
+              mensagemModal = `Esta coleta está atualmente com status "Disponível".\n\nDeseja realmente alterar seu status para "${nomeNovoStatus}"?`;
+            } else if (vaiSerDisponivel) {
+              tituloModal = 'Voltar Coleta para Disponível';
+              mensagemModal = `Deseja realmente voltar o status desta coleta para "Disponível"?\n\nO catador atualmente atribuído será desvinculado automaticamente.`;
+              textoConfirmar = 'Sim, Voltar para Disponível';
+              iconeModal = '<i class="fa-solid fa-recycle" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>';
+            } else {
+              mensagemModal = `Deseja realmente alterar o status desta coleta de "${nomeStatusAnterior}" para "${nomeNovoStatus}"?`;
+            }
+
             showConfirmModal({
-              title: 'Confirmar Alteração de Status',
-              message: `Deseja realmente alterar o status desta coleta para "${nomeNovoStatus}"?`,
-              confirmText: 'Sim, Alterar',
+              title: tituloModal,
+              message: mensagemModal,
+              confirmText: textoConfirmar,
               cancelText: 'Cancelar',
-              icon: '<i class="fa-solid fa-arrows-rotate" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>',
+              icon: iconeModal,
               confirmColor: '#1b6d24',
               onConfirm: async () => {
-                const isDisponivel = novoCodStatus === 1 || nomeNovoStatus.toLowerCase().includes('dispon');
                 const updatePayload = {
                   cod_status: novoCodStatus,
                   atualizado_em: new Date().toISOString()
                 };
 
                 // Se voltar a coleta para disponível, desvincula o catador automaticamente
-                if (isDisponivel) {
+                if (vaiSerDisponivel) {
                   updatePayload.catador_id = null;
                   updatePayload.agenda_id = null;
                   updatePayload.data = null;
@@ -280,7 +387,7 @@
                 } else {
                   sel.dataset.valorAnterior = String(novoCodStatus);
                   statusMsg.className = 'status-message success';
-                  statusMsg.textContent = isDisponivel
+                  statusMsg.textContent = vaiSerDisponivel
                     ? `Status da coleta alterado para "${nomeNovoStatus}" e catador desvinculado com sucesso!`
                     : `Status da coleta alterado para "${nomeNovoStatus}" com sucesso!`;
                   carregarColetas(filtroStatus);
