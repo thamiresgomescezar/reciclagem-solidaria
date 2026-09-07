@@ -116,14 +116,16 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
             <div class="campo" id="box_edit_nivel_acesso">
               <label for="edit_nivel_acesso">Perfil / Papel:</label>
               <select id="edit_nivel_acesso" class="input-underline">
                 <option value="cidadao">Cidadão</option>
                 <option value="administrador">Administrador</option>
-                <option value="catador">Catador</option>
               </select>
+              <div id="badge_catador_display" style="display: none; padding: 7px 12px; background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; color: #1b6d24; font-size: 0.88rem; font-weight: 700; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-truck-ramp-box"></i> Catador Autônomo
+              </div>
+              <small id="edit_papel_hint" style="font-size: 0.75rem; color: #666; display: block; margin-top: 4px; line-height: 1.3;"></small>
             </div>
             <div class="campo">
               <label for="edit_situacao">Situação da Conta:</label>
@@ -217,6 +219,8 @@
       const inputEmail = document.getElementById('edit_email');
       const emailHint = document.getElementById('edit_email_hint');
       const selNivel = document.getElementById('edit_nivel_acesso');
+      const badgeCatador = document.getElementById('badge_catador_display');
+      const papelHint = document.getElementById('edit_papel_hint');
       const selSituacao = document.getElementById('edit_situacao');
 
       selSituacao.value = usuario.situacao || 'ativo';
@@ -243,17 +247,25 @@
       }
 
       if (usuario.isMainAdmin) {
+        selNivel.style.display = 'block';
+        if (badgeCatador) badgeCatador.style.display = 'none';
         selNivel.value = 'administrador';
         selNivel.disabled = true;
         selSituacao.disabled = true;
+        if (papelHint) papelHint.innerHTML = '<i class="fa-solid fa-shield-halved" style="color: #1b6d24;"></i> Administrador principal do sistema (não pode ser alterado).';
       } else if (usuario.isCidadaoTable) {
+        selNivel.style.display = 'block';
+        if (badgeCatador) badgeCatador.style.display = 'none';
         selNivel.value = usuario.tipo === 'administrador' ? 'administrador' : 'cidadao';
         selNivel.disabled = false;
         selSituacao.disabled = false;
+        if (papelHint) papelHint.innerHTML = '<i class="fa-solid fa-user-gear" style="color: #666;"></i> Alterne entre Cidadão e Administrador para gerenciar permissões.';
       } else {
-        selNivel.value = 'catador';
-        selNivel.disabled = true;
+        // Catador autônomo
+        selNivel.style.display = 'none';
+        if (badgeCatador) badgeCatador.style.display = 'flex';
         selSituacao.disabled = false;
+        if (papelHint) papelHint.innerHTML = '<i class="fa-solid fa-truck-ramp-box" style="color: #1b6d24;"></i> Catadores possuem cadastro autônomo próprio. Para novos catadores, use o menu "Cadastrar Catador".';
       }
 
       preencherEndereco(usuario.rawDados || {});
@@ -304,6 +316,31 @@
           editStatusMsg.textContent = errEnd;
           editStatusMsg.style.display = 'block';
           return;
+        }
+
+        // Confirmação explícita ao alterar papel de cidadão para administrador ou vice-versa
+        if (isCidadaoTable && !usuarioEmEdicao.isMainAdmin) {
+          const papelAtual = usuarioEmEdicao.tipo === 'administrador' ? 'administrador' : 'cidadao';
+          if (nivelAcesso !== papelAtual) {
+            const ehPromocao = nivelAcesso === 'administrador';
+            const confirmou = await new Promise(resolve => {
+              showConfirmModal({
+                title: ehPromocao ? 'Promover a Administrador' : 'Rebaixar para Cidadão',
+                message: ehPromocao
+                  ? `Deseja realmente promover "${nome}" a Administrador do sistema? Este usuário terá acesso total a relatórios, configurações e gestão de coletas.`
+                  : `Deseja realmente rebaixar "${nome}" para o perfil de Cidadão? Ele perderá o acesso às funções administrativas.`,
+                confirmText: ehPromocao ? 'Sim, Promover' : 'Sim, Rebaixar',
+                confirmColor: ehPromocao ? '#1b6d24' : '#c62828',
+                cancelText: 'Cancelar',
+                onConfirm: () => resolve(true),
+                onCancel: () => resolve(false)
+              });
+            });
+
+            if (!confirmou) {
+              return;
+            }
+          }
         }
 
         const end = lerDadosEndereco();
