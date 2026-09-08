@@ -109,7 +109,12 @@ export async function cadastrarCidadao(dados) {
     return { ok: false, erro: profileError.message };
   }
 
-  return { ok: true, data };
+  try {
+    localStorage.setItem('reciclagem_tipo_usuario', 'cidadao');
+    sessionStorage.setItem('reciclagem_tipo_usuario', 'cidadao');
+  } catch (e) {}
+
+  return { ok: true, data, tipo: 'cidadao' };
 }
 
 export async function cadastrarCatador(dados) {
@@ -276,7 +281,12 @@ export async function cadastrarCatador(dados) {
     return { ok: false, erro: profileError.message };
   }
 
-  return { ok: true, data };
+  try {
+    localStorage.setItem('reciclagem_tipo_usuario', 'catador');
+    sessionStorage.setItem('reciclagem_tipo_usuario', 'catador');
+  } catch (e) {}
+
+  return { ok: true, data, tipo: 'catador' };
 }
 
 // Cadastro de Catador por Terceiros (sem app/login)

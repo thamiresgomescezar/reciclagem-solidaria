@@ -255,19 +255,20 @@
         Conta Criada com Sucesso!
       </h3>
 
-      <p style="color: #444; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
-        Seu cadastro foi realizado com sucesso na plataforma <strong>Reciclagem Solidária</strong>! Você já pode fazer login para acessar seu painel.
+      <p id="modal_cadastro_sucesso_msg" style="color: #444; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
+        Seu cadastro foi realizado com sucesso na plataforma <strong>Reciclagem Solidária</strong>! Redirecionando para o seu painel...
       </p>
 
-      <a href="./login.html" class="btn-avancar" style="text-decoration: none; justify-content: center; width: 100%;">
-        <i class="fa-solid fa-right-to-bracket"></i> Ir para a Tela de Login
-      </a>
+      <button type="button" id="btn_ir_painel_sucesso" class="btn-avancar" style="width: 100%; justify-content: center; font-size: 0.95rem; cursor: pointer;">
+        <i class="fa-solid fa-gauge-high"></i> Acessar Meu Painel
+      </button>
     </div>
   </div>
 
   <script type="module" src="../js/lib/navMenu.js"></script>
   <script type="module">
-    import { cadastrarCidadao, cadastrarCatador } from '../js/services/auth.js';
+    import { cadastrarCidadao, cadastrarCatador, redirectPorPerfil } from '../js/services/auth.js';
+    import { supabase } from '../js/lib/supabaseClient.js';
     import { renderEnderecoForm, lerDadosEndereco, validarEndereco } from '../js/pages/enderecoForm.js';
     import { aplicarMascaraTelefone, formatarNomeTitleCase } from '../js/lib/validation.js';
 
@@ -508,12 +509,57 @@
         statusMsg.className = 'status-message success';
         statusMsg.textContent = 'Cadastro realizado com sucesso!';
 
-        if (modalSucesso) {
-          modalSucesso.style.display = 'flex';
+        try {
+          localStorage.setItem('reciclagem_tipo_usuario', tipoPerfil);
+          sessionStorage.setItem('reciclagem_tipo_usuario', tipoPerfil);
+        } catch (e) {}
+
+        const { data: sessionData } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+        const temSessao = Boolean(sessionData?.session?.user);
+
+        if (temSessao) {
+          const btnIrPainel = document.getElementById('btn_ir_painel_sucesso');
+          const msgSucesso = document.getElementById('modal_cadastro_sucesso_msg');
+          if (msgSucesso) {
+            msgSucesso.innerHTML = 'Seu cadastro foi realizado com sucesso na plataforma <strong>Reciclagem Solidária</strong>! Redirecionando para o seu painel...';
+          }
+
+          let timerRedirect = setTimeout(() => {
+            redirectPorPerfil(tipoPerfil);
+          }, 1800);
+
+          if (btnIrPainel) {
+            btnIrPainel.onclick = () => {
+              clearTimeout(timerRedirect);
+              redirectPorPerfil(tipoPerfil);
+            };
+          }
+
+          if (modalSucesso) {
+            modalSucesso.style.display = 'flex';
+          } else {
+            redirectPorPerfil(tipoPerfil);
+          }
         } else {
-          setTimeout(() => {
-            window.location.href = './login.html';
-          }, 1500);
+          // Caso atípico em que a sessão não foi iniciada (ex: confirmação por e-mail pendente)
+          const btnIrPainel = document.getElementById('btn_ir_painel_sucesso');
+          const msgSucesso = document.getElementById('modal_cadastro_sucesso_msg');
+          if (msgSucesso) {
+            msgSucesso.innerHTML = 'Seu cadastro foi realizado com sucesso na plataforma <strong>Reciclagem Solidária</strong>! Faça login para acessar seu painel.';
+          }
+          if (btnIrPainel) {
+            btnIrPainel.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Ir para a Tela de Login';
+            btnIrPainel.onclick = () => {
+              window.location.href = './login.html';
+            };
+          }
+          if (modalSucesso) {
+            modalSucesso.style.display = 'flex';
+          } else {
+            setTimeout(() => {
+              window.location.href = './login.html';
+            }, 1500);
+          }
         }
 
       } catch (err) {

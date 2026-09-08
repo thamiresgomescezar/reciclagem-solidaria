@@ -1,5 +1,6 @@
 import { renderEnderecoForm, getEnderecoValues, validarEndereco } from './enderecoForm.js';
-import { cadastrarCidadao, cadastrarCatador } from '../services/auth.js';
+import { cadastrarCidadao, cadastrarCatador, redirectPorPerfil } from '../services/auth.js';
+import { supabase } from '../lib/supabaseClient.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   renderEnderecoForm('endereco-container');
@@ -76,10 +77,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      showSuccess('Cadastro realizado com sucesso! Redirecionando para o login...');
-      setTimeout(() => {
-        window.location.href = './login.html';
-      }, 2000);
+      try {
+        localStorage.setItem('reciclagem_tipo_usuario', tipoPerfil);
+        sessionStorage.setItem('reciclagem_tipo_usuario', tipoPerfil);
+      } catch (e) {}
+
+      showSuccess('Cadastro realizado com sucesso! Redirecionando para o seu painel...');
+      setTimeout(async () => {
+        const { data: sData } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+        if (sData?.session?.user) {
+          redirectPorPerfil(tipoPerfil);
+        } else {
+          window.location.href = './login.html';
+        }
+      }, 1500);
 
     } catch (err) {
       console.error('Erro no cadastro:', err);
