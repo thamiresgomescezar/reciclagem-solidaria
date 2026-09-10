@@ -4,146 +4,435 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Status — Reciclagem Solidária</title>
-  <!-- T4.5 — CRUD de status (admin) -->
   <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: var(--surface, #f5fbef);
-      min-height: 100vh;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-    }
-    .header-wave {
-      background-color: #7bcc7f;
-      color: white;
-      padding: 0.5rem 1rem 1.5rem;
-      border-bottom-left-radius: 50% 20%;
-      border-bottom-right-radius: 50% 20%;
-      position: relative;
-      z-index: 10;
-      text-align: center;
-    }
-    .back-btn { position: absolute; left: 1rem; top: 1.5rem; background: none; border: none; color: white; font-size: 1.3rem; cursor: pointer; }
-    .header-wave h1 { font-size: 1.6rem; font-weight: 800; margin: 0.25rem 0; }
-    main { flex: 1; padding: 1.25rem 1rem 2rem; max-width: 560px; width: 100%; margin: 0 auto; }
-    .status-message { margin-bottom: 0.75rem; }
-    .form-row { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-    .form-row input {
-      flex: 1;
-      border: none;
-      border-bottom: 2px solid var(--verde-300, #addb95);
-      padding: 8px 0;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-weight: 600;
-      color: var(--verde-700, #347535);
-      outline: none;
-      background: transparent;
-    }
-    .btn {
-      border: none;
-      border-radius: 999px;
-      padding: 8px 18px;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-weight: 800;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-    .btn-primary { background: linear-gradient(180deg, #81c784, #4caf50); color: white; }
-    .btn-danger { background: #c62828; color: white; }
-    .btn:hover { opacity: 0.9; }
-    .status-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: white;
-      border-radius: 0.75rem;
-      padding: 0.6rem 1rem;
-      margin-bottom: 0.5rem;
-      box-shadow: 0 2px 4px -1px rgba(0,0,0,0.1);
-      font-weight: 700;
-      color: var(--verde-800, #2c5d2d);
-    }
-    .status-item .del { background: none; border: none; color: #c62828; cursor: pointer; font-size: 1rem; }
-  </style>
 </head>
 <body>
-  <header class="header-wave">
-    <button class="back-btn" type="button" onclick="history.back()" aria-label="Voltar"><i class="fa-solid fa-arrow-left"></i></button>
-    <h1>Gestão de Status</h1>
-  </header>
 
-  <main>
-    <div class="status-message" id="statusMsg"></div>
-    <div class="form-row">
-      <input type="text" id="inputNovoStatus" placeholder="Novo status (ex.: aguardando)">
-      <button class="btn btn-primary" id="btnAdicionar">Adicionar</button>
+  <!-- Menu de Hambúrguer Fixo no Canto Superior Esquerdo -->
+  <button type="button" class="top-menu-btn" id="btn_menu_drawer" aria-label="Abrir Menu Principal" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="web-container">
+    <!-- Top Header -->
+    <div class="top-bar">
+      <div></div>
+      <a href="./dashboard-admin.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
     </div>
-    <div id="listaStatus"></div>
-  </main>
 
+    <div class="main-content">
+      <div class="bg-split">
+        <div class="bg-left"></div>
+        <div class="bg-right"></div>
+      </div>
+
+      <div class="content-overlay">
+        <!-- 1/4 Esquerda: Logo e Navegação -->
+        <aside class="left-panel">
+          <div class="links">
+            <a href="./gestao-status.html" class="l1"><i class="fa-solid fa-tags"></i> Gestão de Status</a>
+          </div>
+
+          <div class="logo-wrap" style="margin-top: 1rem;">
+            <img src="../assets/logo.jpg" alt="Logo Reciclagem Solidária" class="app-logo">
+          </div>
+        </aside>
+
+        <!-- 2/4 Centro: Gestão de Status de Coleta -->
+        <main class="center-panel" style="align-items: stretch; justify-content: flex-start;">
+          <div style="max-width: 680px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.5rem;">
+              Lista de Status de Coletas
+            </h1>
+            <p style="font-size: 0.9rem; color: var(--cinza-texto-aux, #666); text-align: center; margin-bottom: 1.25rem;">
+              Cadastre e personalize os status das coletas do sistema, garantindo a atualização dos dados e a gestão de cancelamentos e reagendamentos.
+            </p>
+
+            <div id="statusMsg" class="status-message"></div>
+
+            <!-- Botão de Ação / Barra de Controle -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px;">
+              <span style="font-size: 14px; font-weight: 700; color: var(--verde-escuro, #1b6d24);">
+                <i class="fa-solid fa-list-check"></i> Status Cadastrados (<span id="total_status_count">0</span>)
+              </span>
+              <div style="display: flex; gap: 8px;">
+                <a href="./gestao-coletas.html" class="btn-secondary-pill" style="font-size: 0.82rem; padding: 6px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-recycle"></i> Ver Coletas
+                </a>
+                <button type="button" id="btn_toggle_form" class="btn-tab active" style="font-size: 0.85rem; padding: 6px 16px; cursor: pointer;">
+                  <i class="fa-solid fa-plus"></i> Novo Status
+                </button>
+              </div>
+            </div>
+
+            <!-- Caixa do Formulário de Cadastro / Edição -->
+            <div id="box_form_status" style="background: white; padding: 20px; border-radius: 16px; border: 1.5px solid #a5d6a7; margin-bottom: 1.5rem; box-shadow: 0 4px 14px rgba(0,0,0,0.05); display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e8f5e9; padding-bottom: 8px;">
+                <h3 id="form_title" style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; font-weight: 800; margin: 0;">
+                  <i class="fa-solid fa-circle-plus"></i> Cadastrar Novo Status
+                </h3>
+                <button type="button" id="btn_cancelar_form" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #666;" title="Fechar formulário">✕</button>
+              </div>
+
+              <form id="form_status" novalidate>
+                <input type="hidden" id="edit_cod_status" value="">
+
+                <div class="campo" style="margin-bottom: 1.25rem;">
+                  <label for="input_nome_status" style="font-weight: 700; color: #2e532b; font-size: 0.9rem;">
+                    Nome do Status:<span class="req">*</span>
+                  </label>
+                  <input type="text" id="input_nome_status" class="input-underline" placeholder="Ex.: em análise, reagendado, aguardando transporte..." required style="width: 100%; box-sizing: border-box;">
+                  <span style="font-size: 0.78rem; color: #666; margin-top: 4px; display: block;">
+                    O nome será registrado e ficará imediatamente disponível para seleção nas coletas.
+                  </span>
+                </div>
+
+                <!-- Parâmetro 1: Regra de Vínculo de Catador -->
+                <div class="campo" style="margin-bottom: 1.25rem;">
+                  <label style="font-weight: 700; color: #2e532b; font-size: 0.9rem; display: block; margin-bottom: 6px;">
+                    <i class="fa-solid fa-user-gear"></i> Regra de Atendimento por Catador:<span class="req">*</span>
+                  </label>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
+                    <label class="radio-card-status" style="border: 1.5px solid #c8e6c9; border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; background: #fafdfa;">
+                      <input type="radio" name="regra_catador" value="sem_catador" checked style="margin-top: 3px;">
+                      <div>
+                        <strong style="display: block; font-size: 0.85rem; color: #1b6d24;"><i class="fa-solid fa-box-open"></i> Sem Catador (Disponível)</strong>
+                        <span style="font-size: 0.74rem; color: #666; display: block; margin-top: 2px;">Coleta aberta para qualquer catador. Desvincula catador se já houver.</span>
+                      </div>
+                    </label>
+                    <label class="radio-card-status" style="border: 1.5px solid #c8e6c9; border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; background: #fafdfa;">
+                      <input type="radio" name="regra_catador" value="requer_catador" style="margin-top: 3px;">
+                      <div>
+                        <strong style="display: block; font-size: 0.85rem; color: #1b6d24;"><i class="fa-solid fa-user-check"></i> Requer Catador (Agendada)</strong>
+                        <span style="font-size: 0.74rem; color: #666; display: block; margin-top: 2px;">Exige catador vinculado e definição de data e horário válidos na agenda.</span>
+                      </div>
+                    </label>
+                    <label class="radio-card-status" style="border: 1.5px solid #c8e6c9; border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; background: #fafdfa;">
+                      <input type="radio" name="regra_catador" value="opcional" style="margin-top: 3px;">
+                      <div>
+                        <strong style="display: block; font-size: 0.85rem; color: #1b6d24;"><i class="fa-solid fa-shield-halved"></i> Neutro / Opcional</strong>
+                        <span style="font-size: 0.74rem; color: #666; display: block; margin-top: 2px;">Não impõe nem remove o vínculo existente de catador.</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Parâmetro 2: Bloqueio dos Dados da Coleta -->
+                <div class="campo" style="margin-bottom: 1.5rem;">
+                  <label style="font-weight: 700; color: #2e532b; font-size: 0.9rem; display: block; margin-bottom: 6px;">
+                    <i class="fa-solid fa-lock"></i> Permissão de Alteração dos Dados da Coleta:<span class="req">*</span>
+                  </label>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
+                    <label class="radio-card-status" style="border: 1.5px solid #c8e6c9; border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; background: #fafdfa;">
+                      <input type="radio" name="bloquear_dados" value="0" checked style="margin-top: 3px;">
+                      <div>
+                        <strong style="display: block; font-size: 0.85rem; color: #1b6d24;"><i class="fa-solid fa-pen-to-square"></i> Permitir Edição</strong>
+                        <span style="font-size: 0.74rem; color: #666; display: block; margin-top: 2px;">Dados de endereço, data, horário e observações permanecem editáveis.</span>
+                      </div>
+                    </label>
+                    <label class="radio-card-status" style="border: 1.5px solid #c8e6c9; border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; background: #fafdfa;">
+                      <input type="radio" name="bloquear_dados" value="1" style="margin-top: 3px;">
+                      <div>
+                        <strong style="display: block; font-size: 0.85rem; color: #c62828;"><i class="fa-solid fa-lock"></i> Bloquear Dados (Somente Leitura)</strong>
+                        <span style="font-size: 0.74rem; color: #666; display: block; margin-top: 2px;">Campos travados e protegidos contra alterações (igual a Retirada e Cancelada).</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                  <button type="button" id="btn_cancelar_acao" class="btn-secondary-pill" style="padding: 8px 18px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                    Cancelar
+                  </button>
+                  <button type="submit" id="btn_salvar_status" class="btn-avancar" style="margin-top: 0; padding: 8px 22px; font-size: 0.85rem; width: auto; cursor: pointer;">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar Status
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Lista de Status Cadastrados -->
+            <div id="lista_status_container" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="text-align: center; padding: 30px; color: var(--cinza-texto-aux);">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando status...
+              </div>
+            </div>
+
+          </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel"></aside>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/lib/navMenu.js"></script>
   <script type="module">
     import { protegerRota } from '../js/lib/routeGuard.js';
-    import { supabase } from '../js/lib/supabaseClient.js';
-
-    const acesso = await protegerRota(['administrador']);
-    if (!acesso.permitido) throw new Error('redirecionando');
+    import { listarStatus, criarStatus, atualizarStatus, excluirStatus, contarColetasPorStatus } from '../js/services/status.js';
+    import { showConfirmModal, showAlertModal } from '../js/lib/modal.js';
 
     const statusMsg = document.getElementById('statusMsg');
-    const lista = document.getElementById('listaStatus');
-    const inputNovo = document.getElementById('inputNovoStatus');
-    const btnAdicionar = document.getElementById('btnAdicionar');
+    const totalCountEl = document.getElementById('total_status_count');
+    const listaContainer = document.getElementById('lista_status_container');
+    const boxForm = document.getElementById('box_form_status');
+    const formTitle = document.getElementById('form_title');
+    const formStatus = document.getElementById('form_status');
+    const inputEditCod = document.getElementById('edit_cod_status');
+    const inputNomeStatus = document.getElementById('input_nome_status');
+    const btnToggleForm = document.getElementById('btn_toggle_form');
+    const btnCancelarForm = document.getElementById('btn_cancelar_form');
+    const btnCancelarAcao = document.getElementById('btn_cancelar_acao');
 
-    const mostrarErro = (m) => { statusMsg.className = 'status-message error'; statusMsg.textContent = m; };
-    const mostrarOk = (m) => { statusMsg.className = 'status-message success'; statusMsg.textContent = m; };
+    let listaStatusAtual = [];
 
-    async function carregar() {
-      const { data, error } = await supabase.from('status').select('*').order('cod_status');
-      if (error) {
-        mostrarErro('Erro ao carregar: ' + error.message);
-        return;
-      }
-      if (!data.length) {
-        lista.innerHTML = '<p style="color: var(--cinza-texto-aux);">Nenhum status cadastrado.</p>';
-        return;
-      }
-      lista.innerHTML = data.map((s) => `
-        <div class="status-item">
-          <span>${s.status}</span>
-          <button class="del" data-id="${s.cod_status}" aria-label="Excluir"><i class="fa-solid fa-trash"></i></button>
-        </div>
-      `).join('');
-
-      lista.querySelectorAll('.del').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-          const { error } = await supabase.from('status').delete().eq('cod_status', btn.dataset.id);
-          if (error) {
-            mostrarErro('Erro ao excluir: ' + error.message);
-            return;
-          }
-          mostrarOk('Status excluído.');
-          carregar();
-        });
-      });
+    function mostrarMsg(texto, tipo = 'success') {
+      statusMsg.className = `status-message ${tipo}`;
+      statusMsg.textContent = texto;
+      statusMsg.style.display = 'block';
+      setTimeout(() => {
+        if (statusMsg.textContent === texto) {
+          statusMsg.textContent = '';
+          statusMsg.className = 'status-message';
+        }
+      }, 5000);
     }
 
-    btnAdicionar.addEventListener('click', async () => {
-      const valor = inputNovo.value.trim();
-      if (!valor) return mostrarErro('Informe o nome do status.');
-      const { error } = await supabase.from('status').insert({ status: valor });
-      if (error) {
-        mostrarErro('Erro ao adicionar: ' + error.message);
-        return;
-      }
-      mostrarOk('Status adicionado!');
-      inputNovo.value = '';
-      carregar();
-    });
+    function abrirFormulario(modo = 'novo', statusItem = null) {
+      boxForm.style.display = 'block';
+      statusMsg.textContent = '';
 
-    carregar();
+      if (modo === 'editar' && statusItem) {
+        formTitle.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Editar Status #${statusItem.cod_status}`;
+        inputEditCod.value = statusItem.cod_status;
+        inputNomeStatus.value = statusItem.status;
+
+        const regras = statusItem.regras || {};
+        const catadorVal = regras.regra_catador || 'opcional';
+        const bloquearVal = regras.bloquear_dados ? '1' : '0';
+
+        const radioCat = formStatus.querySelector(`input[name="regra_catador"][value="${catadorVal}"]`);
+        if (radioCat) radioCat.checked = true;
+
+        const radioBloq = formStatus.querySelector(`input[name="bloquear_dados"][value="${bloquearVal}"]`);
+        if (radioBloq) radioBloq.checked = true;
+      } else {
+        formTitle.innerHTML = `<i class="fa-solid fa-circle-plus"></i> Cadastrar Novo Status`;
+        inputEditCod.value = '';
+        inputNomeStatus.value = '';
+
+        const radioCat = formStatus.querySelector('input[name="regra_catador"][value="sem_catador"]');
+        if (radioCat) radioCat.checked = true;
+
+        const radioBloq = formStatus.querySelector('input[name="bloquear_dados"][value="0"]');
+        if (radioBloq) radioBloq.checked = true;
+      }
+
+      inputNomeStatus.focus();
+      boxForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function fecharFormulario() {
+      boxForm.style.display = 'none';
+      inputEditCod.value = '';
+      inputNomeStatus.value = '';
+    }
+
+    async function carregarLista() {
+      try {
+        listaStatusAtual = await listarStatus();
+        totalCountEl.textContent = listaStatusAtual.length;
+
+        if (listaStatusAtual.length === 0) {
+          listaContainer.innerHTML = `
+            <div style="text-align: center; padding: 30px; background: white; border-radius: 12px; border: 1.5px dashed #a5d6a7; color: #666;">
+              Nenhum status cadastrado no momento.
+            </div>
+          `;
+          return;
+        }
+
+        // Consulta contagens de uso de cada status em paralelo
+        const contagens = await Promise.all(
+          listaStatusAtual.map(st => contarColetasPorStatus(st.cod_status).catch(() => 0))
+        );
+
+        listaContainer.innerHTML = '';
+        listaStatusAtual.forEach((st, idx) => {
+          const countColetas = contagens[idx] || 0;
+          const card = document.createElement('div');
+          card.style.cssText = `
+            background: #ffffff;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid #c8e6c9;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+          `;
+
+          const nomeFormatado = st.status.charAt(0).toUpperCase() + st.status.slice(1);
+          const regras = st.regras || {};
+
+          let badgeCatador = '';
+          if (regras.regra_catador === 'sem_catador') {
+            badgeCatador = `<span style="font-size: 0.72rem; font-weight: 700; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-box-open"></i> Sem Catador</span>`;
+          } else if (regras.regra_catador === 'requer_catador') {
+            badgeCatador = `<span style="font-size: 0.72rem; font-weight: 700; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-user-check"></i> Requer Catador</span>`;
+          } else {
+            badgeCatador = `<span style="font-size: 0.72rem; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-shield-halved"></i> Vínculo Neutro</span>`;
+          }
+
+          let badgeBloqueio = '';
+          if (regras.bloquear_dados) {
+            badgeBloqueio = `<span style="font-size: 0.72rem; font-weight: 700; background: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-lock"></i> Dados Bloqueados</span>`;
+          } else {
+            badgeBloqueio = `<span style="font-size: 0.72rem; font-weight: 700; background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-pen"></i> Dados Editáveis</span>`;
+          }
+
+          card.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 0.8rem; font-weight: 800; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); padding: 4px 8px; border-radius: 6px;">
+                #${st.cod_status}
+              </span>
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <strong style="font-size: 1.05rem; color: var(--verde-escuro, #1b6d24); text-transform: capitalize;">
+                    ${nomeFormatado}
+                  </strong>
+                  ${badgeBloqueio}
+                  ${badgeCatador}
+                </div>
+                <div style="font-size: 0.78rem; color: #666; margin-top: 4px;">
+                  <i class="fa-solid fa-recycle" style="color: #2e7d32;"></i> ${countColetas} coleta(s) vinculada(s)
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn-editar-status btn-secondary-pill" data-id="${st.cod_status}" style="padding: 6px 14px; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-pen-to-square"></i> Editar
+              </button>
+              <button type="button" class="btn-excluir-status btn-secondary-pill" data-id="${st.cod_status}" data-nome="${st.status}" data-count="${countColetas}" style="padding: 6px 12px; font-size: 0.82rem; cursor: pointer; color: #c62828; border-color: #ef9a9a; background: #fff5f5; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-trash"></i> Excluir
+              </button>
+            </div>
+          `;
+
+          listaContainer.appendChild(card);
+        });
+
+        // Eventos de Edição
+        listaContainer.querySelectorAll('.btn-editar-status').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = parseInt(btn.dataset.id, 10);
+            const statusItem = listaStatusAtual.find(s => s.cod_status === id);
+            if (statusItem) abrirFormulario('editar', statusItem);
+          });
+        });
+
+        // Eventos de Exclusão com confirmação e validação
+        listaContainer.querySelectorAll('.btn-excluir-status').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = parseInt(btn.dataset.id, 10);
+            const nome = btn.dataset.nome;
+            const count = parseInt(btn.dataset.count, 10);
+
+            if (count > 0) {
+              showAlertModal({
+                title: 'Status em Uso no Histórico',
+                message: `O status "${nome}" está vinculado a ${count} coleta(s) no sistema.\n\nPara garantir a integridade do histórico e dos relatórios, ele não pode ser excluído. Caso queira, você pode renomeá-lo utilizando a opção "Editar".`,
+                buttonText: 'Entendido',
+                confirmColor: '#1b6d24',
+                icon: '<i class="fa-solid fa-circle-info" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>'
+              });
+              return;
+            }
+
+            showConfirmModal({
+              title: 'Excluir Status',
+              message: `Tem certeza que deseja excluir o status "${nome}"?\n\nEle deixará de aparecer como opção para novas alterações.`,
+              confirmText: 'Sim, Excluir',
+              cancelText: 'Cancelar',
+              confirmColor: '#c62828',
+              icon: '<i class="fa-solid fa-triangle-exclamation" style="color: #c62828; font-size: 1.25rem;"></i>',
+              onConfirm: async () => {
+                try {
+                  await excluirStatus(id);
+                  mostrarMsg(`Status "${nome}" excluído com sucesso!`, 'success');
+                  carregarLista();
+                } catch (err) {
+                  mostrarMsg(err.message, 'error');
+                }
+              }
+            });
+          });
+        });
+
+      } catch (err) {
+        console.error('Erro ao carregar lista de status:', err);
+        listaContainer.innerHTML = `
+          <div style="text-align: center; padding: 24px; color: #c62828;">
+            Erro ao carregar a lista de status: ${err.message}
+          </div>
+        `;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const acesso = await protegerRota(['administrador']).catch(() => ({ permitido: false }));
+      if (!acesso || !acesso.permitido) return;
+
+      btnToggleForm.addEventListener('click', () => abrirFormulario('novo'));
+      btnCancelarForm.addEventListener('click', fecharFormulario);
+      btnCancelarAcao.addEventListener('click', fecharFormulario);
+
+      formStatus.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const codStatus = inputEditCod.value ? parseInt(inputEditCod.value, 10) : null;
+        const nomeStatus = inputNomeStatus.value.trim();
+
+        if (!nomeStatus) {
+          mostrarMsg('Por favor, informe o nome do status.', 'error');
+          return;
+        }
+
+        const radioCat = formStatus.querySelector('input[name="regra_catador"]:checked');
+        const regraCatador = radioCat ? radioCat.value : 'opcional';
+        const radioBloq = formStatus.querySelector('input[name="bloquear_dados"]:checked');
+        const bloquearDados = radioBloq ? (radioBloq.value === '1') : false;
+
+        const regrasPayload = {
+          regra_catador: regraCatador,
+          bloquear_dados: bloquearDados
+        };
+
+        try {
+          if (codStatus) {
+            await atualizarStatus(codStatus, nomeStatus, regrasPayload);
+            mostrarMsg(`Status #${codStatus} atualizado com sucesso!`, 'success');
+          } else {
+            await criarStatus(nomeStatus, regrasPayload);
+            mostrarMsg(`Novo status "${nomeStatus}" cadastrado com sucesso!`, 'success');
+          }
+          fecharFormulario();
+          carregarLista();
+        } catch (err) {
+          mostrarMsg(err.message, 'error');
+        }
+      });
+
+      await carregarLista();
+    });
   </script>
 </body>
 </html>

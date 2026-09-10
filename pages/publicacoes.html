@@ -93,6 +93,7 @@
   <script type="module">
     import { supabase } from '../js/lib/supabaseClient.js';
     import { getPerfilAtual } from '../js/services/auth.js';
+    import { showConfirmModal, showAlertModal } from '../js/lib/modal.js';
 
     const feed = document.getElementById('lista_publicacoes_feed');
     const painelNova = document.getElementById('painel_nova_pub');
@@ -102,6 +103,14 @@
     const btnPostar = document.getElementById('btn_postar');
 
     let perfilAtual = null;
+    let publicacoesCarregadas = [];
+
+    function ehAdminUsuario() {
+      if (perfilAtual?.tipo === 'administrador') return true;
+      if (perfilAtual?.dados?.nivel_acesso === 'administrador') return true;
+      const tipoStorage = localStorage.getItem('reciclagem_tipo_usuario') || sessionStorage.getItem('reciclagem_tipo_usuario');
+      return tipoStorage === 'administrador';
+    }
 
     if (btnVoltarTop) {
       btnVoltarTop.addEventListener('click', (e) => {
@@ -115,22 +124,31 @@
 
     function renderCards(data) {
       if (!data || data.length === 0) {
+        publicacoesCarregadas = [];
         feed.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 24px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">Nenhuma publicação cadastrada no momento.</div>`;
         return;
       }
 
+      publicacoesCarregadas = data;
       feed.innerHTML = '';
+      const ehAdmin = ehAdminUsuario();
+      const autorIdLogado = perfilAtual?.user?.id;
+
       data.forEach(pub => {
         const card = document.createElement('div');
         card.style.cssText = 'background: white; padding: 20px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.03);';
         
         const autorNome = pub.autor_nome || 'Administração';
+        const ehAutor = autorIdLogado && (pub.autor_id === autorIdLogado);
+        const podeExcluir = ehAdmin || ehAutor;
 
         card.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-            <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem;">${pub.titulo}</strong>
-            ${perfilAtual?.tipo === 'administrador' ? `
-              <button class="btn-deletar-pub" data-id="${pub.id}" style="background: none; border: none; color: #c62828; cursor: pointer; font-size: 1rem; padding: 4px;" title="Excluir"><i class="fa-solid fa-trash-can"></i></button>
+            <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; flex: 1; word-break: break-word;">${pub.titulo}</strong>
+            ${podeExcluir ? `
+              <button type="button" class="btn-deletar-pub" data-id="${pub.id}" style="background: none; border: none; color: #c62828; cursor: pointer; font-size: 1.15rem; padding: 6px 10px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s;" title="Excluir Publicação" aria-label="Excluir Publicação">
+                <i class="fa-solid fa-trash-can" style="color: #c62828; font-size: 1.15rem; pointer-events: none;"></i>
+              </button>
             ` : ''}
           </div>
           <p style="font-size: 0.95rem; color: #172b16; white-space: pre-wrap; line-height: 1.5; margin: 4px 0;">${pub.conteudo}</p>
@@ -147,11 +165,50 @@
       });
 
       document.querySelectorAll('.btn-deletar-pub').forEach(b => {
-        b.addEventListener('click', async () => {
-          if (!confirm('Deseja realmente remover esta publicação?')) return;
+        b.addEventListener('click', () => {
           const id = b.dataset.id;
-          await supabase.from('publicacoes').delete().eq('id', id);
-          carregarPublicacoes();
+          const cardEl = b.closest('div[style*="background: white"]');
+          const tituloPub = cardEl ? cardEl.querySelector('strong')?.textContent : 'Publicação';
+
+          showConfirmModal({
+            title: 'Excluir Publicação',
+            message: `Deseja realmente remover a publicação "${tituloPub}"? Esta ação não poderá ser desfeita.`,
+            confirmText: 'Sim, Excluir',
+            cancelText: 'Cancelar',
+            confirmColor: '#c62828',
+            icon: '<i class="fa-solid fa-trash-can" style="color: #c62828; font-size: 1.3rem;"></i>',
+            onConfirm: async () => {
+              try {
+                const { error } = await supabase.from('publicacoes').delete().eq('id', id);
+                if (error) throw error;
+
+                try {
+                  const cached = sessionStorage.getItem('cache_publicacoes');
+                  if (cached) {
+                    const parsed = JSON.parse(cached).filter(p => p.id !== id);
+                    sessionStorage.setItem('cache_publicacoes', JSON.stringify(parsed));
+                  }
+                } catch (e) {}
+
+                showAlertModal({
+                  title: 'Publicação Excluída',
+                  message: 'A publicação foi removida com sucesso!',
+                  buttonText: 'OK',
+                  confirmColor: '#1b6d24',
+                  icon: '<i class="fa-solid fa-circle-check" style="color: #1b6d24; font-size: 1.3rem;"></i>'
+                });
+
+                carregarPublicacoes();
+              } catch (err) {
+                showAlertModal({
+                  title: 'Erro ao Excluir',
+                  message: 'Não foi possível excluir a publicação: ' + (err.message || 'Erro desconhecido'),
+                  buttonText: 'Fechar',
+                  confirmColor: '#c62828'
+                });
+              }
+            }
+          });
         });
       });
     }
@@ -212,22 +269,42 @@
       }
     }
 
-    // Inicialização imediata
-    carregarPublicacoes();
-
     async function initPerfil() {
       try {
-        perfilAtual = await getPerfilAtual().catch(() => null);
-        if (perfilAtual?.tipo) {
-          btnVoltarTop.href = perfilAtual.tipo === 'administrador' ? './dashboard-admin.html' : (perfilAtual.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
-          if (perfilAtual.tipo === 'administrador' && painelNova) {
+        // 1. Checagem prévia rápida no storage para resposta visual imediata
+        const tipoSalvo = localStorage.getItem('reciclagem_tipo_usuario') || sessionStorage.getItem('reciclagem_tipo_usuario');
+        if (tipoSalvo) {
+          if (btnVoltarTop) {
+            btnVoltarTop.href = tipoSalvo === 'administrador' ? './dashboard-admin.html' : (tipoSalvo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+          }
+          if (tipoSalvo === 'administrador' && painelNova) {
             painelNova.style.display = 'block';
           }
         }
-      } catch (e) {}
+
+        // 2. Resolução do perfil autenticado
+        perfilAtual = await getPerfilAtual().catch(() => null);
+        const tipoFinal = perfilAtual?.tipo || tipoSalvo || 'cidadao';
+
+        if (btnVoltarTop) {
+          btnVoltarTop.href = tipoFinal === 'administrador' ? './dashboard-admin.html' : (tipoFinal === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+        }
+        if (tipoFinal === 'administrador' && painelNova) {
+          painelNova.style.display = 'block';
+        }
+
+        // 3. Se as publicações já foram renderizadas na tela, re-renderiza com os botões de ação corretos
+        if (publicacoesCarregadas && publicacoesCarregadas.length > 0) {
+          renderCards(publicacoesCarregadas);
+        }
+      } catch (e) {
+        console.error('Erro ao inicializar perfil:', e);
+      }
     }
 
+    // Inicialização
     initPerfil();
+    carregarPublicacoes();
 
     if (btnVoltarTop) {
       btnVoltarTop.addEventListener('click', (e) => {

@@ -46,14 +46,27 @@
         <!-- 2/4 Centro: Painel de Gestão de Coletas -->
         <main class="center-panel">
           <div style="width: 100%; padding-bottom: 2rem;">
-            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem; margin-top: 0;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.5rem; margin-top: 0;">
               Gestão e Acompanhamento de Coletas
             </h1>
+            <p style="font-size: 0.9rem; color: var(--cinza-texto-aux, #666); text-align: center; margin-bottom: 1.25rem;">
+              Visão geral de ofertas e coletas do sistema. Edite informações, gerencie agendamentos e confirme retiradas.
+            </p>
 
             <div id="statusMsg" class="status-message"></div>
 
+            <!-- Barra Superior de Ações com Atalho para Gestão de Status -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <span style="font-size: 0.92rem; font-weight: 800; color: var(--verde-escuro, #1b6d24);">
+                <i class="fa-solid fa-layer-group"></i> Painel Geral de Coletas
+              </span>
+              <a href="./gestao-status.html" class="btn-tab active" style="font-size: 0.85rem; padding: 7px 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-tags"></i> Gerenciar Lista de Status
+              </a>
+            </div>
+
             <!-- Filtros de Status Padronizados Com Aba 'Canceladas' Incluída -->
-            <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;" id="filtros_coletas">
+            <div id="filtros_coletas" class="filtros-coletas-grid">
               <button class="btn-tab active" data-status="todos"><i class="fa-solid fa-layer-group"></i> Todas</button>
               <button class="btn-tab" data-status="disponível"><i class="fa-solid fa-clock"></i> Disponíveis</button>
               <button class="btn-tab" data-status="agendado"><i class="fa-solid fa-calendar-check"></i> Agendadas</button>
@@ -81,22 +94,99 @@
     import { supabase } from '../js/lib/supabaseClient.js';
     import { protegerRota } from '../js/lib/routeGuard.js';
     import { getPerfilAtual } from '../js/services/auth.js';
-    import { listarTodasColetasAdmin, listarCatadoresParaVincular, vincularCatadorColeta, getStatusDisponiveis } from '../js/services/coletas.js';
+    import { 
+      listarTodasColetasAdmin, 
+      listarCatadoresParaVincular, 
+      vincularCatadorColeta, 
+      getStatusDisponiveis, 
+      atualizarStatusColeta,
+      atualizarColetaCompleta,
+      listarLocaisRetirada,
+      resolverStatusColeta 
+    } from '../js/services/coletas.js';
     import { showConfirmModal, showAlertModal } from '../js/lib/modal.js';
+    import { abrirModalEdicaoColeta, confirmarRetiradaComModal, abrirModalAtribuirCatador } from '../js/lib/modalColeta.js';
 
     const container = document.getElementById('lista_coletas_container');
     const statusMsg = document.getElementById('statusMsg');
     const btnVoltarTop = document.getElementById('btn-voltar-top');
 
     let perfilAtual = null;
+    let todasColetasCarregadas = [];
 
     async function carregarColetas(filtroStatus = 'todos') {
       try {
-        const [coletas, catadores, listaStatus] = await Promise.all([
+        const [coletas, catadores, listaStatus, locaisRetirada] = await Promise.all([
           listarTodasColetasAdmin(filtroStatus).catch(() => []),
           listarCatadoresParaVincular().catch(() => []),
-          getStatusDisponiveis().catch(() => [])
+          getStatusDisponiveis().catch(() => []),
+          listarLocaisRetirada().catch(() => [])
         ]);
+
+        todasColetasCarregadas = coletas || [];
+
+        // Renderiza e sincroniza dinamicamente os botões da toolbar de filtros conforme os status cadastrados
+        const toolbarFiltros = document.getElementById('filtros_coletas');
+        const fNormalizado = (filtroStatus || 'todos').toLowerCase();
+
+        if (toolbarFiltros && listaStatus && listaStatus.length > 0) {
+          let buttonsHtml = `
+            <button class="btn-tab ${fNormalizado === 'todos' ? 'active' : ''}" data-status="todos">
+              <i class="fa-solid fa-layer-group"></i> Todas
+            </button>
+          `;
+
+          listaStatus.forEach(st => {
+            const cod = st.cod_status;
+            const stNomeLower = (st.status || '').toLowerCase().trim();
+            let icon = '<i class="fa-solid fa-tag"></i>';
+            let nomeDisplay = st.status.charAt(0).toUpperCase() + st.status.slice(1);
+
+            if (/cancel/i.test(stNomeLower)) {
+              icon = '<i class="fa-solid fa-ban"></i>';
+              nomeDisplay = 'Canceladas';
+            } else if (/(retirad|conclu)/i.test(stNomeLower)) {
+              icon = '<i class="fa-solid fa-circle-check"></i>';
+              nomeDisplay = 'Retiradas';
+            } else if (/reagend/i.test(stNomeLower)) {
+              icon = '<i class="fa-solid fa-calendar-days"></i>';
+              nomeDisplay = 'Reagendadas';
+            } else if (/agend/i.test(stNomeLower)) {
+              icon = '<i class="fa-solid fa-calendar-check"></i>';
+              nomeDisplay = 'Agendadas';
+            } else if (/dispon/i.test(stNomeLower)) {
+              icon = '<i class="fa-solid fa-clock"></i>';
+              nomeDisplay = 'Disponíveis';
+            }
+
+            const ehAtivo = (fNormalizado === String(cod)) || (fNormalizado === stNomeLower);
+            buttonsHtml += `
+              <button class="btn-tab ${ehAtivo ? 'active' : ''}" data-status="${cod}">
+                ${icon} ${nomeDisplay}
+              </button>
+            `;
+          });
+
+          toolbarFiltros.innerHTML = buttonsHtml;
+
+          toolbarFiltros.querySelectorAll('button').forEach(b => {
+            b.onclick = () => {
+              toolbarFiltros.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+              b.classList.add('active');
+              carregarColetas(b.dataset.status);
+            };
+          });
+        } else {
+          document.querySelectorAll('#filtros_coletas button').forEach(b => {
+            const st = (b.dataset.status || '').toLowerCase();
+            const ehAtivo = (st === fNormalizado) || (fNormalizado === 'todos' && (st === 'todos' || !st));
+            if (ehAtivo) {
+              b.classList.add('active');
+            } else {
+              b.classList.remove('active');
+            }
+          });
+        }
 
         if (!coletas || coletas.length === 0) {
           container.innerHTML = `<div style="text-align: center; color: var(--cinza-texto-aux); padding: 24px; background: white; border-radius: 12px; border: 1px dashed rgba(0,0,0,0.1);">Nenhuma coleta encontrada para este filtro.</div>`;
@@ -114,108 +204,213 @@
           const stNome = item.status?.status || item.status || 'disponível';
           const localNome = item.local_retirada?.nome || 'Fatec Franco da Rocha';
 
-          // Regra: Só permite alocar/alterar o catador se o status for 'disponível' (cod_status === 1)
-          const podeAlocarCatador = (stNome === 'disponível' || item.cod_status === 1);
-          const disabledCatador = podeAlocarCatador ? '' : 'disabled';
-          const styleCatador = podeAlocarCatador 
-            ? 'background: transparent; cursor: pointer;' 
-            : 'background: #f5f5f5; color: #777; cursor: not-allowed; opacity: 0.8;';
+          const dataCriacao = item.criado_em ? new Date(item.criado_em) : null;
+          const dataFormatada = dataCriacao && !isNaN(dataCriacao.getTime())
+            ? dataCriacao.toLocaleDateString('pt-BR')
+            : '';
 
-          let fraseBloqueio = '';
-          if (!podeAlocarCatador) {
-            if (stNome === 'cancelado' || item.cod_status === 5) {
-              fraseBloqueio = 'Alterações não permitidas para coletas canceladas';
-            } else if (stNome === 'agendado' || item.cod_status === 2) {
-              fraseBloqueio = 'Alterações não permitidas para coletas agendadas';
-            } else if (stNome === 'retirado' || stNome === 'concluído' || item.cod_status === 3 || item.cod_status === 4) {
-              fraseBloqueio = 'Alterações não permitidas para coletas retiradas';
-            } else {
-              fraseBloqueio = `Alterações não permitidas para coletas ${stNome}s`;
+          // 1. Data e Horário para Agendada (Previsão combinada)
+          let dataHoraAgendadaFormatada = '';
+          if (item.data) {
+            const partesData = item.data.slice(0, 10).split('-');
+            const dataPtBr = partesData.length === 3 ? `${partesData[2]}/${partesData[1]}/${partesData[0]}` : item.data;
+            const horaPtBr = item.hora ? item.hora.slice(0, 5) : '';
+            dataHoraAgendadaFormatada = horaPtBr ? `${dataPtBr} às ${horaPtBr}` : dataPtBr;
+          }
+
+          // 2. Data e Horário para Retirada (Momento em que o material foi recolhido)
+          let dataHoraRetiradaFormatada = '';
+          if (item.data) {
+            const partesData = item.data.slice(0, 10).split('-');
+            const dataPtBr = partesData.length === 3 ? `${partesData[2]}/${partesData[1]}/${partesData[0]}` : item.data;
+            const horaPtBr = item.hora ? item.hora.slice(0, 5) : '';
+            dataHoraRetiradaFormatada = horaPtBr ? `${dataPtBr} às ${horaPtBr}` : dataPtBr;
+          } else if (item.atualizado_em) {
+            const dt = new Date(item.atualizado_em);
+            if (!isNaN(dt.getTime())) {
+              const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
+              const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+              dataHoraRetiradaFormatada = `${dStr} às ${hStr}`;
+            }
+          } else if (item.criado_em) {
+            const dt = new Date(item.criado_em);
+            if (!isNaN(dt.getTime())) {
+              const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
+              const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+              dataHoraRetiradaFormatada = `${dStr} às ${hStr}`;
             }
           }
 
-          let catadorOptionsHtml = `<option value="">-- Sem Catador (Disponível) --</option>`;
-          catadores.forEach(cat => {
-            const isSelected = item.catador_id === cat.id ? 'selected' : '';
-            catadorOptionsHtml += `<option value="${cat.id}" ${isSelected}>${cat.nome}</option>`;
-          });
+          // 3. Data e Horário para Cancelamento (Momento em que foi cancelada)
+          let dataHoraCanceladaFormatada = '';
+          if (item.atualizado_em) {
+            const dt = new Date(item.atualizado_em);
+            if (!isNaN(dt.getTime())) {
+              const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
+              const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+              dataHoraCanceladaFormatada = `${dStr} às ${hStr}`;
+            }
+          } else if (item.criado_em) {
+            const dt = new Date(item.criado_em);
+            if (!isNaN(dt.getTime())) {
+              const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
+              const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+              dataHoraCanceladaFormatada = `${dStr} às ${hStr}`;
+            }
+          }
 
-          let statusOptionsHtml = '';
-          if (listaStatus && listaStatus.length > 0) {
-            listaStatus.forEach(st => {
-              const isSelected = (item.cod_status === st.cod_status) || (stNome.toLowerCase() === (st.status || '').toLowerCase());
-              let nomeFormatado = (st.status || '').toLowerCase();
-              if (nomeFormatado.includes('agend')) nomeFormatado = 'Agendada';
-              else if (nomeFormatado.includes('retirad') || nomeFormatado.includes('conclu')) nomeFormatado = 'Retirada';
-              else if (nomeFormatado.includes('cancel')) nomeFormatado = 'Cancelada';
-              else if (nomeFormatado.includes('dispon')) nomeFormatado = 'Disponível';
-              else nomeFormatado = (st.status || '').charAt(0).toUpperCase() + (st.status || '').slice(1);
-              statusOptionsHtml += `<option value="${st.cod_status}" ${isSelected ? 'selected' : ''}>${nomeFormatado}</option>`;
-            });
-          } else {
-            statusOptionsHtml = `
-              <option value="1" ${stNome === 'disponível' ? 'selected' : ''}>Disponível</option>
-              <option value="2" ${stNome === 'agendado' || stNome === 'agendada' ? 'selected' : ''}>Agendada</option>
-              <option value="3" ${stNome === 'retirado' || stNome === 'retirada' || stNome === 'concluído' ? 'selected' : ''}>Retirada</option>
-              <option value="4" ${stNome === 'cancelado' || stNome === 'cancelada' ? 'selected' : ''}>Cancelada</option>
-            `;
+          const catadorObj = catadores.find(c => c.id === item.catador_id);
+          const catadorNome = catadorObj?.nome || item.catador?.nome || 'Nenhum (Disponível)';
+          const catadorAuthId = item.catador?.auth_user_id || catadorObj?.auth_user_id || (item.catador?.id ? item.catador.id : null);
+
+          const statusInfo = resolverStatusColeta(item);
+          const ehRetirada = statusInfo.ehRetirada;
+          const ehAgendada = statusInfo.ehAgendada;
+          const ehCancelada = statusInfo.ehCancelada;
+          const ehDisponivel = statusInfo.ehDisponivel;
+
+          let badgeBg = '#e8f5e9';
+          let badgeCor = '#1b5e20';
+          let statusTextoDisplay = statusInfo.rotulo;
+
+          if (ehAgendada) {
+            badgeBg = '#fff8e1';
+            badgeCor = '#b78103';
+          } else if (ehRetirada) {
+            badgeBg = '#e8f5e9';
+            badgeCor = '#1b5e20';
+          } else if (ehCancelada) {
+            badgeBg = '#ffebee';
+            badgeCor = '#c62828';
           }
 
           const fotoTag = (item.foto_url && item.foto_url.trim() !== '')
-            ? `<div style="position: relative; overflow: hidden; border-radius: 12px; margin-bottom: 6px; background: #e8f5e9; border: 1.5px solid #a5d6a7;">
-                <img src="${item.foto_url}" data-src="${item.foto_url}" alt="${matNome} (${item.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 170px; object-fit: cover; border-radius: 10px; cursor: pointer; transition: transform 0.2s;" title="Clique para ampliar a foto do material" onerror="this.parentElement.innerHTML='<div style=\\'padding: 10px; text-align: center; color: #666; font-size: 0.8rem;\\'><i class=\\'fa-regular fa-image\\'></i> Imagem não disponível</div>';">
-                <div style="position: absolute; top: 6px; left: 6px; background: rgba(27,109,36,0.85); color: #ffffff; padding: 3px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; gap: 4px;">
-                  <i class="fa-solid fa-camera"></i> Foto Anexada
-                </div>
-                <div style="position: absolute; bottom: 6px; right: 6px; background: rgba(0,0,0,0.7); color: #ffffff; padding: 3px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">
+            ? `<div style="position: relative; overflow: hidden; border-radius: 12px; background: #e8f5e9; border: 1.5px solid #a5d6a7; margin-bottom: 2px;">
+                <img src="${item.foto_url}" data-src="${item.foto_url}" alt="${matNome} (${item.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 180px; object-fit: cover; border-radius: 10px; cursor: pointer;" title="Clique para ampliar a foto">
+                <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #ffffff; padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">
                   <i class="fa-solid fa-magnifying-glass-plus"></i> Ampliar
                 </div>
               </div>`
-            : `<div style="display: flex; align-items: center; gap: 8px; background: #f8faf8; border: 1px dashed #c8e6c9; border-radius: 10px; padding: 8px 12px; color: #777; font-size: 0.8rem; margin-bottom: 6px;">
-                 <i class="fa-regular fa-image" style="color: #a5d6a7; font-size: 1rem;"></i>
-                 <span>Sem foto anexada</span>
-               </div>`;
+            : '';
 
-          let statusTextoDisplay = 'DISPONÍVEL';
-          if (/agend/i.test(stNome)) statusTextoDisplay = 'AGENDADA';
-          else if (/retirad|conclu/i.test(stNome)) statusTextoDisplay = 'RETIRADA';
-          else if (/cancel/i.test(stNome)) statusTextoDisplay = 'CANCELADA';
+          let bannerDataHoraHtml = '';
+          if (ehRetirada) {
+            bannerDataHoraHtml = `
+              <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #1b5e20;">
+                <i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.25rem;"></i>
+                <div style="display: flex; flex-direction: column;">
+                  <span style="font-size: 0.85rem; font-weight: 800;">Coleta Retirada</span>
+                  <span style="font-size: 0.82rem; color: #2e7d32; font-weight: 600;">Retirado em: <strong>${dataHoraRetiradaFormatada || dataFormatada || 'Data registrada'}</strong></span>
+                </div>
+              </div>
+            `;
+          } else if (ehAgendada) {
+            bannerDataHoraHtml = `
+              <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #856404;">
+                <i class="fa-regular fa-calendar-check" style="color: #b78103; font-size: 1.25rem;"></i>
+                <div style="display: flex; flex-direction: column;">
+                  <span style="font-size: 0.85rem; font-weight: 800;">Coleta Agendada</span>
+                  <span style="font-size: 0.82rem; color: #5d4037; font-weight: 600;">Data e Horário Previsto: <strong>${dataHoraAgendadaFormatada || 'A combinar'}</strong></span>
+                </div>
+              </div>
+            `;
+          } else if (ehCancelada) {
+            bannerDataHoraHtml = `
+              <div style="background: #fff5f5; border: 1px solid #ef9a9a; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #c62828;">
+                <i class="fa-solid fa-ban" style="color: #c62828; font-size: 1.25rem;"></i>
+                <div style="display: flex; flex-direction: column;">
+                  <span style="font-size: 0.85rem; font-weight: 800;">Coleta Cancelada</span>
+                  <span style="font-size: 0.82rem; color: #c62828; font-weight: 600;">Cancelado em: <strong>${dataHoraCanceladaFormatada || dataFormatada || 'Data arquivada'}</strong></span>
+                </div>
+              </div>
+            `;
+          } else {
+            bannerDataHoraHtml = `
+              <div style="background: #f4fbf5; border: 1px dashed #a5d6a7; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #2e7d32;">
+                <i class="fa-regular fa-clock" style="color: #2e7d32; font-size: 1.25rem;"></i>
+                <div style="display: flex; flex-direction: column;">
+                  <span style="font-size: 0.85rem; font-weight: 800;">Oferta Disponível</span>
+                  <span style="font-size: 0.82rem; color: #555; font-weight: 500;">Aguardando atribuição de catador e agendamento da retirada</span>
+                </div>
+              </div>
+            `;
+          }
+
+          let acoesAdminHtml = `
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end; margin-top: 10px; padding-top: 10px; border-top: 1px solid #edf2ed;">
+              ${statusInfo.bloquearDados ? `
+                <div style="font-size: 0.82rem; color: ${statusInfo.ehCancelada ? '#c62828' : '#2e7d32'}; font-weight: 800; background: ${statusInfo.ehCancelada ? '#ffebee' : '#e8f5e9'}; border: 1px solid ${statusInfo.ehCancelada ? '#ffcdd2' : '#c8e6c9'}; padding: 6px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid ${statusInfo.ehCancelada ? 'fa-ban' : 'fa-circle-check'}"></i> ${statusInfo.rotulo}
+                </div>
+                <button type="button" class="btn-editar-coleta" data-id="${item.cod_coleta || item.id}" style="background: #ffffff; color: #555; border: 1px solid #ccc; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                  <i class="fa-solid fa-eye"></i> Ver Detalhes
+                </button>
+              ` : (statusInfo.requerCatador || ehAgendada) ? `
+                <button type="button" class="btn-confirmar-retirada" data-id="${item.cod_coleta || item.id}" data-catador="${item.catador_id || ''}" style="background: var(--verde-escuro, #1b6d24); color: white; border: none; border-radius: 999px; padding: 9px 18px; font-weight: 700; font-size: 0.84rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(27,109,36,0.25);">
+                  <i class="fa-solid fa-circle-check"></i> Confirmar Retirada
+                </button>
+                <button type="button" class="btn-atribuir-catador" data-id="${item.cod_coleta || item.id}" style="background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                  <i class="fa-solid fa-calendar-days"></i> Reagendar / Trocar Catador
+                </button>
+                <button type="button" class="btn-editar-coleta" data-id="${item.cod_coleta || item.id}" style="background: #ffffff; color: #555; border: 1px solid #ccc; border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                  <i class="fa-solid fa-pen-to-square"></i> Editar Dados
+                </button>
+              ` : `
+                <!-- Disponível / Aberta -->
+                <button type="button" class="btn-atribuir-catador" data-id="${item.cod_coleta || item.id}" style="background: var(--verde-escuro, #1b6d24); color: white; border: none; border-radius: 999px; padding: 9px 20px; font-weight: 700; font-size: 0.84rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(27,109,36,0.25);">
+                  <i class="fa-solid fa-user-plus"></i> Atribuir Catador / Agendar
+                </button>
+                <button type="button" class="btn-editar-coleta" data-id="${item.cod_coleta || item.id}" style="background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                  <i class="fa-solid fa-pen-to-square"></i> Editar Dados
+                </button>
+              `}
+
+              ${catadorAuthId ? `
+                <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-secondary-pill" style="height: 35px; padding: 0 14px; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; border-radius: 999px;">
+                  <i class="fa-solid fa-comments"></i> Conversar
+                </a>
+              ` : ''}
+            </div>
+          `;
 
           card.innerHTML = `
             ${fotoTag}
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; font-weight: 800;">
+                  <i class="fa-solid fa-recycle"></i> ${matNome} — ${item.quantidade || 'Qtd não informada'}
+                </strong>
+                <span style="font-size: 0.78rem; color: #6b7280; font-weight: 600; display: flex; align-items: center; gap: 5px;">
+                  <i class="fa-regular fa-calendar" style="color: #2e7d32;"></i> Criada em ${dataFormatada || 'Data recente'}
+                </span>
+              </div>
+              <span style="font-size: 0.74rem; font-weight: 800; background: ${badgeBg}; color: ${badgeCor}; padding: 4px 12px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px;">
+                ${statusTextoDisplay}
+              </span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; color: #374151; padding: 4px 0;">
               <div>
-                <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.08rem;"><i class="fa-solid fa-recycle"></i> ${matNome}</strong> (${item.quantidade || 'Qtd não informada'})
-                <div style="font-size: 0.85rem; color: #555; margin-top: 4px;">
-                  <span><strong>Ofertante:</strong> ${cidNome}${cidTel}</span> | <span><strong>Ponto de Retirada:</strong> ${localNome}</span>
-                </div>
-                <div style="font-size: 0.78rem; color: var(--cinza-texto-aux); margin-top: 2px;">
-                  Status Atual: <strong style="color: #1b6d24; text-transform: uppercase;">${statusTextoDisplay}</strong> | Data de Cadastro: ${new Date(item.criado_em).toLocaleDateString('pt-BR')}
-                </div>
-              </div>
-            </div>
-
-            <!-- Seletores de Vincular Catador e Alterar Status -->
-            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; background: #f9fbf9; padding: 12px 14px; border-radius: 10px; border: 1px solid #e8f5e9;">
-              <div style="display: flex; flex-direction: column; flex: 1; min-width: 220px;">
-                <label style="font-size: 0.78rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-                  <i class="fa-solid fa-user-check"></i> Catador Atribuído:
-                </label>
-                <select class="select-vincular-catador" data-id="${item.cod_coleta || item.id}" data-valor-anterior="${item.catador_id || ''}" ${disabledCatador} style="font-size: 0.88rem; ${styleCatador}">
-                  ${catadorOptionsHtml}
-                </select>
-                ${fraseBloqueio ? `<span style="font-size: 0.75rem; color: #c62828; font-weight: 600; margin-top: 5px; display: flex; align-items: center; gap: 4px;"><i class="fa-solid fa-lock" style="font-size: 0.7rem;"></i> ${fraseBloqueio}</span>` : ''}
+                <strong style="color: var(--verde-escuro, #1b6d24);"><i class="fa-solid fa-location-dot" style="color: #2e7d32; width: 18px;"></i> Ponto de Retirada:</strong>
+                <span style="font-weight: 600;">${localNome}</span>
               </div>
 
-              <div style="display: flex; flex-direction: column; min-width: 160px;">
-                <label style="font-size: 0.78rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-                  <i class="fa-solid fa-list-check"></i> Status da Coleta:
-                </label>
-                <select class="select-status-coleta" data-id="${item.cod_coleta || item.id}" data-valor-anterior="${item.cod_status || ''}" style="font-size: 0.88rem;">
-                  ${statusOptionsHtml}
-                </select>
+              <div>
+                <strong style="color: var(--verde-escuro, #1b6d24);"><i class="fa-solid fa-user" style="color: #0288d1; width: 18px;"></i> Ofertante:</strong>
+                <span>${cidNome}${cidTel}</span>
               </div>
+
+              <div>
+                <strong style="color: var(--verde-escuro, #1b6d24);"><i class="fa-solid fa-user-check" style="color: #2e7d32; width: 18px;"></i> Catador Atribuído:</strong>
+                <span style="font-weight: ${item.catador_id ? '700' : '500'}; color: ${item.catador_id ? '#1b5e20' : '#777'};">
+                  ${item.catador_id ? catadorNome : 'Nenhum catador atribuído'}
+                </span>
+              </div>
+
+              ${bannerDataHoraHtml}
             </div>
+
+            ${acoesAdminHtml}
           `;
           container.appendChild(card);
         });
@@ -228,178 +423,77 @@
           });
         });
 
-        // Eventos de alteração de catador vinculado com confirmação
-        document.querySelectorAll('.select-vincular-catador').forEach(sel => {
-          sel.dataset.valorAnterior = sel.value;
+        // 1. Confirmar Retirada com Modal
+        document.querySelectorAll('.btn-confirmar-retirada').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            const catId = e.currentTarget.getAttribute('data-catador');
+            const coletaAlvo = todasColetasCarregadas.find(c => (c.cod_coleta || c.id) === id);
 
-          sel.addEventListener('change', () => {
-            const id = sel.dataset.id;
-            const catadorId = sel.value;
-            const valorAnterior = sel.dataset.valorAnterior || '';
-            const nomeNovoCatador = sel.options[sel.selectedIndex]?.text || '';
-
-            if (catadorId === valorAnterior) return;
-
-            // Identifica status atual da coleta no card
-            const selStatus = document.querySelector(`.select-status-coleta[data-id="${id}"]`);
-            const codStatusAtual = selStatus ? parseInt(selStatus.value, 10) : 1;
-            const nomeStatusAtual = selStatus?.options[selStatus.selectedIndex]?.text || '';
-            const ehDisponivelAtual = codStatusAtual === 1 || /dispon/i.test(nomeStatusAtual);
-
-            let tituloModal = 'Confirmar Atribuição de Catador';
-            let msgModal = '';
-            let textoConfirmar = 'Sim, Confirmar';
-            let iconeModal = '<i class="fa-solid fa-user-check" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>';
-
-            if (!catadorId) {
-              // Desvinculação de catador -> volta para disponível
-              tituloModal = 'Desvincular Catador';
-              msgModal = `Deseja realmente desvincular o catador desta coleta? Ela retornará automaticamente ao status "Disponível".`;
-              textoConfirmar = 'Sim, Desvincular';
-              iconeModal = '<i class="fa-solid fa-recycle" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>';
-            } else if (ehDisponivelAtual) {
-              // Transição de Disponível para Agendado ao alocar catador
-              tituloModal = 'Vincular Catador e Agendar';
-              msgModal = `A coleta está atualmente com status "Disponível".\n\nAo atribuir o catador "${nomeNovoCatador}", o status da coleta passará para "Agendada". Deseja confirmar?`;
-              textoConfirmar = 'Sim, Atribuir e Agendar';
-            } else {
-              // Reatribuição para outro catador
-              tituloModal = 'Alterar Catador Atribuído';
-              msgModal = `Deseja realmente reatribuir esta coleta para "${nomeNovoCatador}"?`;
-              textoConfirmar = 'Sim, Alterar Catador';
-            }
-
-            showConfirmModal({
-              title: tituloModal,
-              message: msgModal,
-              confirmText: textoConfirmar,
-              cancelText: 'Cancelar',
-              icon: iconeModal,
-              confirmColor: '#1b6d24',
-              onConfirm: async () => {
-                try {
-                  await vincularCatadorColeta(id, catadorId);
-                  sel.dataset.valorAnterior = catadorId;
-                  statusMsg.className = 'status-message success';
-                  statusMsg.textContent = !catadorId
-                    ? 'Catador desvinculado e coleta retornada para Disponível com sucesso!'
-                    : `Catador "${nomeNovoCatador}" vinculado e coleta agendada com sucesso!`;
-                  carregarColetas(filtroStatus);
-                } catch (err) {
-                  sel.value = valorAnterior;
-                  statusMsg.className = 'status-message error';
-                  statusMsg.textContent = 'Erro ao vincular catador: ' + err.message;
-                }
-              },
-              onCancel: () => {
-                sel.value = valorAnterior;
+            confirmarRetiradaComModal({
+              cod_coleta: id,
+              catador_id: catId,
+              material: coletaAlvo?.materiais?.tipo || coletaAlvo?.materiais?.nome,
+              quantidade: coletaAlvo?.quantidade,
+              onConfirmada: (msg) => {
+                statusMsg.className = 'status-message success';
+                statusMsg.textContent = msg;
+                carregarColetas(filtroStatus);
               }
             });
           });
         });
 
-        // Eventos de alteração de status com validação estrita de catador e confirmação
-        document.querySelectorAll('.select-status-coleta').forEach(sel => {
-          sel.dataset.valorAnterior = sel.value;
+        // 2. Editar Informações com Modal Completo
+        document.querySelectorAll('.btn-editar-coleta').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            const coletaAlvo = todasColetasCarregadas.find(c => (c.cod_coleta || c.id) === id);
 
-          sel.addEventListener('change', () => {
-            const id = sel.dataset.id;
-            const valorAnterior = sel.dataset.valorAnterior;
-            const novoCodStatus = parseInt(sel.value, 10);
-            const nomeNovoStatus = sel.options[sel.selectedIndex]?.text || 'novo status';
-            const optAnterior = sel.querySelector(`option[value="${valorAnterior}"]`);
-            const nomeStatusAnterior = optAnterior ? optAnterior.text : 'status anterior';
-
-            if (String(novoCodStatus) === String(valorAnterior)) return;
-
-            // 1. REGRA: Para agendada ou retirada, é OBRIGATÓRIO ter um catador alocado
-            const ehAgendadaOuRetirada = novoCodStatus === 2 || novoCodStatus === 3 || 
-                                         /agend|retirad|conclu/i.test(nomeNovoStatus);
-
-            const selCatador = document.querySelector(`.select-vincular-catador[data-id="${id}"]`);
-            const catadorId = selCatador ? (selCatador.value || '').trim() : '';
-
-            if (ehAgendadaOuRetirada && !catadorId) {
-              sel.value = valorAnterior;
-              showAlertModal({
-                title: 'Catador Obrigatório',
-                message: `Para a coleta ter o status alterado para "${nomeNovoStatus}", é obrigatório ter um catador alocado.\n\nPor favor, selecione e atribua um catador no campo "Catador Atribuído" antes de avançar.`,
-                buttonText: 'Entendido',
-                confirmColor: '#c62828',
-                icon: '<i class="fa-solid fa-triangle-exclamation" style="color: #c62828; font-size: 1.25rem;"></i>'
-              });
+            if (!coletaAlvo) {
               statusMsg.className = 'status-message error';
-              statusMsg.textContent = `A coleta precisa ter um catador alocado para ser marcada como "${nomeNovoStatus}".`;
+              statusMsg.textContent = 'Coleta não localizada para edição.';
               return;
             }
 
-            // 2. CONFIRMAÇÃO: Sempre pedir confirmação (com destaque ao trocar de Disponível para outro status)
-            const eraDisponivel = valorAnterior === '1' || /dispon/i.test(nomeStatusAnterior);
-            const vaiSerDisponivel = novoCodStatus === 1 || /dispon/i.test(nomeNovoStatus);
-
-            let tituloModal = 'Confirmar Alteração de Status';
-            let mensagemModal = '';
-            let textoConfirmar = 'Sim, Alterar';
-            let iconeModal = '<i class="fa-solid fa-arrows-rotate" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>';
-
-            if (eraDisponivel) {
-              tituloModal = 'Alterar Status de Coleta Disponível';
-              mensagemModal = `Esta coleta está atualmente com status "Disponível".\n\nDeseja realmente alterar seu status para "${nomeNovoStatus}"?`;
-            } else if (vaiSerDisponivel) {
-              tituloModal = 'Voltar Coleta para Disponível';
-              mensagemModal = `Deseja realmente voltar o status desta coleta para "Disponível"?\n\nO catador atualmente atribuído será desvinculado automaticamente.`;
-              textoConfirmar = 'Sim, Voltar para Disponível';
-              iconeModal = '<i class="fa-solid fa-recycle" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>';
-            } else {
-              mensagemModal = `Deseja realmente alterar o status desta coleta de "${nomeStatusAnterior}" para "${nomeNovoStatus}"?`;
-            }
-
-            showConfirmModal({
-              title: tituloModal,
-              message: mensagemModal,
-              confirmText: textoConfirmar,
-              cancelText: 'Cancelar',
-              icon: iconeModal,
-              confirmColor: '#1b6d24',
-              onConfirm: async () => {
-                const updatePayload = {
-                  cod_status: novoCodStatus,
-                  atualizado_em: new Date().toISOString()
-                };
-
-                // Se voltar a coleta para disponível, desvincula o catador automaticamente
-                if (vaiSerDisponivel) {
-                  updatePayload.catador_id = null;
-                  updatePayload.agenda_id = null;
-                  updatePayload.data = null;
-                  updatePayload.hora = null;
-                }
-
-                const { error } = await supabase
-                  .from('coleta')
-                  .update(updatePayload)
-                  .eq('cod_coleta', id);
-
-                if (error) {
-                  statusMsg.className = 'status-message error';
-                  statusMsg.textContent = 'Erro ao atualizar status: ' + error.message;
-                  sel.value = valorAnterior;
-                } else {
-                  sel.dataset.valorAnterior = String(novoCodStatus);
-                  statusMsg.className = 'status-message success';
-                  statusMsg.textContent = vaiSerDisponivel
-                    ? `Status da coleta alterado para "${nomeNovoStatus}" e catador desvinculado com sucesso!`
-                    : `Status da coleta alterado para "${nomeNovoStatus}" com sucesso!`;
-                  carregarColetas(filtroStatus);
-                }
-              },
-              onCancel: () => {
-                sel.value = valorAnterior;
+            abrirModalEdicaoColeta({
+              coleta: coletaAlvo,
+              catadores,
+              listaStatus,
+              locaisRetirada,
+              ehAdmin: true,
+              onSalvar: (msg) => {
+                statusMsg.className = 'status-message success';
+                statusMsg.textContent = msg;
+                carregarColetas(filtroStatus);
               }
             });
           });
         });
 
+        // 3. Atribuir Catador / Agendar Coleta com Escolha Explícita de Data e Horário
+        document.querySelectorAll('.btn-atribuir-catador').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            const coletaAlvo = todasColetasCarregadas.find(c => (c.cod_coleta || c.id) === id);
+
+            if (!coletaAlvo) {
+              statusMsg.className = 'status-message error';
+              statusMsg.textContent = 'Coleta não localizada para agendamento.';
+              return;
+            }
+
+            abrirModalAtribuirCatador({
+              coleta: coletaAlvo,
+              catadores,
+              onSalvar: (msg) => {
+                statusMsg.className = 'status-message success';
+                statusMsg.textContent = msg;
+                carregarColetas(filtroStatus);
+              }
+            });
+          });
+        });
       } catch (err) {
         console.error('Erro ao carregar coletas:', err);
         container.innerHTML = `<div class="status-message error">Erro ao carregar coletas: ${err.message}</div>`;
@@ -421,6 +515,12 @@
           carregarColetas(b.dataset.status);
         });
       });
+
+      const perfilLogado = await getPerfilAtual().catch(() => null);
+      if (perfilLogado && perfilLogado.tipo === 'cidadao') {
+        window.location.href = './minhas-ofertas.html';
+        return;
+      }
 
       const acesso = await protegerRota(['administrador']).catch(() => ({ permitido: false }));
       if (acesso && acesso.permitido) {

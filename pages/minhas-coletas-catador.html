@@ -42,7 +42,7 @@
 
   <script type="module">
     import { proibirAcessoInvalido } from '../js/lib/routeGuard.js';
-    import { listarMinhasColetasCatador, cancelarAgendamento } from '../js/services/coletas.js';
+    import { listarMinhasColetasCatador, cancelarAgendamento, resolverStatusColeta } from '../js/services/coletas.js';
     import { logout } from '../js/services/auth.js';
     import { showConfirmModal, showAlertModal } from '../js/lib/modal.js';
 
@@ -94,26 +94,90 @@
             const tipoMaterial = coleta.materiais?.tipo || 'Material';
             const doadorNome = coleta.cidadao?.nome || 'Cidadão';
             const doadorTel = coleta.cidadao?.telefone || 'Não informado';
-            const statusNome = coleta.status?.status || 'agendado';
+            const statusInfo = resolverStatusColeta(coleta);
+            const ehRetirada = statusInfo.ehRetirada;
+            const ehCancelada = statusInfo.ehCancelada;
+            const ehAgendada = statusInfo.ehAgendada;
+            const statusNome = statusInfo.rotulo;
+
+            let dataHoraRetiradaFormatada = '';
+            let dataHoraAgendadaFormatada = '';
+            let dataHoraCanceladaFormatada = '';
+
+            if (coleta.data) {
+              const partesData = coleta.data.slice(0, 10).split('-');
+              const dataPtBr = partesData.length === 3 ? `${partesData[2]}/${partesData[1]}/${partesData[0]}` : coleta.data;
+              const horaPtBr = coleta.hora ? coleta.hora.slice(0, 5) : '';
+              const strFormatada = horaPtBr ? `${dataPtBr} às ${horaPtBr}` : dataPtBr;
+              dataHoraAgendadaFormatada = strFormatada;
+              dataHoraRetiradaFormatada = strFormatada;
+            }
+            if (!dataHoraRetiradaFormatada && (coleta.atualizado_em || coleta.criado_em)) {
+              const dt = new Date(coleta.atualizado_em || coleta.criado_em);
+              if (!isNaN(dt.getTime())) {
+                const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
+                const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+                dataHoraRetiradaFormatada = `${dStr} às ${hStr}`;
+              }
+            }
+            if (coleta.atualizado_em || coleta.criado_em) {
+              const dt = new Date(coleta.atualizado_em || coleta.criado_em);
+              if (!isNaN(dt.getTime())) {
+                const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
+                const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+                dataHoraCanceladaFormatada = `${dStr} às ${hStr}`;
+              }
+            }
+
+            let badgeBg = '#fff3cd';
+            let badgeCor = '#856404';
+            if (ehRetirada) {
+              badgeBg = '#e8f5e9';
+              badgeCor = '#2e7d32';
+            } else if (ehCancelada) {
+              badgeBg = '#ffebee';
+              badgeCor = '#c62828';
+            }
+
+            const dataCriacaoCat = coleta.criado_em ? new Date(coleta.criado_em).toLocaleDateString('pt-BR') : '';
 
             card.innerHTML = `
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <strong style="color: var(--verde-escuro); font-size: 16px;">${tipoMaterial} (${coleta.quantidade})</strong>
-                <span style="font-size: 11px; font-weight: bold; background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 12px; text-transform: uppercase;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <strong style="color: var(--verde-escuro); font-size: 16px;">${tipoMaterial} (${coleta.quantidade})</strong>
+                  ${dataCriacaoCat ? `<span style="font-size: 0.75rem; color: #666; font-weight: 600;"><i class="fa-regular fa-calendar" style="color: var(--verde-escuro);"></i> Criada em ${dataCriacaoCat}</span>` : ''}
+                </div>
+                <span style="font-size: 11px; font-weight: bold; background: ${badgeBg}; color: ${badgeCor}; padding: 4px 10px; border-radius: 12px; text-transform: uppercase;">
                   ${statusNome}
                 </span>
               </div>
 
-              <div style="font-size: 13px; color: var(--cinza-texto); background: #f9fbf9; padding: 10px; border-radius: 8px; margin-top: 4px;">
-                <p><strong> Local:</strong> ${coleta.local_retirada?.nome || 'Fatec Franco da Rocha'}</p>
-                <p style="margin-top: 4px;"><strong> Doador:</strong> ${doadorNome}</p>
+              <div style="font-size: 13px; color: var(--cinza-texto); background: #f9fbf9; padding: 10px; border-radius: 8px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px;">
+                <p style="margin: 0;"><strong>📍 Local:</strong> ${coleta.local_retirada?.nome || 'Fatec Franco da Rocha'}</p>
+                <p style="margin: 0;"><strong>👤 Doador:</strong> ${doadorNome}</p>
+                ${ehRetirada ? `
+                  <div style="background: #e8f5e9; border: 1.5px solid #a5d6a7; border-radius: 8px; padding: 6px 10px; margin-top: 4px; display: flex; align-items: center; gap: 8px; color: #1b5e20; font-size: 0.85rem; font-weight: 700;">
+                    <i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.1rem;"></i>
+                    <span><strong>Retirado em:</strong> <span style="color: #1b5e20; font-weight: 800;">${dataHoraRetiradaFormatada || 'Data registrada'}</span></span>
+                  </div>
+                ` : ehCancelada ? `
+                  <div style="background: #fff5f5; border: 1.5px solid #ef9a9a; border-radius: 8px; padding: 6px 10px; margin-top: 4px; display: flex; align-items: center; gap: 8px; color: #c62828; font-size: 0.85rem; font-weight: 700;">
+                    <i class="fa-solid fa-ban" style="color: #c62828; font-size: 1.1rem;"></i>
+                    <span><strong>Cancelado em:</strong> <span style="color: #c62828; font-weight: 800;">${dataHoraCanceladaFormatada || 'Data arquivada'}</span></span>
+                  </div>
+                ` : `
+                  <div style="background: #fff8e1; border: 1.5px solid #ffe082; border-radius: 8px; padding: 6px 10px; margin-top: 4px; display: flex; align-items: center; gap: 8px; color: #856404; font-size: 0.85rem; font-weight: 700;">
+                    <i class="fa-regular fa-calendar-check" style="color: #b78103; font-size: 1.1rem;"></i>
+                    <span><strong>Data Prevista para Retirada:</strong> <span style="color: #5d4037; font-weight: 800;">${dataHoraAgendadaFormatada || 'A combinar'}</span></span>
+                  </div>
+                `}
               </div>
 
               <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
                 <a href="./mensagens.html?coleta=${coleta.cod_coleta}" class="btn-pill" style="text-align: center; font-size: 12px; padding: 8px 12px; flex: 1; text-decoration: none;">
                    CONTATAR DOADOR
                 </a>
-                ${(statusNome.toLowerCase() === 'agendado') ? `
+                ${ehAgendada ? `
                   <button type="button" class="btn-cancelar-agendamento-mob" data-id="${coleta.cod_coleta}" style="background: #fff5f5; border: 1.5px solid #ef9a9a; color: #c62828; border-radius: 999px; font-weight: 700; font-size: 12px; padding: 8px 12px; cursor: pointer; flex: 1;">
                      Cancelar Agendamento
                   </button>

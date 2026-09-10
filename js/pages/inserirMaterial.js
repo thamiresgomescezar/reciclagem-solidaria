@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const perfil = await proibirAcessoInvalido(['cidadao', 'administrador']);
   if (!perfil) return;
 
+  const isAdm = perfil?.tipo === 'administrador';
+
   const form = document.getElementById('oferta-form');
   const selectMaterial = document.getElementById('cod_material');
   const inputQtdNum = document.getElementById('quantidade_numero');
@@ -20,9 +22,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const boxAgenda = document.getElementById('box-confirmacao-agenda');
   const conteudoAgenda = document.getElementById('conteudo-agenda-resumo');
   const checkConfirmarAgenda = document.getElementById('check-confirmar-agenda');
+  const txtAvisoAgenda = document.getElementById('txt-aviso-agenda-ajuste');
   const feedbackMsg = document.getElementById('feedback-msg');
   const btnEnviar = document.getElementById('btn-enviar');
   const btnVoltar = document.getElementById('btn-voltar') || document.getElementById('btn-voltar-top');
+
+  // Para administradores, substitui o texto genérico por orientação direta com botão de edição de agenda
+  if (txtAvisoAgenda && isAdm) {
+    txtAvisoAgenda.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
+        <span style="color: #2e532b; font-weight: 600;">
+          <i class="fa-solid fa-calendar-check" style="color: #1b6d24;"></i> Como administrador, você pode ajustar os horários e dias de atendimento da unidade:
+        </span>
+        <a href="./definir-agenda.html" class="btn-secondary-pill" style="font-size: 0.78rem; padding: 4px 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+          <i class="fa-solid fa-calendar-days"></i> Editar Agenda
+        </a>
+      </div>
+    `;
+  }
 
   let listaLocais = [];
 
@@ -278,7 +295,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (checkConfirmarAgenda && !checkConfirmarAgenda.checked) {
-      showError('Por favor, confirme que a unidade estará aberta nos horários indicados para atendimento aos catadores. Se não, entre em contato com um dos administradores para atualizar a agenda.');
+      if (isAdm) {
+        showError('Por favor, confirme que a unidade estará aberta para atendimento ou clique no botão "Editar Agenda" acima para atualizar a grade de funcionamento.');
+      } else {
+        showError('Por favor, confirme que a unidade estará aberta nos horários indicados para atendimento aos catadores. Se não, entre em contato com um dos administradores para atualizar a agenda.');
+      }
       return;
     }
 

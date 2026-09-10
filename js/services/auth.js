@@ -450,8 +450,18 @@ export async function login(email, password) {
   }
 }
 
-// Retorna o perfil completo do usuário autenticado no momento
+let _perfilInFlightPromise = null;
+
+// Retorna o perfil completo do usuário autenticado no momento (com deduplicação de chamadas simultâneas)
 export async function getPerfilAtual() {
+  if (_perfilInFlightPromise) return _perfilInFlightPromise;
+  _perfilInFlightPromise = _execGetPerfilAtual().finally(() => {
+    setTimeout(() => { _perfilInFlightPromise = null; }, 1500);
+  });
+  return _perfilInFlightPromise;
+}
+
+async function _execGetPerfilAtual() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session || !session.user) return null;
 
@@ -686,6 +696,7 @@ export async function resetPassword(email) {
 }
 
 export async function logout() {
+  _perfilInFlightPromise = null;
   try { localStorage.removeItem('reciclagem_tipo_usuario'); } catch (e) {}
   const { error } = await supabase.auth.signOut();
   if (error) throw error;

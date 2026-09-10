@@ -226,3 +226,61 @@ export function formatarQuantidadePadrao(numero, unidade, complemento = '') {
       return qtdNum === 1 ? '1 unidade' : `${qtdNum} unidades`;
   }
 }
+
+/**
+ * Decompõe uma string de quantidade existente (ex: "3 sacos grandes", "1 caixa", "15 kg", "2 baldes")
+ * em objeto { numero, unidade, outro } para preenchimento de inputs e selects padronizados.
+ */
+export function decomporQuantidade(qtd) {
+  if (!qtd || typeof qtd !== 'string') {
+    return { numero: 1, unidade: 'caixa(s)', outro: '' };
+  }
+
+  const str = qtd.trim();
+  const match = str.match(/^(\d+)\s*(.*)$/);
+
+  let numero = 1;
+  let resto = '';
+
+  if (match) {
+    numero = parseInt(match[1], 10) || 1;
+    resto = match[2].trim().toLowerCase();
+  } else {
+    resto = str.toLowerCase();
+  }
+
+  if (!resto) {
+    return { numero, unidade: 'unidade(s)', outro: '' };
+  }
+
+  if (resto.includes('saco') && (resto.includes('grand') || resto.includes('g'))) {
+    return { numero, unidade: 'saco(s) grande(s)', outro: '' };
+  }
+  if (resto.includes('saco') && (resto.includes('méd') || resto.includes('med') || resto.includes('m'))) {
+    return { numero, unidade: 'saco(s) médio(s)', outro: '' };
+  }
+  if (resto.includes('saco')) {
+    return { numero, unidade: 'saco(s) grande(s)', outro: '' };
+  }
+  if (resto.includes('caixa')) {
+    return { numero, unidade: 'caixa(s)', outro: '' };
+  }
+  if (resto.includes('sacola')) {
+    return { numero, unidade: 'sacola(s)', outro: '' };
+  }
+  if (resto.includes('pacote')) {
+    return { numero, unidade: 'pacote(s)', outro: '' };
+  }
+  if (resto.includes('kg') || resto.includes('quilo')) {
+    return { numero, unidade: 'kg', outro: '' };
+  }
+  if (resto.includes('unidade')) {
+    return { numero, unidade: 'unidade(s)', outro: '' };
+  }
+  if (resto.includes('fardo')) {
+    return { numero, unidade: 'fardo(s)', outro: '' };
+  }
+
+  return { numero, unidade: 'outro', outro: match ? match[2].trim() : str };
+}
+

@@ -322,7 +322,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const slotsDoDia = (agendaData || []).filter(a => a.data === dateStr && a.disponivel);
             if (slotsDoDia.length === 0 && entryDia && entryDia.disponivel) {
               if (entryDia.hora_inicio && entryDia.hora_fim) {
-                slotsDoDia.push({ hora_inicio: entryDia.hora_inicio, hora_fim: entryDia.hora_fim });
+                slotsDoDia.push({ 
+                  hora_inicio: entryDia.hora_inicio, 
+                  hora_fim: entryDia.hora_fim,
+                  pausa_inicio: entryDia.pausa_inicio || null,
+                  pausa_fim: entryDia.pausa_fim || null
+                });
               }
               if (entryDia.hora_inicio_2 && entryDia.hora_fim_2) {
                 slotsDoDia.push({ hora_inicio: entryDia.hora_inicio_2, hora_fim: entryDia.hora_fim_2 });
@@ -467,9 +472,8 @@ function abrirModalMapa(nomePonto, enderecoCompleto) {
 
 function gerarHorariosDisponiveis(slots, dateStr = null) {
   const lista = [];
-  const baseSlots = (!slots || slots.length === 0)
-    ? [{ hora_inicio: '08:00', hora_fim: '17:00', pausa_inicio: '12:00', pausa_fim: '13:00' }]
-    : slots;
+  if (!slots || slots.length === 0) return [];
+  const baseSlots = slots;
 
   const agora = new Date();
   const hojeY = agora.getFullYear();

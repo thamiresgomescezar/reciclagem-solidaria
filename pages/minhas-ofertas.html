@@ -47,14 +47,14 @@
         <main class="center-panel">
           <div style="max-width: 620px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
             
-            <!-- Cabeçalho Simplificado com Ação Direta -->
+            <!-- Cabeçalho com Ação Direta -->
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1.5rem; border-bottom: 2px solid #a5d6a7; padding-bottom: 1rem;">
               <div>
                 <h1 id="titulo_minhas_coletas" style="font-size: 1.75rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin: 0;">
-                  Minhas Ofertas de Reciclagem
+                  Histórico de Coletas
                 </h1>
                 <p id="subtitulo_minhas_coletas" style="font-size: 0.88rem; color: #555; margin-top: 2px; margin-bottom: 0;">
-                  Acompanhamento e histórico dos seus materiais disponibilizados
+                  Gerencie o status das coletas disponibilizadas e atribua catadores
                 </p>
               </div>
 
@@ -64,6 +64,15 @@
             </div>
 
             <div id="feedback-msg" class="status-message"></div>
+
+            <!-- Toolbar de Filtros por Status da Coleta -->
+            <div id="filtros_status_coletas" class="filtros-coletas-grid">
+              <button type="button" class="btn-tab active" data-filtro="todos"><i class="fa-solid fa-layer-group"></i> Todas</button>
+              <button type="button" class="btn-tab" data-filtro="disponível"><i class="fa-solid fa-clock"></i> Disponíveis</button>
+              <button type="button" class="btn-tab" data-filtro="agendado"><i class="fa-solid fa-calendar-check"></i> Agendadas</button>
+              <button type="button" class="btn-tab" data-filtro="retirado"><i class="fa-solid fa-circle-check"></i> Retiradas</button>
+              <button type="button" class="btn-tab" data-filtro="cancelado"><i class="fa-solid fa-ban"></i> Canceladas</button>
+            </div>
 
             <!-- Lista de Coletas / Ofertas -->
             <div id="lista-minhas-coletas" style="display: flex; flex-direction: column; gap: 12px;">
