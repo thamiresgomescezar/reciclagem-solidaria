@@ -81,8 +81,15 @@ create table public.materiais (
 -- Situação da coleta (lookup)
 create table public.status (
   cod_status serial primary key,
-  status varchar not null unique
+  status varchar not null unique,
+  bloquear_dados boolean default false,
+  regra_catador varchar default 'opcional' -- 'sem_catador', 'requer_catador', 'opcional'
 );
+
+-- Migração para instâncias existentes:
+-- alter table public.status add column if not exists bloquear_dados boolean default false;
+-- alter table public.status add column if not exists regra_catador varchar default 'opcional';
+
 
 -- Locais de retirada (hoje só a Fatec; estrutura pronta para expandir)
 create table public.local_retirada (

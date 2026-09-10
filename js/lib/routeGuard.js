@@ -11,7 +11,7 @@ export async function proibirAcessoInvalido(perfisPermitidos = []) {
 
   try {
     const perfilPromise = getPerfilAtual();
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout de autenticação')), 5000));
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout de autenticação')), 15000));
     const perfil = await Promise.race([perfilPromise, timeoutPromise]).catch(err => {
       console.warn('Timeout ou erro ao verificar perfil na rota:', err);
       return null;

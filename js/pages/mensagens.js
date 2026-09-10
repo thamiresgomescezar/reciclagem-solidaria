@@ -1,5 +1,6 @@
-﻿import { proibirAcessoInvalido, redirecionarPorPerfil } from '../lib/routeGuard.js';
+import { proibirAcessoInvalido, redirecionarPorPerfil } from '../lib/routeGuard.js';
 import { supabase } from '../lib/supabaseClient.js';
+import { showAlertModal } from '../lib/modal.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const perfil = await proibirAcessoInvalido(['cidadao', 'catador', 'administrador']);
@@ -116,7 +117,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (err) {
       console.error(err);
-      alert('Erro ao enviar mensagem: ' + err.message);
+      showAlertModal({
+        title: 'Erro no Envio',
+        message: 'Não foi possível enviar a mensagem: ' + (err.message || 'Erro desconhecido'),
+        buttonText: 'Fechar',
+        confirmColor: '#c62828'
+      });
     } finally {
       btnEnviar.disabled = false;
     }

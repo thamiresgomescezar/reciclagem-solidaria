@@ -272,3 +272,20 @@ body {
   color: #1565c0;
   border: 1.5px solid #90caf9;
 }
+
+/* ==========================================================================
+   Campos de Data e Horário — Abertura Ergonômica ao Clicar
+   ========================================================================== */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  cursor: pointer !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer !important;
+  padding: 4px;
+}
+

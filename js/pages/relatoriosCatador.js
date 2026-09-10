@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { protegerRota } from '../lib/routeGuard.js';
 import { getPerfilAtual } from '../services/auth.js';
+import { showAlertModal } from '../lib/modal.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const acesso = await protegerRota(['catador']);
@@ -334,7 +335,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (btnExportarCsv) {
     btnExportarCsv.addEventListener('click', () => {
       if (!dadosExportacao || dadosExportacao.length === 0) {
-        alert('Não há dados disponíveis para exportação nesta aba.');
+        showAlertModal({
+          title: 'Exportação Indisponível',
+          message: 'Não há dados disponíveis para exportação nesta aba.',
+          buttonText: 'Entendido',
+          confirmColor: '#1b6d24',
+          icon: '<i class="fa-solid fa-circle-info" style="color: #1b6d24; font-size: 1.3rem;"></i>'
+        });
         return;
       }
 
