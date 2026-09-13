@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           : `${localNome}, Franco da Rocha - SP`;
 
         const fotoTag = (coleta.foto_url && coleta.foto_url.trim() !== '')
-          ? `<div style="position: relative; overflow: hidden; border-radius: 12px; margin-bottom: 6px; background: #e8f5e9; border: 1.5px solid #a5d6a7;">
+          ? `<div style="position: relative; overflow: hidden; border-radius: 12px; margin-top: 8px; margin-bottom: 2px; background: #e8f5e9; border: 1.5px solid #a5d6a7;">
               <img src="${coleta.foto_url}" data-src="${coleta.foto_url}" alt="${tipoMaterial} (${coleta.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px; cursor: pointer; transition: transform 0.2s;" title="Clique para ampliar a foto do material" onerror="this.parentElement.innerHTML='<div style=\\'padding: 12px; text-align: center; color: #555; font-size: 0.82rem;\\'><i class=\\'fa-regular fa-image\\'></i> Imagem não disponível para visualização</div>';">
               <div style="position: absolute; top: 8px; left: 8px; background: rgba(27,109,36,0.85); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 4px;">
                 <i class="fa-solid fa-camera"></i> Foto Anexada
@@ -112,44 +112,57 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <i class="fa-solid fa-magnifying-glass-plus"></i> Toque para ampliar
               </div>
             </div>`
-          : `<div style="display: flex; align-items: center; gap: 8px; background: #f8faf8; border: 1px dashed #c8e6c9; border-radius: 10px; padding: 10px 14px; color: #666; font-size: 0.82rem; margin-bottom: 6px;">
-               <i class="fa-regular fa-image" style="color: #81c784; font-size: 1.1rem;"></i>
-               <span><b>Sem foto anexada</b> pelo cidadão ofertante</span>
-             </div>`;
+          : '';
 
         card.innerHTML = `
-          ${fotoTag}
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
             <div>
-              <span style="font-size: 0.78rem; font-weight: 800; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); padding: 4px 10px; border-radius: 8px; text-transform: uppercase;">
+              <span style="font-size: 0.72rem; font-weight: 700; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;">
                 <i class="fa-solid fa-recycle"></i> ${tipoMaterial}
               </span>
-              <h3 style="color: var(--verde-escuro, #1b6d24); margin-top: 8px; font-size: 1.15rem; font-weight: 800;">${coleta.quantidade || 'Quantidade aproximada'}</h3>
+              <h3 style="color: var(--verde-escuro, #1b6d24); margin: 6px 0 0; font-size: 1.1rem; font-weight: 700;">${coleta.quantidade || 'Quantidade aproximada'}</h3>
             </div>
-            <span style="font-size: 0.78rem; color: var(--cinza-texto-aux); font-weight: 600;">
-              ${new Date(coleta.criado_em).toLocaleDateString('pt-BR')}
+            <span style="font-size: 0.76rem; color: #6b7280; font-weight: 500; display: flex; align-items: center; gap: 5px;">
+              <i class="fa-regular fa-calendar" style="color: #9ca3af;"></i> Criada em ${new Date(coleta.criado_em).toLocaleDateString('pt-BR')}
             </span>
           </div>
 
-          <div style="font-size: 0.88rem; color: #444; background: #f9fbf9; padding: 12px; border-radius: 10px; border: 1px solid #e8f5e9; display: flex; flex-direction: column; gap: 4px;">
-            <p style="margin: 0;"><strong><i class="fa-solid fa-location-dot" style="color: #2e7d32;"></i> Ponto de Retirada:</strong> ${localNome}</p>
-            <p style="margin: 0; font-size: 0.82rem; color: #555;"><strong><i class="fa-solid fa-map-pin" style="color: #777;"></i> Endereço:</strong> ${enderecoCompleto}</p>
-            <p style="margin: 0;"><strong><i class="fa-solid fa-user" style="color: #0288d1;"></i> Ofertante:</strong> ${nomeDoador}</p>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.86rem; color: #374151; padding: 2px 0;">
+            <div style="display: flex; align-items: flex-start; gap: 8px;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex-shrink: 0; color: var(--verde-escuro, #1b6d24); margin-top: 1px;">
+                <i class="fa-solid fa-location-dot" style="font-size: 0.95rem;"></i>
+              </span>
+              <div>
+                <span style="color: #4b5563; font-weight: 600;">Ponto de Retirada:</span>
+                <span style="color: #111827; font-weight: 600;">${localNome}</span>
+                <div style="font-size: 0.8rem; color: #6b7280; margin-top: 1px;">${enderecoCompleto}</div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex-shrink: 0; color: var(--verde-escuro, #1b6d24);">
+                <i class="fa-solid fa-user" style="font-size: 0.95rem;"></i>
+              </span>
+              <span style="color: #4b5563; font-weight: 600;">Ofertante:</span>
+              <span style="color: #111827; font-weight: 600;">${nomeDoador}</span>
+            </div>
           </div>
 
+          ${fotoTag}
+
           <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
-            <button type="button" class="btn-abrir-mapa btn-secondary-pill" data-local="${localNome}" data-endereco="${enderecoCompleto}" style="height: 38px; padding: 0 10px; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #ffffff; border: 1.5px solid #2e7d32; color: #2e7d32; flex: 1; white-space: nowrap; box-sizing: border-box;">
-              <i class="fa-solid fa-map-location-dot" style="color: #2e7d32;"></i> Ver no Mapa
+            <button type="button" class="btn-abrir-mapa btn-coleta-secondary" data-local="${localNome}" data-endereco="${enderecoCompleto}" style="flex: 1;">
+              <i class="fa-solid fa-map-location-dot"></i> Ver no Mapa
             </button>
             ${coleta.cidadao_id ? `
-              <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-secondary-pill" style="height: 38px; padding: 0 10px; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; flex: 1; white-space: nowrap; box-sizing: border-box;">
-                <i class="fa-solid fa-comments"></i> Tirar Dúvidas
+              <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-coleta-secondary" style="flex: 1;">
+                <i class="fa-solid fa-comments"></i> Conversar
               </a>
             ` : ''}
           </div>
 
-          <button class="btn-avancar btn-agendar" data-coleta-id="${coleta.cod_coleta}" data-local-id="${coleta.local_retirada_id}" style="padding: 12px; font-size: 0.95rem; width: 100%; margin-top: 4px;">
-            <i class="fa-solid fa-calendar-plus"></i> ASSUMIR E AGENDAR COLETA
+          <button class="btn-coleta-primary btn-agendar" data-coleta-id="${coleta.cod_coleta}" data-local-id="${coleta.local_retirada_id}" style="height: 40px; width: 100%; font-size: 0.88rem; margin-top: 4px;">
+            <i class="fa-solid fa-calendar-plus"></i> Assumir e Agendar Coleta
           </button>
         `;
 
@@ -250,8 +263,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         <!-- Box de Confirmação e Escolha de Horário (Aparece após selecionar o dia) -->
         <div id="container-confirmar-agendamento" style="display: none; margin-top: 16px; background: #f9fbf9; padding: 16px; border-radius: 12px; border: 1.5px solid #a5d6a7;">
-          <div style="font-size: 0.95rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin-bottom: 8px;">
+          <div style="font-size: 0.95rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin-bottom: 6px;">
             <i class="fa-solid fa-calendar-day" style="color: #2e7d32;"></i> Data Selecionada: <span id="lbl-data-selecionada" style="color: #0288d1;">--</span>
+          </div>
+
+          <div id="lbl-horario-resumo-dia" style="font-size: 0.84rem; font-weight: 700; color: #1b6d24; margin-bottom: 12px; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 7px 12px; border-radius: 8px; display: none; align-items: center; gap: 6px;">
+            <i class="fa-regular fa-clock"></i> Atendimento Disponível: <span id="txt-horario-resumo-dia" style="color: #1b6d24; font-weight: 800;">--</span>
           </div>
 
           <div style="margin-top: 10px;">
@@ -299,7 +316,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     let dataSelecionadaStr = null;
 
     try {
-      const agendaData = await listarAgendaPorLocal(localId);
+      let locIdEfetivo = localId;
+      if (!locIdEfetivo) {
+        try {
+          const { getLocalRetiradaPadrao } = await import('../services/coletas.js');
+          const padrao = await getLocalRetiradaPadrao();
+          if (padrao) locIdEfetivo = padrao.id;
+        } catch (e) {}
+      }
+      const agendaData = await listarAgendaPorLocal(locIdEfetivo);
 
       renderCalendarGrid('agenda-calendar-picker', {
         agendaData,
@@ -313,16 +338,31 @@ document.addEventListener('DOMContentLoaded', async () => {
           const boxConfirmar = document.getElementById('container-confirmar-agendamento');
           const modalFeedback = document.getElementById('modal-feedback');
           const selectHorario = document.getElementById('select-horario-retirada');
+          const resumoBox = document.getElementById('lbl-horario-resumo-dia');
+          const resumoTxt = document.getElementById('txt-horario-resumo-dia');
 
           if (lblData) lblData.textContent = dataFormatada;
           if (boxConfirmar) boxConfirmar.style.display = 'block';
           if (modalFeedback) modalFeedback.style.display = 'none';
 
+          if (resumoBox && resumoTxt) {
+            if (entryDia && entryDia.disponivel) {
+              let textoAtendimento = `${entryDia.hora_inicio || '08:00'} às ${entryDia.hora_fim || '17:00'}`;
+              if (entryDia.hora_inicio_2 && entryDia.hora_fim_2) {
+                textoAtendimento = `${entryDia.hora_inicio} às ${entryDia.hora_fim} e ${entryDia.hora_inicio_2} às ${entryDia.hora_fim_2}`;
+              }
+              resumoTxt.textContent = textoAtendimento;
+              resumoBox.style.display = 'flex';
+            } else {
+              resumoBox.style.display = 'none';
+            }
+          }
+
           if (selectHorario) {
-            const slotsDoDia = (agendaData || []).filter(a => a.data === dateStr && a.disponivel);
-            if (slotsDoDia.length === 0 && entryDia && entryDia.disponivel) {
+            let slotsParaGerar = [];
+            if (entryDia && entryDia.disponivel) {
               if (entryDia.hora_inicio && entryDia.hora_fim) {
-                slotsDoDia.push({ 
+                slotsParaGerar.push({ 
                   hora_inicio: entryDia.hora_inicio, 
                   hora_fim: entryDia.hora_fim,
                   pausa_inicio: entryDia.pausa_inicio || null,
@@ -330,11 +370,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
               }
               if (entryDia.hora_inicio_2 && entryDia.hora_fim_2) {
-                slotsDoDia.push({ hora_inicio: entryDia.hora_inicio_2, hora_fim: entryDia.hora_fim_2 });
+                slotsParaGerar.push({ 
+                  hora_inicio: entryDia.hora_inicio_2, 
+                  hora_fim: entryDia.hora_fim_2,
+                  pausa_inicio: null,
+                  pausa_fim: null
+                });
               }
             }
 
-            const horariosGerados = gerarHorariosDisponiveis(slotsDoDia, dateStr);
+            if (slotsParaGerar.length === 0) {
+              slotsParaGerar = (agendaData || []).filter(a => String(a.data).slice(0, 10) === dateStr && a.disponivel);
+            }
+
+            const horariosGerados = gerarHorariosDisponiveis(slotsParaGerar, dateStr);
             const btnConfirmar = document.getElementById('btn-confirmar-agendamento-final');
 
             if (!horariosGerados || horariosGerados.length === 0) {
@@ -501,7 +550,7 @@ function gerarHorariosDisponiveis(slots, dateStr = null) {
     }
 
     while (curMin <= endMin) {
-      // Se estiver dentro da pausa para almoço, pula para o próximo horário
+      // Se estiver dentro do intervalo, pula para o próximo horário
       if (pIniMin !== -1 && pFimMin !== -1 && curMin >= pIniMin && curMin < pFimMin) {
         curMin += 30;
         continue;
@@ -523,6 +572,6 @@ function gerarHorariosDisponiveis(slots, dateStr = null) {
     }
   });
 
-  return lista;
+  return lista.sort();
 }
 

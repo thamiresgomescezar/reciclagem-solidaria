@@ -18,7 +18,7 @@ export function renderEnderecoForm(containerId) {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="campo">
             <label for="end_cep">CEP:<span class="req">*</span></label>
-            <input type="text" id="end_cep" class="input-underline" placeholder="00000-000" maxlength="9" required>
+            <input type="text" id="end_cep" class="input-underline" placeholder="00000-000" maxlength="9" autocomplete="off" required>
           </div>
           <div></div>
         </div>
@@ -27,35 +27,35 @@ export function renderEnderecoForm(containerId) {
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
           <div class="campo">
             <label for="end_cidade">Cidade:<span class="req">*</span></label>
-            <input type="text" id="end_cidade" class="input-underline" placeholder="Ex: Franco da Rocha">
+            <input type="text" id="end_cidade" class="input-underline" placeholder="Ex: Franco da Rocha" autocomplete="off">
           </div>
           <div class="campo">
             <label for="end_estado">Estado (UF):<span class="req">*</span></label>
-            <input type="text" id="end_estado" class="input-underline" placeholder="SP" maxlength="2" style="text-transform: uppercase;">
+            <input type="text" id="end_estado" class="input-underline" placeholder="SP" maxlength="2" style="text-transform: uppercase;" autocomplete="off">
           </div>
         </div>
 
         <!-- Linha 3: Bairro -->
         <div class="campo">
           <label for="end_bairro">Bairro:<span class="req">*</span></label>
-          <input type="text" id="end_bairro" class="input-underline" placeholder="Ex: Centro">
+          <input type="text" id="end_bairro" class="input-underline" placeholder="Ex: Centro" autocomplete="off">
         </div>
 
         <!-- Linha 4: Rua / Logradouro -->
         <div class="campo">
           <label for="end_rua">Rua / Logradouro:<span class="req">*</span></label>
-          <input type="text" id="end_rua" class="input-underline" placeholder="Ex: Rua das Flores">
+          <input type="text" id="end_rua" class="input-underline" placeholder="Ex: Rua das Flores" autocomplete="off">
         </div>
 
         <!-- Linha 5: Número e Complemento -->
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
           <div class="campo">
             <label for="end_numero">Número:<span class="req">*</span></label>
-            <input type="text" id="end_numero" class="input-underline" placeholder="Ex: 123 ou S/N">
+            <input type="text" id="end_numero" class="input-underline" placeholder="Ex: 123 ou S/N" autocomplete="off">
           </div>
           <div class="campo">
             <label for="end_complemento">Complemento <span style="font-size: 0.8rem; font-weight: 500; color: #777;">- Opcional</span>:</label>
-            <input type="text" id="end_complemento" class="input-underline" placeholder="Ex: Bloco B, portaria principal">
+            <input type="text" id="end_complemento" class="input-underline" placeholder="Ex: Bloco B, portaria principal" autocomplete="off">
           </div>
         </div>
       </div>

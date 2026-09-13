@@ -49,16 +49,13 @@ export async function initNavMenu() {
           <li class="sidebar-nav-item"><a href="${p('meu-perfil.html')}"><i class="fa-solid fa-user-gear"></i> Meu Perfil / Dados</a></li>
           <li class="sidebar-nav-item"><a href="${p('inserir-material.html')}"><i class="fa-solid fa-circle-plus"></i> Inserir Material</a></li>
           <li class="sidebar-nav-item"><a href="${p('gestao-coletas.html')}"><i class="fa-solid fa-recycle"></i> Gestão de Coletas</a></li>
-          <li class="sidebar-nav-item"><a href="${p('definir-agenda.html')}"><i class="fa-solid fa-calendar-days"></i> Definir Agenda</a></li>
-          <li class="sidebar-nav-item"><a href="${p('editar-local.html')}"><i class="fa-solid fa-map-location-dot"></i> Locais de Coleta</a></li>
-          <li class="sidebar-nav-item"><a href="${p('gestao-materiais.html')}"><i class="fa-solid fa-boxes-stacked"></i> Tipos de Materiais</a></li>
-          <li class="sidebar-nav-item"><a href="${p('gestao-status.html')}"><i class="fa-solid fa-tags"></i> Gestão de Status</a></li>
           <li class="sidebar-nav-item"><a href="${p('relatorios.html')}"><i class="fa-solid fa-chart-column"></i> Relatórios</a></li>
           <li class="sidebar-nav-item"><a href="${p('usuarios-cadastrados.html')}"><i class="fa-solid fa-users"></i> Usuários Cadastrados</a></li>
           <li class="sidebar-nav-item"><a href="${p('catadores-cadastrados.html')}"><i class="fa-solid fa-sitemap"></i> Catadores Cadastrados</a></li>
           <li class="sidebar-nav-item"><a href="${p('cadastrar-catador.html')}"><i class="fa-solid fa-user-plus"></i> Cadastrar Catador</a></li>
           <li class="sidebar-nav-item"><a href="${p('mensagens.html')}"><i class="fa-solid fa-comments"></i> Mensagens</a></li>
           <li class="sidebar-nav-item"><a href="${p('publicacoes.html')}"><i class="fa-solid fa-bullhorn"></i> Publicações</a></li>
+          <li class="sidebar-nav-item"><a href="${p('configuracoes.html')}"><i class="fa-solid fa-sliders"></i> Configurações do App</a></li>
         `;
       } else if (tipo === 'catador') {
         linksHtml += `
@@ -93,7 +90,7 @@ export async function initNavMenu() {
           <i class="fa-solid fa-mobile-screen-button"></i> Adicionar à Tela Inicial
         </a>
       </li>
-      <li class="sidebar-nav-item"><a href="${p('quem-somos.html')}"><i class="fa-solid fa-circle-info"></i> Quem Somos</a></li>
+      <li class="sidebar-nav-item"><a href="${p('quem-somos.html')}"><i class="fa-solid fa-circle-info"></i> Sobre Nós</a></li>
     `;
 
     if (isLogged) {
@@ -243,12 +240,12 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-// Ativação Ergonômica Universal: clicar em qualquer campo de data ou horário (ou no label) abre o seletor gráfico nativo
+// Ativação Ergonômica Universal: clicar em qualquer campo de data (ou no label) abre o seletor correspondente
 document.addEventListener('click', (e) => {
-  const input = e.target.closest('input[type="date"], input[type="time"], input[type="datetime-local"]');
-  if (input && typeof input.showPicker === 'function') {
+  const dateInput = e.target.closest('input[type="date"], input[type="datetime-local"]');
+  if (dateInput && typeof dateInput.showPicker === 'function') {
     try {
-      input.showPicker();
+      dateInput.showPicker();
     } catch (err) {}
     return;
   }
@@ -256,13 +253,14 @@ document.addEventListener('click', (e) => {
   const label = e.target.closest('label');
   if (label && label.htmlFor) {
     const alvo = document.getElementById(label.htmlFor);
-    if (alvo && (alvo.type === 'date' || alvo.type === 'time' || alvo.type === 'datetime-local') && typeof alvo.showPicker === 'function') {
+    if (alvo && (alvo.type === 'date' || alvo.type === 'datetime-local') && typeof alvo.showPicker === 'function') {
       try {
         alvo.showPicker();
       } catch (err) {}
     }
   }
-});
+}, true);
+
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initNavMenu);

@@ -51,28 +51,76 @@
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1.5rem; border-bottom: 2px solid #a5d6a7; padding-bottom: 1rem;">
               <div>
                 <h1 id="titulo_minhas_coletas" style="font-size: 1.75rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); margin: 0;">
-                  Histórico de Coletas
+                  Minhas Ofertas
                 </h1>
                 <p id="subtitulo_minhas_coletas" style="font-size: 0.88rem; color: #555; margin-top: 2px; margin-bottom: 0;">
-                  Gerencie o status das coletas disponibilizadas e atribua catadores
+                  Acompanhe suas ofertas de descarte sustentável e o status dos agendamentos
                 </p>
               </div>
 
-              <a href="./inserir-material.html" id="btn_top_acao" class="btn-avancar" style="width: auto; padding: 8px 18px; font-size: 0.88rem; text-decoration: none; border-radius: 8px;">
+              <a href="./inserir-material.html" id="btn_top_acao" class="btn-acao-primaria" style="width: auto; text-decoration: none;">
                 <i class="fa-solid fa-plus"></i> Nova Oferta
               </a>
             </div>
 
             <div id="feedback-msg" class="status-message"></div>
 
-            <!-- Toolbar de Filtros por Status da Coleta -->
+            <!-- Toolbar de Filtros por Status da Coleta Dinâmica Instantânea -->
             <div id="filtros_status_coletas" class="filtros-coletas-grid">
               <button type="button" class="btn-tab active" data-filtro="todos"><i class="fa-solid fa-layer-group"></i> Todas</button>
-              <button type="button" class="btn-tab" data-filtro="disponível"><i class="fa-solid fa-clock"></i> Disponíveis</button>
-              <button type="button" class="btn-tab" data-filtro="agendado"><i class="fa-solid fa-calendar-check"></i> Agendadas</button>
-              <button type="button" class="btn-tab" data-filtro="retirado"><i class="fa-solid fa-circle-check"></i> Retiradas</button>
-              <button type="button" class="btn-tab" data-filtro="cancelado"><i class="fa-solid fa-ban"></i> Canceladas</button>
+              <button type="button" class="btn-tab" data-filtro="disponível" data-cor="verde"><i class="fa-solid fa-clock"></i> Disponíveis</button>
+              <button type="button" class="btn-tab" data-filtro="agendada" data-cor="amarelo"><i class="fa-solid fa-calendar-check"></i> Agendadas</button>
+              <button type="button" class="btn-tab" data-filtro="reagendada" data-cor="amarelo"><i class="fa-solid fa-calendar-days"></i> Reagendadas</button>
+              <button type="button" class="btn-tab" data-filtro="retirada" data-cor="verde"><i class="fa-solid fa-circle-check"></i> Retiradas</button>
+              <button type="button" class="btn-tab" data-filtro="cancelada" data-cor="vermelho"><i class="fa-solid fa-ban"></i> Canceladas</button>
             </div>
+            <script>
+              (function() {
+                try {
+                  var raw = localStorage.getItem('reciclagem_lista_status');
+                  var container = document.getElementById('filtros_status_coletas');
+                  if (raw && container) {
+                    var list = JSON.parse(raw);
+                    if (Array.isArray(list) && list.length > 0) {
+                      var urlParams = new URLSearchParams(window.location.search);
+                      var f = (urlParams.get('status') || urlParams.get('filtro') || 'todos').toLowerCase();
+                      var h = '<button type="button" class="btn-tab ' + (f === 'todos' ? 'active' : '') + '" data-filtro="todos" data-status="todos"><i class="fa-solid fa-layer-group"></i> Todas</button>';
+                      list.forEach(function(st) {
+                        var cod = st.cod_status;
+                        var stNome = (st.status || '').toLowerCase().trim();
+                        var regras = st.regras || {};
+                        var icon = regras.icone;
+                        var disp = st.status.charAt(0).toUpperCase() + st.status.slice(1);
+                        var corId = (regras && regras.cor) ? regras.cor : (cod === 4 || cod === 5 || /cancel/i.test(stNome) ? 'vermelho' : /agend/i.test(stNome) ? 'amarelo' : 'verde');
+                        if (/cancel/i.test(stNome) || cod === 4 || cod === 5) {
+                          icon = 'fa-ban';
+                          disp = 'Canceladas';
+                        } else if (!icon) {
+                          if (/(retirad|conclu)/i.test(stNome)) { icon = 'fa-circle-check'; disp = 'Retiradas'; }
+                          else if (/reagend/i.test(stNome)) { icon = 'fa-calendar-days'; disp = 'Reagendadas'; }
+                          else if (/agend/i.test(stNome)) { icon = 'fa-calendar-check'; disp = 'Agendadas'; }
+                          else if (/dispon/i.test(stNome)) { icon = 'fa-box-open'; disp = 'Disponíveis'; }
+                          else { icon = 'fa-tag'; }
+                        } else {
+                          if (/(retirad|conclu)/i.test(stNome)) disp = 'Retiradas';
+                          else if (/reagend/i.test(stNome)) disp = 'Reagendadas';
+                          else if (/agend/i.test(stNome)) disp = 'Agendadas';
+                          else if (/dispon/i.test(stNome)) disp = 'Disponíveis';
+                          else if (/cancel/i.test(stNome)) disp = 'Canceladas';
+                        }
+                        var active = (f === String(cod)) || (f === stNome) ||
+                          (f === 'disponivel' && /dispon/i.test(stNome)) ||
+                          (f === 'cancelada' && /cancel/i.test(stNome)) ||
+                          (f === 'retirada' && /(retirad|conclu)/i.test(stNome)) ||
+                          (f === 'agendada' && /agend/i.test(stNome));
+                        h += '<button type="button" class="btn-tab ' + (active ? 'active' : '') + '" data-filtro="' + cod + '" data-status="' + cod + '" data-cor="' + corId + '" title="' + st.status + '"><i class="fa-solid ' + icon + '"></i> <span>' + disp + '</span></button>';
+                      });
+                      container.innerHTML = h;
+                    }
+                  }
+                } catch(e) {}
+              })();
+            </script>
 
             <!-- Lista de Coletas / Ofertas -->
             <div id="lista-minhas-coletas" style="display: flex; flex-direction: column; gap: 12px;">

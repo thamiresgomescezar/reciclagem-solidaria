@@ -4,17 +4,34 @@ import { cadastrarCatadorPorTerceiros } from '../services/auth.js';
 import { aplicarMascaraTelefone, formatarNomeTitleCase } from '../lib/validation.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // 1. Renderiza imediatamente o formulário de endereço de forma síncrona
+  renderEnderecoForm('endereco-container');
+
+  // 2. Limpa o formulário para evitar que o navegador preencha valores antigos em cache
+  const form = document.getElementById('cadastrar-catador-form');
+  if (form) {
+    try { form.reset(); } catch (e) {}
+  }
+
+  // 3. Configura botão voltar imediatamente se houver tipo em cache local
+  const tipoCache = localStorage.getItem('reciclagem_tipo_usuario') || sessionStorage.getItem('reciclagem_tipo_usuario');
+  const btnVoltar = document.getElementById('btn-voltar') || document.getElementById('btn-voltar-top');
+  if (btnVoltar && tipoCache) {
+    btnVoltar.onclick = (e) => {
+      e.preventDefault();
+      redirecionarPorPerfil(tipoCache);
+    };
+  }
+
+  // 4. Proteção de rota e obtenção do perfil
   const perfil = await proibirAcessoInvalido(['administrador', 'cidadao', 'catador']);
   if (!perfil) return;
 
-  renderEnderecoForm('endereco-container');
-
-  const btnVoltar = document.getElementById('btn-voltar') || document.getElementById('btn-voltar-top');
-  if (btnVoltar) {
-    btnVoltar.addEventListener('click', (e) => {
+  if (btnVoltar && perfil.tipo) {
+    btnVoltar.onclick = (e) => {
       e.preventDefault();
       redirecionarPorPerfil(perfil.tipo);
-    });
+    };
   }
 
   const form = document.getElementById('cadastrar-catador-form');

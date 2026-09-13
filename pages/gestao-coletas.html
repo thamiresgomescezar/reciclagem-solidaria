@@ -60,19 +60,67 @@
               <span style="font-size: 0.92rem; font-weight: 800; color: var(--verde-escuro, #1b6d24);">
                 <i class="fa-solid fa-layer-group"></i> Painel Geral de Coletas
               </span>
-              <a href="./gestao-status.html" class="btn-tab active" style="font-size: 0.85rem; padding: 7px 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="fa-solid fa-tags"></i> Gerenciar Lista de Status
+              <a href="./gestao-status.html" class="btn-acao-secundaria" title="Personalizar status e regras de coleta">
+                <i class="fa-solid fa-sliders"></i> Gerenciar Status
               </a>
             </div>
 
-            <!-- Filtros de Status Padronizados Com Aba 'Canceladas' Incluída -->
+            <!-- Filtros de Status Padronizados Dinâmicos com Inicialização Instantânea -->
             <div id="filtros_coletas" class="filtros-coletas-grid">
               <button class="btn-tab active" data-status="todos"><i class="fa-solid fa-layer-group"></i> Todas</button>
-              <button class="btn-tab" data-status="disponível"><i class="fa-solid fa-clock"></i> Disponíveis</button>
-              <button class="btn-tab" data-status="agendado"><i class="fa-solid fa-calendar-check"></i> Agendadas</button>
-              <button class="btn-tab" data-status="retirado"><i class="fa-solid fa-circle-check"></i> Retiradas</button>
-              <button class="btn-tab" data-status="cancelado"><i class="fa-solid fa-ban"></i> Canceladas</button>
+              <button class="btn-tab" data-status="disponível" data-cor="verde"><i class="fa-solid fa-clock"></i> Disponíveis</button>
+              <button class="btn-tab" data-status="agendada" data-cor="amarelo"><i class="fa-solid fa-calendar-check"></i> Agendadas</button>
+              <button class="btn-tab" data-status="reagendada" data-cor="amarelo"><i class="fa-solid fa-calendar-days"></i> Reagendadas</button>
+              <button class="btn-tab" data-status="retirada" data-cor="verde"><i class="fa-solid fa-circle-check"></i> Retiradas</button>
+              <button class="btn-tab" data-status="cancelada" data-cor="vermelho"><i class="fa-solid fa-ban"></i> Canceladas</button>
             </div>
+            <script>
+              (function() {
+                try {
+                  var raw = localStorage.getItem('reciclagem_lista_status');
+                  var container = document.getElementById('filtros_coletas');
+                  if (raw && container) {
+                    var list = JSON.parse(raw);
+                    if (Array.isArray(list) && list.length > 0) {
+                      var urlParams = new URLSearchParams(window.location.search);
+                      var f = (urlParams.get('status') || 'todos').toLowerCase();
+                      var h = '<button class="btn-tab ' + (f === 'todos' ? 'active' : '') + '" data-status="todos"><i class="fa-solid fa-layer-group"></i> Todas</button>';
+                      list.forEach(function(st) {
+                        var cod = st.cod_status;
+                        var stNome = (st.status || '').toLowerCase().trim();
+                        var regras = st.regras || {};
+                        var icon = regras.icone;
+                        var disp = st.status.charAt(0).toUpperCase() + st.status.slice(1);
+                        var corId = (regras && regras.cor) ? regras.cor : (cod === 4 || cod === 5 || /cancel/i.test(stNome) ? 'vermelho' : /agend/i.test(stNome) ? 'amarelo' : 'verde');
+                        if (/cancel/i.test(stNome) || cod === 4 || cod === 5) {
+                          icon = 'fa-ban';
+                          disp = 'Canceladas';
+                        } else if (!icon) {
+                          if (/(retirad|conclu)/i.test(stNome)) { icon = 'fa-circle-check'; disp = 'Retiradas'; }
+                          else if (/reagend/i.test(stNome)) { icon = 'fa-calendar-days'; disp = 'Reagendadas'; }
+                          else if (/agend/i.test(stNome)) { icon = 'fa-calendar-check'; disp = 'Agendadas'; }
+                          else if (/dispon/i.test(stNome)) { icon = 'fa-box-open'; disp = 'Disponíveis'; }
+                          else { icon = 'fa-tag'; }
+                        } else {
+                          if (/(retirad|conclu)/i.test(stNome)) disp = 'Retiradas';
+                          else if (/reagend/i.test(stNome)) disp = 'Reagendadas';
+                          else if (/agend/i.test(stNome)) disp = 'Agendadas';
+                          else if (/dispon/i.test(stNome)) disp = 'Disponíveis';
+                          else if (/cancel/i.test(stNome)) disp = 'Canceladas';
+                        }
+                        var active = (f === String(cod)) || (f === stNome) ||
+                          (f === 'disponivel' && /dispon/i.test(stNome)) ||
+                          (f === 'cancelada' && /cancel/i.test(stNome)) ||
+                          (f === 'retirada' && /(retirad|conclu)/i.test(stNome)) ||
+                          (f === 'agendada' && /agend/i.test(stNome));
+                        h += '<button class="btn-tab ' + (active ? 'active' : '') + '" data-status="' + cod + '" data-cor="' + corId + '" title="' + st.status + '"><i class="fa-solid ' + icon + '"></i> <span>' + disp + '</span></button>';
+                      });
+                      container.innerHTML = h;
+                    }
+                  }
+                } catch(e) {}
+              })();
+            </script>
 
             <!-- Container Dinâmico da Lista de Coletas -->
             <div id="lista_coletas_container" style="display: flex; flex-direction: column; gap: 12px;">
@@ -99,11 +147,13 @@
       listarCatadoresParaVincular, 
       vincularCatadorColeta, 
       getStatusDisponiveis, 
+      getStatusDisponiveisCache,
       atualizarStatusColeta,
       atualizarColetaCompleta,
       listarLocaisRetirada,
       resolverStatusColeta 
     } from '../js/services/coletas.js';
+    import { obterRegrasStatus, obterCoresStatus } from '../js/services/status.js';
     import { showConfirmModal, showAlertModal } from '../js/lib/modal.js';
     import { abrirModalEdicaoColeta, confirmarRetiradaComModal, abrirModalAtribuirCatador } from '../js/lib/modalColeta.js';
 
@@ -113,6 +163,79 @@
 
     let perfilAtual = null;
     let todasColetasCarregadas = [];
+
+    function sincronizarToolbarFiltros(listaStatus, filtroStatus = 'todos') {
+      const toolbarFiltros = document.getElementById('filtros_coletas');
+      if (!toolbarFiltros || !listaStatus || listaStatus.length === 0) return;
+
+      const fNormalizado = (filtroStatus || 'todos').toLowerCase();
+      let buttonsHtml = `
+        <button class="btn-tab ${fNormalizado === 'todos' ? 'active' : ''}" data-status="todos">
+          <i class="fa-solid fa-layer-group"></i> Todas
+        </button>
+      `;
+
+      listaStatus.forEach(st => {
+        const cod = st.cod_status;
+        const stNomeLower = (st.status || '').toLowerCase().trim();
+        const regras = st.regras || obterRegrasStatus(st.cod_status, st.status);
+        let iconClass = regras.icone;
+        let nomeDisplay = st.status.charAt(0).toUpperCase() + st.status.slice(1);
+
+        if (/cancel/i.test(stNomeLower) || cod === 4 || cod === 5) {
+          iconClass = 'fa-ban';
+          nomeDisplay = 'Canceladas';
+        } else if (!iconClass) {
+          if (/(retirad|conclu)/i.test(stNomeLower)) {
+            iconClass = 'fa-circle-check';
+            nomeDisplay = 'Retiradas';
+          } else if (/reagend/i.test(stNomeLower)) {
+            iconClass = 'fa-calendar-days';
+            nomeDisplay = 'Reagendadas';
+          } else if (/agend/i.test(stNomeLower)) {
+            iconClass = 'fa-calendar-check';
+            nomeDisplay = 'Agendadas';
+          } else if (/dispon/i.test(stNomeLower)) {
+            iconClass = 'fa-box-open';
+            nomeDisplay = 'Disponíveis';
+          } else {
+            iconClass = 'fa-tag';
+          }
+        } else {
+          if (/(retirad|conclu)/i.test(stNomeLower)) nomeDisplay = 'Retiradas';
+          else if (/reagend/i.test(stNomeLower)) nomeDisplay = 'Reagendadas';
+          else if (/agend/i.test(stNomeLower)) nomeDisplay = 'Agendadas';
+          else if (/dispon/i.test(stNomeLower)) nomeDisplay = 'Disponíveis';
+          else if (/cancel/i.test(stNomeLower)) nomeDisplay = 'Canceladas';
+        }
+
+        const icon = `<i class="fa-solid ${iconClass}"></i>`;
+        const ehAtivo = (fNormalizado === String(cod)) || (fNormalizado === stNomeLower) || 
+          (fNormalizado === 'disponivel' && /dispon/i.test(stNomeLower)) ||
+          (fNormalizado === 'cancelada' && /cancel/i.test(stNomeLower)) ||
+          (fNormalizado === 'retirada' && /(retirad|conclu)/i.test(stNomeLower)) ||
+          (fNormalizado === 'agendada' && /agend/i.test(stNomeLower));
+
+        const temaCor = obterCoresStatus(cod, stNomeLower);
+        const corId = (regras && regras.cor) ? regras.cor : (temaCor ? temaCor.id : 'verde');
+
+        buttonsHtml += `
+          <button class="btn-tab ${ehAtivo ? 'active' : ''}" data-status="${cod}" data-nome="${stNomeLower}" data-cor="${corId}" style="--cor-bg: ${temaCor.bg}; --cor-texto: ${temaCor.cor}; --cor-borda: ${temaCor.borda}; --cor-dot: ${temaCor.dot};" title="${st.status}">
+            ${icon} <span>${nomeDisplay}</span>
+          </button>
+        `;
+      });
+
+      toolbarFiltros.innerHTML = buttonsHtml;
+
+      toolbarFiltros.querySelectorAll('button').forEach(b => {
+        b.onclick = () => {
+          toolbarFiltros.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          carregarColetas(b.dataset.status);
+        };
+      });
+    }
 
     async function carregarColetas(filtroStatus = 'todos') {
       try {
@@ -126,59 +249,12 @@
         todasColetasCarregadas = coletas || [];
 
         // Renderiza e sincroniza dinamicamente os botões da toolbar de filtros conforme os status cadastrados
-        const toolbarFiltros = document.getElementById('filtros_coletas');
-        const fNormalizado = (filtroStatus || 'todos').toLowerCase();
-
-        if (toolbarFiltros && listaStatus && listaStatus.length > 0) {
-          let buttonsHtml = `
-            <button class="btn-tab ${fNormalizado === 'todos' ? 'active' : ''}" data-status="todos">
-              <i class="fa-solid fa-layer-group"></i> Todas
-            </button>
-          `;
-
-          listaStatus.forEach(st => {
-            const cod = st.cod_status;
-            const stNomeLower = (st.status || '').toLowerCase().trim();
-            let icon = '<i class="fa-solid fa-tag"></i>';
-            let nomeDisplay = st.status.charAt(0).toUpperCase() + st.status.slice(1);
-
-            if (/cancel/i.test(stNomeLower)) {
-              icon = '<i class="fa-solid fa-ban"></i>';
-              nomeDisplay = 'Canceladas';
-            } else if (/(retirad|conclu)/i.test(stNomeLower)) {
-              icon = '<i class="fa-solid fa-circle-check"></i>';
-              nomeDisplay = 'Retiradas';
-            } else if (/reagend/i.test(stNomeLower)) {
-              icon = '<i class="fa-solid fa-calendar-days"></i>';
-              nomeDisplay = 'Reagendadas';
-            } else if (/agend/i.test(stNomeLower)) {
-              icon = '<i class="fa-solid fa-calendar-check"></i>';
-              nomeDisplay = 'Agendadas';
-            } else if (/dispon/i.test(stNomeLower)) {
-              icon = '<i class="fa-solid fa-clock"></i>';
-              nomeDisplay = 'Disponíveis';
-            }
-
-            const ehAtivo = (fNormalizado === String(cod)) || (fNormalizado === stNomeLower);
-            buttonsHtml += `
-              <button class="btn-tab ${ehAtivo ? 'active' : ''}" data-status="${cod}">
-                ${icon} ${nomeDisplay}
-              </button>
-            `;
-          });
-
-          toolbarFiltros.innerHTML = buttonsHtml;
-
-          toolbarFiltros.querySelectorAll('button').forEach(b => {
-            b.onclick = () => {
-              toolbarFiltros.querySelectorAll('button').forEach(x => x.classList.remove('active'));
-              b.classList.add('active');
-              carregarColetas(b.dataset.status);
-            };
-          });
+        if (listaStatus && listaStatus.length > 0) {
+          sincronizarToolbarFiltros(listaStatus, filtroStatus);
         } else {
           document.querySelectorAll('#filtros_coletas button').forEach(b => {
             const st = (b.dataset.status || '').toLowerCase();
+            const fNormalizado = (filtroStatus || 'todos').toLowerCase();
             const ehAtivo = (st === fNormalizado) || (fNormalizado === 'todos' && (st === 'todos' || !st));
             if (ehAtivo) {
               b.classList.add('active');
@@ -269,146 +345,190 @@
           const ehCancelada = statusInfo.ehCancelada;
           const ehDisponivel = statusInfo.ehDisponivel;
 
-          let badgeBg = '#e8f5e9';
-          let badgeCor = '#1b5e20';
-          let statusTextoDisplay = statusInfo.rotulo;
+          const temaCard = statusInfo.temaCor || { bg: '#f0fdf4', cor: '#166534', borda: '#bbf7d0', dot: '#16a34a' };
+          const iconeCard = statusInfo.regras?.icone || (ehRetirada ? 'fa-circle-check' : ehAgendada ? 'fa-calendar-check' : ehCancelada ? 'fa-ban' : 'fa-clock');
+          const rotuloCard = (statusInfo.rotulo || 'COLETA')
+            .replace(/RETIRADO/gi, 'RETIRADA')
+            .replace(/CANCELADO/gi, 'CANCELADA')
+            .replace(/REAGENDADO/gi, 'REAGENDADA')
+            .replace(/AGENDADO/gi, 'AGENDADA');
+          const nomeCap = statusInfo.nome ? (statusInfo.nome.charAt(0).toUpperCase() + statusInfo.nome.slice(1)) : 'Status';
 
-          if (ehAgendada) {
-            badgeBg = '#fff8e1';
-            badgeCor = '#b78103';
-          } else if (ehRetirada) {
-            badgeBg = '#e8f5e9';
-            badgeCor = '#1b5e20';
-          } else if (ehCancelada) {
-            badgeBg = '#ffebee';
-            badgeCor = '#c62828';
-          }
+          let badgeBg = temaCard.bg;
+          let badgeCor = temaCard.cor;
+          let badgeBorda = temaCard.borda;
+          let statusTextoDisplay = rotuloCard;
 
           const fotoTag = (item.foto_url && item.foto_url.trim() !== '')
-            ? `<div style="position: relative; overflow: hidden; border-radius: 12px; background: #e8f5e9; border: 1.5px solid #a5d6a7; margin-bottom: 2px;">
-                <img src="${item.foto_url}" data-src="${item.foto_url}" alt="${matNome} (${item.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 180px; object-fit: cover; border-radius: 10px; cursor: pointer;" title="Clique para ampliar a foto">
+            ? `<div style="position: relative; overflow: hidden; border-radius: 12px; background: #e8f5e9; border: 1.5px solid #a5d6a7; margin-top: 8px; margin-bottom: 2px;">
+                <img src="${item.foto_url}" data-src="${item.foto_url}" alt="${matNome} (${item.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 180px; object-fit: cover; border-radius: 10px; cursor: pointer; transition: transform 0.2s;" title="Clique para ampliar a foto">
                 <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #ffffff; padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">
                   <i class="fa-solid fa-magnifying-glass-plus"></i> Ampliar
                 </div>
               </div>`
             : '';
 
+          let tituloBanner = 'Coleta';
+          if (ehRetirada || /retirad/i.test(statusInfo.nome)) tituloBanner = 'Coleta Retirada';
+          else if (ehAgendada) tituloBanner = 'Coleta Agendada';
+          else if (ehCancelada) tituloBanner = 'Coleta Cancelada';
+          else if (ehDisponivel) tituloBanner = 'Oferta Disponível';
+          else {
+            const n = String(statusInfo.nome || '').trim().toLowerCase();
+            if (n.endsWith('o')) {
+              tituloBanner = 'Coleta ' + (n.charAt(0).toUpperCase() + n.slice(1, -1) + 'a');
+            } else {
+              tituloBanner = 'Coleta ' + nomeCap;
+            }
+          }
+
           let bannerDataHoraHtml = '';
-          if (ehRetirada) {
+          if (ehRetirada || /retirad/i.test(statusInfo.nome)) {
             bannerDataHoraHtml = `
-              <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #1b5e20;">
-                <i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.25rem;"></i>
-                <div style="display: flex; flex-direction: column;">
-                  <span style="font-size: 0.85rem; font-weight: 800;">Coleta Retirada</span>
-                  <span style="font-size: 0.82rem; color: #2e7d32; font-weight: 600;">Retirado em: <strong>${dataHoraRetiradaFormatada || dataFormatada || 'Data registrada'}</strong></span>
+              <div style="background: ${temaCard.bg}; border: 1px solid ${temaCard.borda}; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+                <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
+                <div style="display: flex; flex-direction: column; gap: 1px;">
+                  <span style="font-size: 0.82rem; font-weight: 700; color: ${temaCard.cor};">${tituloBanner}</span>
+                  <span style="font-size: 0.8rem; color: #4b5563;">Retirada em: <strong style="color: #111827; font-weight: 600;">${dataHoraRetiradaFormatada || dataFormatada || 'Data registrada'}</strong></span>
                 </div>
               </div>
             `;
           } else if (ehAgendada) {
             bannerDataHoraHtml = `
-              <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #856404;">
-                <i class="fa-regular fa-calendar-check" style="color: #b78103; font-size: 1.25rem;"></i>
-                <div style="display: flex; flex-direction: column;">
-                  <span style="font-size: 0.85rem; font-weight: 800;">Coleta Agendada</span>
-                  <span style="font-size: 0.82rem; color: #5d4037; font-weight: 600;">Data e Horário Previsto: <strong>${dataHoraAgendadaFormatada || 'A combinar'}</strong></span>
+              <div style="background: ${temaCard.bg}; border: 1px solid ${temaCard.borda}; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+                <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
+                <div style="display: flex; flex-direction: column; gap: 1px;">
+                  <span style="font-size: 0.82rem; font-weight: 700; color: ${temaCard.cor};">${tituloBanner}</span>
+                  <span style="font-size: 0.8rem; color: #57534e;">Data e horário previsto: <strong style="color: #1c1917; font-weight: 600;">${dataHoraAgendadaFormatada || 'A combinar'}</strong></span>
                 </div>
               </div>
             `;
           } else if (ehCancelada) {
             bannerDataHoraHtml = `
-              <div style="background: #fff5f5; border: 1px solid #ef9a9a; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #c62828;">
-                <i class="fa-solid fa-ban" style="color: #c62828; font-size: 1.25rem;"></i>
-                <div style="display: flex; flex-direction: column;">
-                  <span style="font-size: 0.85rem; font-weight: 800;">Coleta Cancelada</span>
-                  <span style="font-size: 0.82rem; color: #c62828; font-weight: 600;">Cancelado em: <strong>${dataHoraCanceladaFormatada || dataFormatada || 'Data arquivada'}</strong></span>
+              <div style="background: ${temaCard.bg}; border: 1px solid ${temaCard.borda}; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+                <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
+                <div style="display: flex; flex-direction: column; gap: 1px;">
+                  <span style="font-size: 0.82rem; font-weight: 700; color: ${temaCard.cor};">${tituloBanner}</span>
+                  <span style="font-size: 0.8rem; color: #4b5563;">Cancelada em: <strong style="color: #111827; font-weight: 600;">${dataHoraCanceladaFormatada || dataFormatada || 'Data arquivada'}</strong></span>
                 </div>
               </div>
             `;
           } else {
             bannerDataHoraHtml = `
-              <div style="background: #f4fbf5; border: 1px dashed #a5d6a7; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #2e7d32;">
-                <i class="fa-regular fa-clock" style="color: #2e7d32; font-size: 1.25rem;"></i>
-                <div style="display: flex; flex-direction: column;">
-                  <span style="font-size: 0.85rem; font-weight: 800;">Oferta Disponível</span>
-                  <span style="font-size: 0.82rem; color: #555; font-weight: 500;">Aguardando atribuição de catador e agendamento da retirada</span>
+              <div style="background: ${temaCard.bg}; border: 1.5px dashed ${temaCard.borda}; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+                <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
+                <div style="display: flex; flex-direction: column; gap: 1px;">
+                  <span style="font-size: 0.84rem; font-weight: 800; color: ${temaCard.cor};">${tituloBanner}</span>
+                  <span style="font-size: 0.8rem; color: ${temaCard.cor}; opacity: 0.9; font-weight: 500;">Aguardando atribuição de catador e agendamento da retirada</span>
                 </div>
               </div>
             `;
           }
 
+
           let acoesAdminHtml = `
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end; margin-top: 10px; padding-top: 10px; border-top: 1px solid #edf2ed;">
-              ${statusInfo.bloquearDados ? `
-                <div style="font-size: 0.82rem; color: ${statusInfo.ehCancelada ? '#c62828' : '#2e7d32'}; font-weight: 800; background: ${statusInfo.ehCancelada ? '#ffebee' : '#e8f5e9'}; border: 1px solid ${statusInfo.ehCancelada ? '#ffcdd2' : '#c8e6c9'}; padding: 6px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid ${statusInfo.ehCancelada ? 'fa-ban' : 'fa-circle-check'}"></i> ${statusInfo.rotulo}
+            ${statusInfo.bloquearDados ? `
+              <div class="card-coleta-finalizada">
+                <div class="acoes-finalizadas-botoes">
+                  <button type="button" class="btn-editar-coleta btn-coleta-secondary" data-id="${item.cod_coleta || item.id}">
+                    <i class="fa-solid fa-eye"></i> Ver Detalhes
+                  </button>
+                  ${catadorAuthId ? `
+                    <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-coleta-secondary">
+                      <i class="fa-solid fa-comments"></i> Conversar
+                    </a>
+                  ` : ''}
                 </div>
-                <button type="button" class="btn-editar-coleta" data-id="${item.cod_coleta || item.id}" style="background: #ffffff; color: #555; border: 1px solid #ccc; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                  <i class="fa-solid fa-eye"></i> Ver Detalhes
-                </button>
-              ` : (statusInfo.requerCatador || ehAgendada) ? `
-                <button type="button" class="btn-confirmar-retirada" data-id="${item.cod_coleta || item.id}" data-catador="${item.catador_id || ''}" style="background: var(--verde-escuro, #1b6d24); color: white; border: none; border-radius: 999px; padding: 9px 18px; font-weight: 700; font-size: 0.84rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(27,109,36,0.25);">
+              </div>
+            ` : (statusInfo.requerCatador || ehAgendada) ? `
+              <div class="card-coleta-acoes">
+                <button type="button" class="btn-confirmar-retirada btn-coleta-primary btn-acao-destaque" data-id="${item.cod_coleta || item.id}" data-catador="${item.catador_id || ''}">
                   <i class="fa-solid fa-circle-check"></i> Confirmar Retirada
                 </button>
-                <button type="button" class="btn-atribuir-catador" data-id="${item.cod_coleta || item.id}" style="background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                  <i class="fa-solid fa-calendar-days"></i> Reagendar / Trocar Catador
-                </button>
-                <button type="button" class="btn-editar-coleta" data-id="${item.cod_coleta || item.id}" style="background: #ffffff; color: #555; border: 1px solid #ccc; border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                  <i class="fa-solid fa-pen-to-square"></i> Editar Dados
-                </button>
-              ` : `
-                <!-- Disponível / Aberta -->
-                <button type="button" class="btn-atribuir-catador" data-id="${item.cod_coleta || item.id}" style="background: var(--verde-escuro, #1b6d24); color: white; border: none; border-radius: 999px; padding: 9px 20px; font-weight: 700; font-size: 0.84rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(27,109,36,0.25);">
-                  <i class="fa-solid fa-user-plus"></i> Atribuir Catador / Agendar
-                </button>
-                <button type="button" class="btn-editar-coleta" data-id="${item.cod_coleta || item.id}" style="background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                  <i class="fa-solid fa-pen-to-square"></i> Editar Dados
-                </button>
-              `}
-
-              ${catadorAuthId ? `
-                <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-secondary-pill" style="height: 35px; padding: 0 14px; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; border-radius: 999px;">
-                  <i class="fa-solid fa-comments"></i> Conversar
-                </a>
-              ` : ''}
-            </div>
+                <div class="acoes-linha-botoes">
+                  <button type="button" class="btn-atribuir-catador btn-coleta-secondary btn-acao-larga" data-id="${item.cod_coleta || item.id}">
+                    <i class="fa-solid fa-calendar-days"></i> Reagendar / Trocar Catador
+                  </button>
+                  <div class="acoes-sublinha-dupla">
+                    <button type="button" class="btn-editar-coleta btn-coleta-secondary" data-id="${item.cod_coleta || item.id}">
+                      <i class="fa-solid fa-pen-to-square"></i> Editar Dados
+                    </button>
+                    ${catadorAuthId ? `
+                      <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-coleta-secondary">
+                        <i class="fa-solid fa-comments"></i> Conversar
+                      </a>
+                    ` : ''}
+                  </div>
+                </div>
+              </div>
+            ` : `
+              <!-- Disponível / Aberta -->
+              <div class="card-coleta-acoes">
+                <div class="acoes-linha-botoes">
+                  <button type="button" class="btn-atribuir-catador btn-coleta-primary btn-acao-larga" data-id="${item.cod_coleta || item.id}">
+                    <i class="fa-solid fa-user-plus"></i> Atribuir Catador / Agendar
+                  </button>
+                  <div class="acoes-sublinha-dupla">
+                    <button type="button" class="btn-editar-coleta btn-coleta-secondary" data-id="${item.cod_coleta || item.id}">
+                      <i class="fa-solid fa-pen-to-square"></i> Editar Dados
+                    </button>
+                    ${catadorAuthId ? `
+                      <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-coleta-secondary">
+                        <i class="fa-solid fa-comments"></i> Conversar
+                      </a>
+                    ` : ''}
+                  </div>
+                </div>
+              </div>
+            `}
           `;
 
           card.innerHTML = `
-            ${fotoTag}
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
               <div style="display: flex; flex-direction: column; gap: 2px;">
-                <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; font-weight: 800;">
-                  <i class="fa-solid fa-recycle"></i> ${matNome} — ${item.quantidade || 'Qtd não informada'}
+                <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-recycle" style="color: var(--verde-escuro, #1b6d24);"></i> ${matNome} — ${item.quantidade || 'Qtd não informada'}
                 </strong>
-                <span style="font-size: 0.78rem; color: #6b7280; font-weight: 600; display: flex; align-items: center; gap: 5px;">
-                  <i class="fa-regular fa-calendar" style="color: #2e7d32;"></i> Criada em ${dataFormatada || 'Data recente'}
+                <span style="font-size: 0.76rem; color: #6b7280; font-weight: 500; display: flex; align-items: center; gap: 5px;">
+                  <i class="fa-regular fa-calendar" style="color: #9ca3af;"></i> Criada em ${dataFormatada || 'Data recente'}
                 </span>
               </div>
-              <span style="font-size: 0.74rem; font-weight: 800; background: ${badgeBg}; color: ${badgeCor}; padding: 4px 12px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px;">
+              <span style="font-size: 0.72rem; font-weight: 700; background: ${badgeBg}; color: ${badgeCor}; border: 1px solid ${badgeBorda}; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;">
                 ${statusTextoDisplay}
               </span>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; color: #374151; padding: 4px 0;">
-              <div>
-                <strong style="color: var(--verde-escuro, #1b6d24);"><i class="fa-solid fa-location-dot" style="color: #2e7d32; width: 18px;"></i> Ponto de Retirada:</strong>
-                <span style="font-weight: 600;">${localNome}</span>
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.86rem; color: #374151; padding: 2px 0;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex-shrink: 0; color: var(--verde-escuro, #1b6d24);">
+                  <i class="fa-solid fa-location-dot" style="font-size: 0.95rem;"></i>
+                </span>
+                <span style="color: #4b5563; font-weight: 600;">Ponto de Retirada:</span>
+                <span style="color: #111827; font-weight: 600;">${localNome}</span>
               </div>
 
-              <div>
-                <strong style="color: var(--verde-escuro, #1b6d24);"><i class="fa-solid fa-user" style="color: #0288d1; width: 18px;"></i> Ofertante:</strong>
-                <span>${cidNome}${cidTel}</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex-shrink: 0; color: var(--verde-escuro, #1b6d24);">
+                  <i class="fa-solid fa-user" style="font-size: 0.95rem;"></i>
+                </span>
+                <span style="color: #4b5563; font-weight: 600;">Ofertante:</span>
+                <span style="color: #111827; font-weight: 600;">${cidNome}${cidTel}</span>
               </div>
 
-              <div>
-                <strong style="color: var(--verde-escuro, #1b6d24);"><i class="fa-solid fa-user-check" style="color: #2e7d32; width: 18px;"></i> Catador Atribuído:</strong>
-                <span style="font-weight: ${item.catador_id ? '700' : '500'}; color: ${item.catador_id ? '#1b5e20' : '#777'};">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex-shrink: 0; color: var(--verde-escuro, #1b6d24);">
+                  <i class="fa-solid fa-user-check" style="font-size: 0.95rem;"></i>
+                </span>
+                <span style="color: #4b5563; font-weight: 600;">Catador Atribuído:</span>
+                <span style="color: ${item.catador_id ? '#111827' : '#9ca3af'}; font-weight: ${item.catador_id ? '600' : '500'};">
                   ${item.catador_id ? catadorNome : 'Nenhum catador atribuído'}
                 </span>
               </div>
 
               ${bannerDataHoraHtml}
             </div>
+
+            ${fotoTag}
 
             ${acoesAdminHtml}
           `;
@@ -431,14 +551,16 @@
             const coletaAlvo = todasColetasCarregadas.find(c => (c.cod_coleta || c.id) === id);
 
             confirmarRetiradaComModal({
+              coleta: coletaAlvo,
               cod_coleta: id,
               catador_id: catId,
               material: coletaAlvo?.materiais?.tipo || coletaAlvo?.materiais?.nome,
               quantidade: coletaAlvo?.quantidade,
-              onConfirmada: (msg) => {
+              onConfirmada: (msg, infoStatus) => {
                 statusMsg.className = 'status-message success';
                 statusMsg.textContent = msg;
-                carregarColetas(filtroStatus);
+                const statusDestino = (infoStatus && infoStatus.cod_status) ? String(infoStatus.cod_status) : '3';
+                carregarColetas(statusDestino);
               }
             });
           });
@@ -462,10 +584,13 @@
               listaStatus,
               locaisRetirada,
               ehAdmin: true,
-              onSalvar: (msg) => {
+              onSalvar: (msg, infoStatus) => {
                 statusMsg.className = 'status-message success';
                 statusMsg.textContent = msg;
-                carregarColetas(filtroStatus);
+                const statusDestino = (infoStatus && (infoStatus.cod_status || infoStatus.nome_status))
+                  ? String(infoStatus.cod_status || infoStatus.nome_status)
+                  : filtroStatus;
+                carregarColetas(statusDestino);
               }
             });
           });
@@ -486,10 +611,11 @@
             abrirModalAtribuirCatador({
               coleta: coletaAlvo,
               catadores,
-              onSalvar: (msg) => {
+              onSalvar: (msg, infoStatus) => {
                 statusMsg.className = 'status-message success';
                 statusMsg.textContent = msg;
-                carregarColetas(filtroStatus);
+                const statusDestino = (infoStatus && infoStatus.cod_status) ? String(infoStatus.cod_status) : '2';
+                carregarColetas(statusDestino);
               }
             });
           });
@@ -508,12 +634,30 @@
         });
       }
 
-      document.querySelectorAll('#filtros_coletas button').forEach(b => {
-        b.addEventListener('click', () => {
-          document.querySelectorAll('#filtros_coletas button').forEach(x => x.classList.remove('active'));
-          b.classList.add('active');
-          carregarColetas(b.dataset.status);
+      const urlParams = new URLSearchParams(window.location.search);
+      const statusParam = urlParams.get('status') || 'todos';
+
+      // 1. Sincronização INSTANTÂNEA dos filtros via cache (0ms - exibe todos os status novos imediatamente)
+      const statusEmCache = getStatusDisponiveisCache();
+      if (statusEmCache && statusEmCache.length > 0) {
+        sincronizarToolbarFiltros(statusEmCache, statusParam);
+      } else {
+        document.querySelectorAll('#filtros_coletas button').forEach(b => {
+          b.addEventListener('click', () => {
+            document.querySelectorAll('#filtros_coletas button').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            carregarColetas(b.dataset.status);
+          });
         });
+      }
+
+      // 2. Busca lista fresca de status em paralelo no Supabase (não trava a interface nem espera as coletas)
+      getStatusDisponiveis().then(statusFrescos => {
+        if (statusFrescos && statusFrescos.length > 0) {
+          const btnAtivo = document.querySelector('#filtros_coletas button.active');
+          const stAtivo = btnAtivo ? (btnAtivo.dataset.status || statusParam) : statusParam;
+          sincronizarToolbarFiltros(statusFrescos, stAtivo);
+        }
       });
 
       const perfilLogado = await getPerfilAtual().catch(() => null);
@@ -527,7 +671,7 @@
         perfilAtual = acesso.perfil;
       }
 
-      await carregarColetas();
+      await carregarColetas(statusParam);
     });
 
     function abrirModalFoto(url, titulo) {

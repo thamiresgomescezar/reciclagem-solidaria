@@ -48,7 +48,7 @@ export async function criarHorarioAgenda({ local_retirada_id, data, hora_inicio,
   }
 }
 
-// Salva o mapa completo de agenda no banco de dados de uma só vez (1 registro por data com upsert atômico)
+// Salva o mapa completo de agenda no banco de dados de uma só vez (1 registro por data com upsert em lotes atômicos)
 export async function salvarAgendaEmLote({ local_retirada_id, mapaDatas, hora_inicio = '08:00', hora_fim = '17:00' }) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Usuário não autenticado.');
@@ -71,7 +71,7 @@ export async function salvarAgendaEmLote({ local_retirada_id, mapaDatas, hora_in
     } else if (entry) {
       isDisp = Boolean(entry.disponivel);
       hIni = entry.hora_inicio || hora_inicio;
-      hFim = entry.hora_fim || hora_fim;
+      hFim = entry.hora_fim_2 || entry.hora_fim || hora_fim;
       pIni = entry.pausa_inicio || null;
       pFim = entry.pausa_fim || null;
 
@@ -96,37 +96,185 @@ export async function salvarAgendaEmLote({ local_retirada_id, mapaDatas, hora_in
   });
 
   const registros = Array.from(mapUnico.values());
+  const BATCH_SIZE = 80;
+  const todosResultados = [];
 
-  // Upsert atômico com suporte às colunas pausa_inicio e pausa_fim
-  let { data, error } = await supabase
-    .from('agenda')
-    .upsert(registros, { onConflict: 'local_retirada_id,data' })
-    .select();
-  
-  if (error) {
-    // Fallback caso a tabela no Supabase ainda não tenha as colunas pausa_inicio/pausa_fim
-    if (error.code === '42703' || error.message?.includes('pausa_inicio') || error.message?.includes('pausa_fim')) {
-      const fallbackRegistros = registros.map(r => ({
-        local_retirada_id: r.local_retirada_id,
-        data: r.data,
-        hora_inicio: r.hora_inicio,
-        hora_fim: r.hora_fim,
-        disponivel: r.disponivel,
-        criado_por: r.criado_por
-      }));
+  for (let i = 0; i < registros.length; i += BATCH_SIZE) {
+    const chunk = registros.slice(i, i + BATCH_SIZE);
+    let { data, error } = await supabase
+      .from('agenda')
+      .upsert(chunk, { onConflict: 'local_retirada_id,data' })
+      .select();
 
-      const { data: fbData, error: fbError } = await supabase
-        .from('agenda')
-        .upsert(fallbackRegistros, { onConflict: 'local_retirada_id,data' })
-        .select();
+    if (error) {
+      // Fallback caso a tabela no Supabase ainda não tenha as colunas pausa_inicio/pausa_fim
+      if (error.code === '42703' || error.message?.includes('pausa_inicio') || error.message?.includes('pausa_fim')) {
+        const fallbackRegistros = chunk.map(r => ({
+          local_retirada_id: r.local_retirada_id,
+          data: r.data,
+          hora_inicio: r.hora_inicio,
+          hora_fim: r.hora_fim,
+          disponivel: r.disponivel,
+          criado_por: r.criado_por
+        }));
 
-      if (fbError) throw fbError;
-      return fbData;
+        const { data: fbData, error: fbError } = await supabase
+          .from('agenda')
+          .upsert(fallbackRegistros, { onConflict: 'local_retirada_id,data' })
+          .select();
+
+        if (fbError) throw fbError;
+        if (fbData) todosResultados.push(...fbData);
+      } else {
+        throw error;
+      }
+    } else if (data) {
+      todosResultados.push(...data);
     }
-    throw error;
   }
 
-  return data;
+  return todosResultados;
+}
+
+/**
+ * Cálculo 100% matemático e offline de feriados nacionais brasileiros (fixos e móveis).
+ * Não depende de nenhuma API, rede ou integração externa.
+ */
+export function calcularFeriadosNacionaisOffline(ano) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const fixos = [
+    { date: `${ano}-01-01`, name: 'Confraternização Universal' },
+    { date: `${ano}-04-21`, name: 'Tiradentes' },
+    { date: `${ano}-05-01`, name: 'Dia do Trabalho' },
+    { date: `${ano}-09-07`, name: 'Independência do Brasil' },
+    { date: `${ano}-10-12`, name: 'Nossa Senhora Aparecida' },
+    { date: `${ano}-11-02`, name: 'Finados' },
+    { date: `${ano}-11-15`, name: 'Proclamação da República' },
+    { date: `${ano}-11-20`, name: 'Dia Nacional de Zumbi e da Consciência Negra' },
+    { date: `${ano}-12-25`, name: 'Natal' }
+  ];
+
+  // Algoritmo Meeus/Jones/Butcher para Páscoa
+  const a = ano % 19;
+  const b = Math.floor(ano / 100);
+  const c = ano % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mesPascoa = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+  const diaPascoa = ((h + l - 7 * m + 114) % 31) + 1;
+  const pascoa = new Date(ano, mesPascoa, diaPascoa);
+
+  const addDias = (dias) => {
+    const dt = new Date(pascoa);
+    dt.setDate(dt.getDate() + dias);
+    return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+  };
+
+  const moveis = [
+    { date: addDias(-47), name: 'Carnaval' },
+    { date: addDias(-2), name: 'Sexta-feira Santa (Paixão de Cristo)' },
+    { date: addDias(0), name: 'Páscoa' },
+    { date: addDias(60), name: 'Corpus Christi' }
+  ];
+
+  const todos = [...fixos, ...moveis];
+  todos.sort((x, y) => x.date.localeCompare(y.date));
+  return todos;
+}
+
+/**
+ * Gera a agenda padrão do ano completo (todos os 12 meses)
+ * aplicando os dias da semana e horários definidos pelo administrador.
+ * 100% autônomo no software, sem necessidade de nenhuma API externa.
+ */
+export async function gerarAgendaAnual({
+  local_retirada_id,
+  ano,
+  diasSemana = [1, 2, 3, 4, 5],
+  hora_inicio = '08:00',
+  hora_fim = '17:00',
+  pausa_inicio = null,
+  pausa_fim = null,
+  fecharFeriados = false
+}) {
+  const anoNum = parseInt(ano, 10) || new Date().getFullYear();
+  let feriadosList = [];
+  if (fecharFeriados) {
+    feriadosList = calcularFeriadosNacionaisOffline(anoNum);
+  }
+  const feriadosMap = new Map();
+  feriadosList.forEach(f => feriadosMap.set(f.date, f.name));
+
+  const pad = (n) => String(n).padStart(2, '0');
+  const mapaDatas = {};
+
+  const isBissexto = (anoNum % 4 === 0 && anoNum % 100 !== 0) || (anoNum % 400 === 0);
+  const diasPorMes = [31, isBissexto ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  let totalDisponiveis = 0;
+  let totalFeriadosFechados = 0;
+
+  for (let m = 0; m < 12; m++) {
+    const totalDiasMes = diasPorMes[m];
+    for (let d = 1; d <= totalDiasMes; d++) {
+      const dataStr = `${anoNum}-${pad(m + 1)}-${pad(d)}`;
+      const dtObj = new Date(anoNum, m, d);
+      const dayOfWeek = dtObj.getDay();
+
+      const ehFeriado = feriadosMap.has(dataStr);
+      const diaPermitido = diasSemana.includes(dayOfWeek);
+
+      if (ehFeriado && fecharFeriados) {
+        totalFeriadosFechados++;
+        mapaDatas[dataStr] = {
+          disponivel: false,
+          hora_inicio,
+          hora_fim,
+          pausa_inicio: null,
+          pausa_fim: null
+        };
+      } else if (diaPermitido) {
+        totalDisponiveis++;
+        mapaDatas[dataStr] = {
+          disponivel: true,
+          hora_inicio,
+          hora_fim,
+          pausa_inicio: (pausa_inicio && pausa_fim && pausa_fim > pausa_inicio) ? pausa_inicio : null,
+          pausa_fim: (pausa_inicio && pausa_fim && pausa_fim > pausa_inicio) ? pausa_fim : null
+        };
+      } else {
+        mapaDatas[dataStr] = {
+          disponivel: false,
+          hora_inicio,
+          hora_fim,
+          pausa_inicio: null,
+          pausa_fim: null
+        };
+      }
+    }
+  }
+
+  await salvarAgendaEmLote({
+    local_retirada_id,
+    mapaDatas,
+    hora_inicio,
+    hora_fim
+  });
+
+  return {
+    ano: anoNum,
+    totalDias: Object.keys(mapaDatas).length,
+    totalDisponiveis,
+    totalFeriadosFechados,
+    feriados: feriadosList
+  };
 }
 
 // Alterna a disponibilidade de uma data específica
@@ -147,12 +295,26 @@ export async function listarAgendaPorLocal(localId) {
     query = query.eq('local_retirada_id', localId);
   }
 
-  const { data, error } = await query
+  let { data, error } = await query
     .order('data', { ascending: true })
     .order('hora_inicio', { ascending: true });
 
   if (error) throw error;
-  return data;
+
+  // Se filtrou por localId mas não encontrou registros, tenta sem filtro de localId
+  // pois há apenas 1 polo de atendimento físico (Fatec Franco da Rocha)
+  if (localId && (!data || data.length === 0)) {
+    const { data: allData, error: allErr } = await supabase
+      .from('agenda')
+      .select('*')
+      .order('data', { ascending: true })
+      .order('hora_inicio', { ascending: true });
+    if (!allErr && allData && allData.length > 0) {
+      return allData;
+    }
+  }
+
+  return data || [];
 }
 
 // Retorna apenas os dias marcados como DISPONÍVEIS para o catador agendar
@@ -170,9 +332,22 @@ export async function listarDatasDisponiveisCatador(localId) {
     query = query.eq('local_retirada_id', localId);
   }
 
-  const { data, error } = await query.order('data', { ascending: true });
+  let { data, error } = await query.order('data', { ascending: true });
   if (error) throw error;
-  return data;
+
+  if (localId && (!data || data.length === 0)) {
+    const { data: allData, error: allErr } = await supabase
+      .from('agenda')
+      .select('*')
+      .eq('disponivel', true)
+      .gte('data', hojeStr)
+      .order('data', { ascending: true });
+    if (!allErr && allData && allData.length > 0) {
+      return allData;
+    }
+  }
+
+  return data || [];
 }
 
 export async function deletarHorarioAgenda(agendaId) {
@@ -185,7 +360,8 @@ export async function deletarHorarioAgenda(agendaId) {
  * Prioridade:
  * 1. Registro explícito na tabela 'agenda' para a data
  * 2. Padrão semanal configurado pelo administrador no histórico da agenda
- * 3. Padrão geral do sistema (Segunda a Sexta das 08:00 às 17:00; Sábados e Domingos fechados)
+ * 3. Configuração persistida da agenda em localStorage (definida pelo administrador)
+ * 4. Padrão geral do sistema (Segunda a Sexta das 08:00 às 17:00; Sábados e Domingos fechados)
  */
 export async function obterHorarioFuncionamentoData(localId, dateStr) {
   if (!dateStr) {
@@ -215,14 +391,21 @@ export async function obterHorarioFuncionamentoData(localId, dateStr) {
         .from('agenda')
         .select('*')
         .eq('local_retirada_id', targetLocalId);
-      if (!error && data) agendaData = data;
+      if (!error && data && data.length > 0) agendaData = data;
+    }
+
+    if (agendaData.length === 0) {
+      const { data: allData, error: allErr } = await supabase
+        .from('agenda')
+        .select('*');
+      if (!allErr && allData && allData.length > 0) agendaData = allData;
     }
   } catch (e) {
     console.warn('Erro ao consultar agenda no Supabase:', e);
   }
 
   // 1. Procura se há configuração específica cadastrada para este dia
-  const diaEspecifico = agendaData.find(a => a.data === dataFmt);
+  const diaEspecifico = agendaData.find(a => String(a.data || '').slice(0, 10) === dataFmt);
   if (diaEspecifico) {
     const isDisp = Boolean(diaEspecifico.disponivel);
     let hIni = (diaEspecifico.hora_inicio || '08:00').slice(0, 5);
@@ -251,12 +434,13 @@ export async function obterHorarioFuncionamentoData(localId, dateStr) {
   // 2. Extrai padrão do histórico configurado para este mesmo dia da semana
   const diasDaMesmaSemana = agendaData.filter(a => {
     if (!a.data) return false;
-    const [ay, am, ad] = a.data.split('-').map(Number);
+    const dStr = String(a.data).slice(0, 10);
+    const [ay, am, ad] = dStr.split('-').map(Number);
     return new Date(ay, am - 1, ad).getDay() === diaSemanaIdx;
   });
 
   if (diasDaMesmaSemana.length > 0) {
-    diasDaMesmaSemana.sort((a, b) => b.data.localeCompare(a.data));
+    diasDaMesmaSemana.sort((a, b) => String(b.data).localeCompare(String(a.data)));
     const maisRecente = diasDaMesmaSemana[0];
     const isDisp = Boolean(maisRecente.disponivel);
     let hIni = (maisRecente.hora_inicio || '08:00').slice(0, 5);
@@ -276,7 +460,30 @@ export async function obterHorarioFuncionamentoData(localId, dateStr) {
     };
   }
 
-  // 3. Padrão Geral do Sistema:
+  // 3. Fallback sincronizado com a configuração salva pelo Administrador no navegador
+  try {
+    const rawStorage = localStorage.getItem('reciclagem_ultimo_horario_agenda');
+    if (rawStorage) {
+      const cfg = JSON.parse(rawStorage);
+      if (cfg && (cfg.abertura || cfg.fechamento)) {
+        const diasPermitidos = Array.isArray(cfg.diasSemana) ? cfg.diasSemana : [1, 2, 3, 4, 5];
+        const isDisp = diasPermitidos.includes(diaSemanaIdx);
+        const temP = Boolean(cfg.temPausa && cfg.pausaIni && cfg.pausaFim);
+        return {
+          disponivel: isDisp,
+          nomeDia,
+          data: dataFmt,
+          hora_inicio: (cfg.abertura || '08:00').slice(0, 5),
+          hora_fim: (cfg.fechamento || '17:00').slice(0, 5),
+          pausa_inicio: temP ? cfg.pausaIni.slice(0, 5) : null,
+          pausa_fim: temP ? cfg.pausaFim.slice(0, 5) : null,
+          origem: 'local_storage'
+        };
+      }
+    }
+  } catch (e) {}
+
+  // 4. Padrão Geral do Sistema:
   // Segunda a Sexta: 08:00 às 17:00 (aberto)
   // Sábado e Domingo: fechado
   const ehDiaUtil = (diaSemanaIdx >= 1 && diaSemanaIdx <= 5);
@@ -351,7 +558,7 @@ export async function validarHorarioAgendamento({ local_retirada_id, data, hora 
     };
   }
 
-  // 4. Validação de pausa para almoço / intervalo
+  // 4. Validação de pausa para intervalo
   if (info.pausa_inicio && info.pausa_fim) {
     const [ph1, pm1] = info.pausa_inicio.split(':').map(Number);
     const [ph2, pm2] = info.pausa_fim.split(':').map(Number);
@@ -361,7 +568,7 @@ export async function validarHorarioAgendamento({ local_retirada_id, data, hora 
     if (minSelecionado >= minPausaIni && minSelecionado < minPausaFim) {
       return {
         valido: false,
-        erro: `O ponto de retirada estará em pausa para almoço/intervalo das ${info.pausa_inicio} às ${info.pausa_fim}. Por favor, informe um horário antes das ${info.pausa_inicio} ou a partir das ${info.pausa_fim}.`
+        erro: `O ponto de retirada estará em intervalo das ${info.pausa_inicio} às ${info.pausa_fim}. Por favor, informe um horário antes das ${info.pausa_inicio} ou a partir das ${info.pausa_fim}.`
       };
     }
   }

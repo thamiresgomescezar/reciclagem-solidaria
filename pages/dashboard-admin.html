@@ -71,11 +71,14 @@
         <!-- 2/4 Centro: Grade Alinhada no Topo Padronizado -->
         <main class="center-panel">
           <div style="width: 100%; padding-bottom: 2rem;">
-            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.75rem; margin-top: 0;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.5rem; margin-top: 0;">
               Painel de Gestão e Operações
             </h1>
+            <p style="font-size: 0.9rem; color: var(--cinza-texto-aux, #666); text-align: center; margin-bottom: 1.5rem;">
+              Visão geral administrativa para monitoramento das atividades, parâmetros e operações da plataforma.
+            </p>
 
-            <div class="proto-grid-3x3">
+            <div class="proto-grid-2col proto-grid-admin">
               <!-- Linha 1: Operação e Fluxo de Coletas -->
               <a class="proto-card-btn" href="inserir-material.html">
                 <i class="fa-solid fa-circle-plus"></i>
@@ -85,26 +88,8 @@
                 <i class="fa-solid fa-recycle"></i>
                 <span>Gestão de Coletas</span>
               </a>
-              <a class="proto-card-btn" href="definir-agenda.html">
-                <i class="fa-solid fa-calendar-days"></i>
-                <span>Definir Agenda</span>
-              </a>
 
-              <!-- Linha 2: Infraestrutura, Materiais e Status -->
-              <a class="proto-card-btn" href="editar-local.html">
-                <i class="fa-solid fa-map-location-dot"></i>
-                <span>Locais de Coleta</span>
-              </a>
-              <a class="proto-card-btn" href="gestao-materiais.html">
-                <i class="fa-solid fa-boxes-stacked"></i>
-                <span>Tipos de Materiais</span>
-              </a>
-              <a class="proto-card-btn" href="gestao-status.html">
-                <i class="fa-solid fa-tags"></i>
-                <span>Status de Coletas</span>
-              </a>
-
-              <!-- Linha 3: Relatórios e Pessoas -->
+              <!-- Linha 2: Indicadores e Pessoas -->
               <a class="proto-card-btn" href="relatorios.html">
                 <i class="fa-solid fa-chart-column"></i>
                 <span>Relatórios</span>
@@ -113,16 +98,18 @@
                 <i class="fa-solid fa-users"></i>
                 <span>Usuários Cadastrados</span>
               </a>
+
+              <!-- Linha 3: Gestão de Catadores -->
               <a class="proto-card-btn" href="catadores-cadastrados.html">
                 <i class="fa-solid fa-sitemap"></i>
                 <span>Catadores Cadastrados</span>
               </a>
-
-              <!-- Linha 4: Cadastros e Comunicação -->
               <a class="proto-card-btn" href="cadastrar-catador.html">
                 <i class="fa-solid fa-user-plus" style="font-size: 2.25rem;"></i>
                 <span>Cadastrar Catador</span>
               </a>
+
+              <!-- Linha 4: Comunicação e Conteúdo -->
               <a class="proto-card-btn" href="mensagens.html">
                 <i class="fa-solid fa-comments"></i>
                 <span>Mensagens</span>
@@ -132,10 +119,14 @@
                 <span>Publicações</span>
               </a>
 
-              <!-- Linha 5: Institucional -->
+              <!-- Linha 5: Sistema e Institucional (Lado a Lado) -->
+              <a class="proto-card-btn" href="configuracoes.html">
+                <i class="fa-solid fa-sliders"></i>
+                <span>Configurações do App</span>
+              </a>
               <a class="proto-card-btn" href="quem-somos.html">
                 <i class="fa-solid fa-circle-info"></i>
-                <span>Quem Somos</span>
+                <span>Sobre Nós</span>
               </a>
             </div>
           </div>

@@ -98,7 +98,11 @@
             const ehRetirada = statusInfo.ehRetirada;
             const ehCancelada = statusInfo.ehCancelada;
             const ehAgendada = statusInfo.ehAgendada;
-            const statusNome = statusInfo.rotulo;
+            const statusNome = (statusInfo.rotulo || '')
+              .replace(/RETIRADO/gi, 'RETIRADA')
+              .replace(/CANCELADO/gi, 'CANCELADA')
+              .replace(/REAGENDADO/gi, 'REAGENDADA')
+              .replace(/AGENDADO/gi, 'AGENDADA');
 
             let dataHoraRetiradaFormatada = '';
             let dataHoraAgendadaFormatada = '';
@@ -158,12 +162,12 @@
                 ${ehRetirada ? `
                   <div style="background: #e8f5e9; border: 1.5px solid #a5d6a7; border-radius: 8px; padding: 6px 10px; margin-top: 4px; display: flex; align-items: center; gap: 8px; color: #1b5e20; font-size: 0.85rem; font-weight: 700;">
                     <i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.1rem;"></i>
-                    <span><strong>Retirado em:</strong> <span style="color: #1b5e20; font-weight: 800;">${dataHoraRetiradaFormatada || 'Data registrada'}</span></span>
+                    <span><strong>Retirada em:</strong> <span style="color: #1b5e20; font-weight: 800;">${dataHoraRetiradaFormatada || 'Data registrada'}</span></span>
                   </div>
                 ` : ehCancelada ? `
                   <div style="background: #fff5f5; border: 1.5px solid #ef9a9a; border-radius: 8px; padding: 6px 10px; margin-top: 4px; display: flex; align-items: center; gap: 8px; color: #c62828; font-size: 0.85rem; font-weight: 700;">
                     <i class="fa-solid fa-ban" style="color: #c62828; font-size: 1.1rem;"></i>
-                    <span><strong>Cancelado em:</strong> <span style="color: #c62828; font-weight: 800;">${dataHoraCanceladaFormatada || 'Data arquivada'}</span></span>
+                    <span><strong>Cancelada em:</strong> <span style="color: #c62828; font-weight: 800;">${dataHoraCanceladaFormatada || 'Data arquivada'}</span></span>
                   </div>
                 ` : `
                   <div style="background: #fff8e1; border: 1.5px solid #ffe082; border-radius: 8px; padding: 6px 10px; margin-top: 4px; display: flex; align-items: center; gap: 8px; color: #856404; font-size: 0.85rem; font-weight: 700;">
@@ -174,12 +178,12 @@
               </div>
 
               <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
-                <a href="./mensagens.html?coleta=${coleta.cod_coleta}" class="btn-pill" style="text-align: center; font-size: 12px; padding: 8px 12px; flex: 1; text-decoration: none;">
-                   CONTATAR DOADOR
+                <a href="./mensagens.html?coleta=${coleta.cod_coleta}" class="btn-coleta-secondary" style="text-align: center; flex: 1;">
+                   <i class="fa-solid fa-comments"></i> Contatar Doador
                 </a>
                 ${ehAgendada ? `
-                  <button type="button" class="btn-cancelar-agendamento-mob" data-id="${coleta.cod_coleta}" style="background: #fff5f5; border: 1.5px solid #ef9a9a; color: #c62828; border-radius: 999px; font-weight: 700; font-size: 12px; padding: 8px 12px; cursor: pointer; flex: 1;">
-                     Cancelar Agendamento
+                  <button type="button" class="btn-cancelar-agendamento-mob btn-coleta-danger" data-id="${coleta.cod_coleta}" style="flex: 1;">
+                     <i class="fa-solid fa-calendar-xmark"></i> Cancelar Agendamento
                   </button>
                 ` : ''}
               </div>
@@ -213,7 +217,7 @@
                     if (err.message?.includes('RLS') || err.message?.includes('banco de dados')) {
                       showAlertModal({
                         title: 'Ação Bloqueada pelo Banco de Dados',
-                        message: 'O Supabase não permitiu desvincular o material porque a regra de segurança (RLS) da tabela coleta ainda não autoriza o Catador a atualizar registros.\n\nPara liberar essa ação, basta rodar o comando SQL de permissão no SQL Editor do Supabase.',
+                        message: 'O Supabase não permitiu desvincular o material porque a regra de segurança (RLS) da tabela coleta não autoriza o Catador a atualizar registros.\n\nPara liberar essa ação, basta rodar o comando SQL de permissão no SQL Editor do Supabase.',
                         buttonText: 'Entendi'
                       });
                     }

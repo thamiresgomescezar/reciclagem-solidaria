@@ -20,7 +20,7 @@
     <!-- Top Header -->
     <div class="top-bar">
       <div></div>
-      <a href="#" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+      <a href="./dashboard-admin.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
         <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
       </a>
     </div>
@@ -46,46 +46,102 @@
         <!-- 2/4 Centro: Formulário de Cadastro por Terceiros Padronizado -->
         <main class="center-panel">
           <div style="max-width: 520px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
-            <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.5rem; margin-top: 0;">
               Cadastrar Catador por Terceiros
             </h1>
-            <p style="color: var(--cinza-texto-aux); font-size: 0.85rem; text-align: center; margin-bottom: 1.25rem;">
+            <p style="font-size: 0.9rem; color: var(--cinza-texto-aux, #666); text-align: center; margin-bottom: 1.25rem;">
               Registre um catador autônomo para que ele possa receber agendamentos de coleta, mesmo sem possuir e-mail ou aplicativo.
             </p>
 
             <div id="feedback-msg" class="status-message" style="margin-bottom: 1.25rem;"></div>
 
-            <form id="cadastrar-catador-form" novalidate>
+            <form id="cadastrar-catador-form" novalidate autocomplete="off">
               <div class="campo">
                 <label for="nome">Nome do Catador:<span class="req">*</span></label>
-                <input type="text" id="nome" class="input-underline" placeholder="Nome completo do catador" required>
+                <input type="text" id="nome" class="input-underline" placeholder="Nome completo do catador" maxlength="60" autocomplete="off" required>
               </div>
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div class="campo">
                   <label for="telefone">Telefone / Contato:</label>
-                  <input type="tel" id="telefone" class="input-underline" placeholder="(11) 90000-0000 (Opcional)">
+                  <input type="tel" id="telefone" class="input-underline" placeholder="(11) 90000-0000" autocomplete="off">
                 </div>
                 <div class="campo">
                   <label for="email">E-mail (Opcional):</label>
-                  <input type="email" id="email" class="input-underline" placeholder="catador@exemplo.com (Opcional)">
+                  <input type="email" id="email" class="input-underline" placeholder="catador@exemplo.com" autocomplete="off">
                 </div>
               </div>
 
-              <!-- Aviso sobre o E-mail -->
-              <div style="margin-top: 6px; margin-bottom: 12px; padding: 12px 14px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 10px; font-size: 0.82rem; color: #1b5e20; line-height: 1.45; display: flex; align-items: flex-start; gap: 10px;">
-                <i class="fa-solid fa-circle-info" style="margin-top: 2px; flex-shrink: 0; color: #2e7d32; font-size: 1rem;"></i>
-                <div>
-                  <strong>Aviso:</strong>Deixe o e-mail em branco se o catador não tiver celular ou e-mail; ele poderá receber coletas mesmo sem login criado. Caso ele crie um e-mail posteriormente, o administrador deve inseri-lo em <strong>Usuários Cadastrados</strong>. Assim, o catador poderá se cadastrar, acessar o sistema e resgatar seu histórico de coletas.
+              <!-- Orientação sobre o E-mail Posterior -->
+              <div style="margin-top: 8px; margin-bottom: 16px; padding: 12px 14px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 10px; font-size: 0.82rem; color: #1b5e20; line-height: 1.6; display: flex; align-items: flex-start; gap: 10px;">
+                <i class="fa-solid fa-circle-info" style="margin-top: 2px; flex-shrink: 0; color: #2e7d32; font-size: 1.1rem;"></i>
+                <div id="texto_orientacao_email" style="flex: 1; line-height: 1.6;">
+                  <span><strong>Orientação:</strong> Caso o catador crie um e-mail posteriormente, você poderá vinculá-lo em <a href="./usuarios-cadastrados.html" class="btn-acao-secundaria" style="font-size: 0.78rem !important; padding: 2px 8px !important; display: inline-flex !important; align-items: center; gap: 4px; vertical-align: middle; margin: 0 3px; text-decoration: none;" title="Ir para Usuários Cadastrados"><i class="fa-solid fa-users"></i> Usuários Cadastrados</a> para que ele acesse o app sem perder o histórico de coletas.</span>
                 </div>
               </div>
 
-              <h4 style="color: var(--verde-escuro, #1b6d24); margin-top: 1rem; margin-bottom: 0.5rem; font-size: 1rem; font-weight: 800; border-bottom: 2px solid #a5d6a7; padding-bottom: 4px;">
+              <h4 style="color: var(--verde-escuro, #1b6d24); margin-top: 1.25rem; margin-bottom: 0.75rem; font-size: 1rem; font-weight: 800; border-bottom: 2px solid #a5d6a7; padding-bottom: 4px;">
                 Endereço de Referência
               </h4>
-              <div id="endereco-container"></div>
+              <div id="endereco-container">
+                <div class="endereco-box" style="margin-top: 0.5rem; width: 100%;">
+                  <div class="campo" style="margin-bottom: 0.85rem;">
+                    <label for="sem_residencia" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 700; color: var(--verde-escuro, #1b6d24); font-size: 0.9rem;">
+                      <input type="checkbox" id="sem_residencia" name="sem_residencia" style="width: 18px; height: 18px; accent-color: #1b6d24; cursor: pointer;">
+                      Sem moradia
+                    </label>
+                  </div>
 
-              <button type="submit" id="btn-salvar" class="btn-avancar" style="margin-top: 1.5rem;">
+                  <div id="campos-endereco" style="display: block;">
+                    <!-- Linha 1: CEP -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                      <div class="campo">
+                        <label for="end_cep">CEP:<span class="req">*</span></label>
+                        <input type="text" id="end_cep" class="input-underline" placeholder="00000-000" maxlength="9" autocomplete="off" required>
+                      </div>
+                      <div></div>
+                    </div>
+
+                    <!-- Linha 2: Cidade e Estado -->
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+                      <div class="campo">
+                        <label for="end_cidade">Cidade:<span class="req">*</span></label>
+                        <input type="text" id="end_cidade" class="input-underline" placeholder="Ex: Franco da Rocha" autocomplete="off">
+                      </div>
+                      <div class="campo">
+                        <label for="end_estado">Estado (UF):<span class="req">*</span></label>
+                        <input type="text" id="end_estado" class="input-underline" placeholder="SP" maxlength="2" style="text-transform: uppercase;" autocomplete="off">
+                      </div>
+                    </div>
+
+                    <!-- Linha 3: Bairro -->
+                    <div class="campo">
+                      <label for="end_bairro">Bairro:<span class="req">*</span></label>
+                      <input type="text" id="end_bairro" class="input-underline" placeholder="Ex: Centro" autocomplete="off">
+                    </div>
+
+                    <!-- Linha 4: Rua / Logradouro -->
+                    <div class="campo">
+                      <label for="end_rua">Rua / Logradouro:<span class="req">*</span></label>
+                      <input type="text" id="end_rua" class="input-underline" placeholder="Ex: Rua das Flores" autocomplete="off">
+                    </div>
+
+                    <!-- Linha 5: Número e Complemento -->
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+                      <div class="campo">
+                        <label for="end_numero">Número:<span class="req">*</span></label>
+                        <input type="text" id="end_numero" class="input-underline" placeholder="Ex: 123 ou S/N" autocomplete="off">
+                      </div>
+                      <div class="campo">
+                        <label for="end_complemento">Complemento <span style="font-size: 0.8rem; font-weight: 500; color: #777;">- Opcional</span>:</label>
+                        <input type="text" id="end_complemento" class="input-underline" placeholder="Ex: Bloco B, portaria principal" autocomplete="off">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" id="btn-salvar" class="btn-avancar" style="margin-top: 1.5rem; width: 100%;">
                 <i class="fa-solid fa-user-check"></i> REGISTRAR CATADOR
               </button>
             </form>
@@ -98,15 +154,55 @@
     </div>
   </div>
 
+  <script>
+    // Inicialização síncrona imediata com base no perfil em cache
+    (function() {
+      try {
+        const tipo = localStorage.getItem('reciclagem_tipo_usuario') || sessionStorage.getItem('reciclagem_tipo_usuario');
+        const btnVoltarTop = document.getElementById('btn-voltar-top');
+        const textoOrientacao = document.getElementById('texto_orientacao_email');
+        if (tipo === 'administrador') {
+          if (btnVoltarTop) btnVoltarTop.href = './dashboard-admin.html';
+          if (textoOrientacao) {
+            textoOrientacao.innerHTML = '<span><strong>Orientação:</strong> Caso o catador crie um e-mail posteriormente, você poderá vinculá-lo em <a href="./usuarios-cadastrados.html" class="btn-acao-secundaria" style="font-size: 0.78rem !important; padding: 2px 8px !important; display: inline-flex !important; align-items: center; gap: 4px; vertical-align: middle; margin: 0 3px; text-decoration: none;" title="Ir para Usuários Cadastrados"><i class="fa-solid fa-users"></i> Usuários Cadastrados</a> para que ele acesse o app sem perder o histórico de coletas.</span>';
+          }
+        } else if (tipo === 'catador') {
+          if (btnVoltarTop) btnVoltarTop.href = './dashboard-catador.html';
+          if (textoOrientacao) {
+            textoOrientacao.innerHTML = '<span><strong>Orientação:</strong> Caso o catador passe a ter um e-mail posteriormente, informe a um administrador para vinculá-lo ao sistema em <strong>Usuários Cadastrados</strong>, permitindo que ele acesse o app sem perder o histórico de coletas.</span>';
+          }
+        } else if (tipo === 'cidadao') {
+          if (btnVoltarTop) btnVoltarTop.href = './dashboard-cidadao.html';
+          if (textoOrientacao) {
+            textoOrientacao.innerHTML = '<span><strong>Orientação:</strong> Caso o catador passe a ter um e-mail posteriormente, informe a um administrador para vinculá-lo ao sistema em <strong>Usuários Cadastrados</strong>, permitindo que ele acesse o app sem perder o histórico de coletas.</span>';
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
+
   <script type="module" src="../js/lib/navMenu.js"></script>
   <script type="module" src="../js/pages/cadastrarCatador.js"></script>
   <script type="module">
     import { getPerfilAtual } from '../js/services/auth.js';
+
     document.addEventListener('DOMContentLoaded', async () => {
       const btnVoltarTop = document.getElementById('btn-voltar-top');
-      const perfil = await getPerfilAtual();
-      if (perfil?.tipo) {
-        btnVoltarTop.href = perfil.tipo === 'administrador' ? './dashboard-admin.html' : (perfil.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+      const textoOrientacao = document.getElementById('texto_orientacao_email');
+      const perfil = await getPerfilAtual().catch(() => null);
+
+      if (perfil?.tipo === 'administrador') {
+        if (textoOrientacao) {
+          textoOrientacao.innerHTML = '<span><strong>Orientação:</strong> Caso o catador crie um e-mail posteriormente, você poderá vinculá-lo em <a href="./usuarios-cadastrados.html" class="btn-acao-secundaria" style="font-size: 0.78rem !important; padding: 2px 8px !important; display: inline-flex !important; align-items: center; gap: 4px; vertical-align: middle; margin: 0 3px; text-decoration: none;" title="Ir para Usuários Cadastrados"><i class="fa-solid fa-users"></i> Usuários Cadastrados</a> para que ele acesse o app sem perder o histórico de coletas.</span>';
+        }
+        if (btnVoltarTop) btnVoltarTop.href = './dashboard-admin.html';
+      } else if (perfil?.tipo) {
+        if (textoOrientacao) {
+          textoOrientacao.innerHTML = '<strong>Orientação:</strong> Caso o catador passe a ter um e-mail posteriormente, informe a um administrador para vinculá-lo ao sistema em <strong>Usuários Cadastrados</strong>, permitindo que ele acesse o app sem perder o histórico de coletas.';
+        }
+        if (btnVoltarTop) {
+          btnVoltarTop.href = perfil.tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html';
+        }
       }
     });
   </script>

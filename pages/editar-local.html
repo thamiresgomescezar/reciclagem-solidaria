@@ -20,8 +20,8 @@
     <!-- Top Header -->
     <div class="top-bar">
       <div></div>
-      <a href="./dashboard-admin.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
-        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      <a href="./configuracoes.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar a Configurações
       </a>
     </div>
 
@@ -46,9 +46,12 @@
         <!-- 2/4 Centro: Gestão de Locais de Retirada -->
         <main class="center-panel" style="align-items: stretch; justify-content: flex-start;">
           <div style="max-width: 680px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
-            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.5rem; margin-top: 0;">
               Gestão de Locais de Coleta & Retirada
             </h1>
+            <p style="font-size: 0.9rem; color: var(--cinza-texto-aux, #666); text-align: center; margin-bottom: 1.25rem;">
+              Cadastre novos pontos de coleta, atualize endereços completos e gerencie a ativação dos locais de retirada.
+            </p>
 
             <div id="statusMsg" class="status-message"></div>
 
@@ -57,7 +60,7 @@
               <span style="font-size: 1rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); display: inline-flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-location-dot" style="color: #2e7d32;"></i> Pontos de Retirada Cadastrados
               </span>
-              <button type="button" id="btn_toggle_form" class="btn-tab active" style="font-size: 0.85rem; padding: 7px 16px; white-space: nowrap;">
+              <button type="button" id="btn_toggle_form" class="btn-acao-primaria" title="Cadastrar novo ponto de coleta">
                 <i class="fa-solid fa-plus"></i> Novo Local de Coleta
               </button>
             </div>
@@ -76,7 +79,7 @@
 
                 <div class="campo">
                   <label for="local_nome">Nome do Ponto / Instituição:<span class="req">*</span></label>
-                  <input type="text" id="local_nome" class="input-underline" placeholder="Ex: Fatec Franco da Rocha" required>
+                  <input type="text" id="local_nome" class="input-underline" placeholder="Ex: Fatec Franco da Rocha" maxlength="60" required>
                 </div>
 
                 <!-- Linha 1: CEP -->
@@ -271,16 +274,16 @@
             : `${local.nome}, Franco da Rocha - SP`;
 
           card.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
-              <div>
-                <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
-                  <i class="fa-solid fa-location-dot" style="color: #2e7d32;"></i> ${local.nome}
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%;">
+              <div style="flex: 1; min-width: 0;">
+                <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; display: flex; align-items: center; gap: 8px; word-break: break-word;">
+                  <i class="fa-solid fa-location-dot" style="color: #2e7d32; flex-shrink: 0;"></i> ${local.nome}
                 </strong>
-                <div style="font-size: 0.88rem; color: #444; margin-top: 6px; line-height: 1.4;">
-                  <strong>Endereço:</strong> ${endCompleto}
-                </div>
               </div>
-              <div>${statusBadge}</div>
+              <div style="flex-shrink: 0; margin-left: auto;">${statusBadge}</div>
+            </div>
+            <div style="font-size: 0.88rem; color: #444; margin-top: 6px; line-height: 1.4; word-break: break-word; width: 100%;">
+              <strong>Endereço:</strong> ${endCompleto}
             </div>
 
             <div class="card-acoes-local" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1px solid #f0f0f0; width: 100%;">

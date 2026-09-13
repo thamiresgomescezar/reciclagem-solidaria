@@ -8,6 +8,118 @@
   <link rel="stylesheet" href="../css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .radio-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .radio-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 600px) {
+      .radio-grid-3,
+      .radio-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+    .radio-card-status {
+      border: 1.5px solid #c8e6c9;
+      border-radius: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fafdfa;
+      transition: all 0.2s ease;
+      user-select: none;
+      min-height: 44px;
+      box-sizing: border-box;
+    }
+    .radio-card-status:hover {
+      border-color: #81c784;
+      background: #f0fdf4;
+    }
+    .radio-card-status input[type="radio"] {
+      margin: 0;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--verde-escuro, #1b6d24);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .radio-card-status .radio-icon {
+      font-size: 0.95rem;
+      color: var(--verde-escuro, #1b6d24);
+      flex-shrink: 0;
+    }
+    .radio-card-status .radio-label {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #2e532b;
+      white-space: nowrap;
+    }
+    .radio-card-status:has(input[type="radio"]:checked) {
+      background: #f0fdf4;
+      border-color: var(--verde-escuro, #1b6d24);
+      box-shadow: 0 2px 6px rgba(27, 109, 36, 0.12);
+    }
+    .radio-card-status.danger .radio-icon,
+    .radio-card-status.danger .radio-label {
+      color: #c62828;
+    }
+    .radio-card-status.danger:has(input[type="radio"]:checked) {
+      background: #fff5f5;
+      border-color: #c62828;
+      box-shadow: 0 2px 6px rgba(198, 40, 40, 0.12);
+    }
+    .btn-info-ajuda {
+      background: none;
+      border: none;
+      color: var(--verde-escuro, #1b6d24);
+      font-size: 0.88rem;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.75;
+      transition: all 0.2s ease;
+    }
+    .btn-info-ajuda:hover {
+      opacity: 1;
+      transform: scale(1.18);
+      color: #14531d;
+    }
+    .box-dica-campo {
+      display: none;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-top: 6px;
+      margin-bottom: 8px;
+      font-size: 0.78rem;
+      color: #166534;
+      line-height: 1.45;
+      animation: fadeInDica 0.2s ease-out;
+    }
+    @keyframes fadeInDica {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #menu_seletor_icone::-webkit-scrollbar {
+      width: 6px;
+    }
+    #menu_seletor_icone::-webkit-scrollbar-thumb {
+      background: #c8e6c9;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
 
@@ -20,8 +132,8 @@
     <!-- Top Header -->
     <div class="top-bar">
       <div></div>
-      <a href="./dashboard-admin.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
-        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      <a href="./configuracoes.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar a Configurações
       </a>
     </div>
 
@@ -50,7 +162,7 @@
               Lista de Status de Coletas
             </h1>
             <p style="font-size: 0.9rem; color: var(--cinza-texto-aux, #666); text-align: center; margin-bottom: 1.25rem;">
-              Cadastre e personalize os status das coletas do sistema, garantindo a atualização dos dados e a gestão de cancelamentos e reagendamentos.
+              Cadastre e personalize os status das coletas do sistema.
             </p>
 
             <div id="statusMsg" class="status-message"></div>
@@ -61,10 +173,10 @@
                 <i class="fa-solid fa-list-check"></i> Status Cadastrados (<span id="total_status_count">0</span>)
               </span>
               <div style="display: flex; gap: 8px;">
-                <a href="./gestao-coletas.html" class="btn-secondary-pill" style="font-size: 0.82rem; padding: 6px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <a href="./gestao-coletas.html" class="btn-acao-secundaria" title="Acessar o painel geral de coletas">
                   <i class="fa-solid fa-recycle"></i> Ver Coletas
                 </a>
-                <button type="button" id="btn_toggle_form" class="btn-tab active" style="font-size: 0.85rem; padding: 6px 16px; cursor: pointer;">
+                <button type="button" id="btn_toggle_form" class="btn-acao-primaria" title="Cadastrar novo status">
                   <i class="fa-solid fa-plus"></i> Novo Status
                 </button>
               </div>
@@ -82,66 +194,166 @@
               <form id="form_status" novalidate>
                 <input type="hidden" id="edit_cod_status" value="">
 
+                <!-- 1. Nome do Status -->
                 <div class="campo" style="margin-bottom: 1.25rem;">
-                  <label for="input_nome_status" style="font-weight: 700; color: #2e532b; font-size: 0.9rem;">
-                    Nome do Status:<span class="req">*</span>
-                  </label>
-                  <input type="text" id="input_nome_status" class="input-underline" placeholder="Ex.: em análise, reagendado, aguardando transporte..." required style="width: 100%; box-sizing: border-box;">
-                  <span style="font-size: 0.78rem; color: #666; margin-top: 4px; display: block;">
-                    O nome será registrado e ficará imediatamente disponível para seleção nas coletas.
-                  </span>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <label for="input_nome_status" style="font-weight: 700; color: #2e532b; font-size: 0.9rem; margin: 0;">
+                        Nome do Status:<span class="req">*</span>
+                      </label>
+                      <button type="button" class="btn-info-ajuda" data-ajuda="nome" title="Ver orientação sobre o nome do status" aria-label="Ajuda sobre o nome do status">
+                        <i class="fa-solid fa-circle-question"></i>
+                      </button>
+                    </div>
+                    <span id="char_counter_status" style="font-size: 0.76rem; color: #666; font-weight: 700; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 999px;">0/25</span>
+                  </div>
+                  <div id="dica_nome" class="box-dica-campo">
+                    Digite um título curto e objetivo para identificar o status na plataforma (máx. 25 caracteres). Ex.: <em>em análise</em>, <em>reagendada</em>, <em>triagem</em>.
+                  </div>
+                  <input type="text" id="input_nome_status" class="input-underline" maxlength="25" placeholder="Ex.: em análise, reagendada..." required style="width: 100%; box-sizing: border-box;">
                 </div>
 
-                <!-- Parâmetro 1: Regra de Vínculo de Catador -->
+                <!-- 2. Regra de Vínculo de Catador -->
                 <div class="campo" style="margin-bottom: 1.25rem;">
-                  <label style="font-weight: 700; color: #2e532b; font-size: 0.9rem; display: block; margin-bottom: 6px;">
-                    <i class="fa-solid fa-user-gear"></i> Regra de Atendimento por Catador:<span class="req">*</span>
-                  </label>
-                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
-                    <label class="radio-card-status" style="border: 1.5px solid #c8e6c9; border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; background: #fafdfa;">
-                      <input type="radio" name="regra_catador" value="sem_catador" checked style="margin-top: 3px;">
-                      <div>
-                        <strong style="display: block; font-size: 0.85rem; color: #1b6d24;"><i class="fa-solid fa-box-open"></i> Sem Catador (Disponível)</strong>
-                        <span style="font-size: 0.74rem; color: #666; display: block; margin-top: 2px;">Coleta aberta para qualquer catador. Desvincula catador se já houver.</span>
-                      </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <label style="font-weight: 700; color: #2e532b; font-size: 0.9rem; margin: 0;">
+                        <i class="fa-solid fa-user-gear"></i> Regra de Atendimento por Catador:<span class="req">*</span>
+                      </label>
+                      <button type="button" class="btn-info-ajuda" data-ajuda="catador" title="Ver orientação sobre regra de catador" aria-label="Ajuda sobre regra de catador">
+                        <i class="fa-solid fa-circle-question"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div id="dica_catador" class="box-dica-campo">
+                    <strong>• Sem Catador:</strong> Coleta aberta e livre para novos agendamentos no mural.<br>
+                    <strong>• Requer Catador:</strong> O status só pode ser ativado quando um catador assumir a coleta.<br>
+                    <strong>• Opcional:</strong> Status neutro que não exige nem cancela o vínculo com catador.
+                  </div>
+                  <div class="radio-grid-3">
+                    <label class="radio-card-status" title="Coleta aberta para qualquer catador">
+                      <input type="radio" name="regra_catador" value="sem_catador" checked>
+                      <i class="fa-solid fa-box-open radio-icon"></i>
+                      <span class="radio-label">Sem Catador</span>
                     </label>
-                    <label class="radio-card-status" style="border: 1.5px solid #c8e6c9; border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; background: #fafdfa;">
-                      <input type="radio" name="regra_catador" value="requer_catador" style="margin-top: 3px;">
-                      <div>
-                        <strong style="display: block; font-size: 0.85rem; color: #1b6d24;"><i class="fa-solid fa-user-check"></i> Requer Catador (Agendada)</strong>
-                        <span style="font-size: 0.74rem; color: #666; display: block; margin-top: 2px;">Exige catador vinculado e definição de data e horário válidos na agenda.</span>
-                      </div>
+                    <label class="radio-card-status" title="Exige catador vinculado e agenda definida">
+                      <input type="radio" name="regra_catador" value="requer_catador">
+                      <i class="fa-solid fa-user-check radio-icon"></i>
+                      <span class="radio-label">Requer Catador</span>
                     </label>
-                    <label class="radio-card-status" style="border: 1.5px solid #c8e6c9; border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; background: #fafdfa;">
-                      <input type="radio" name="regra_catador" value="opcional" style="margin-top: 3px;">
-                      <div>
-                        <strong style="display: block; font-size: 0.85rem; color: #1b6d24;"><i class="fa-solid fa-shield-halved"></i> Neutro / Opcional</strong>
-                        <span style="font-size: 0.74rem; color: #666; display: block; margin-top: 2px;">Não impõe nem remove o vínculo existente de catador.</span>
-                      </div>
+                    <label class="radio-card-status" title="Não impõe nem remove o vínculo de catador">
+                      <input type="radio" name="regra_catador" value="opcional">
+                      <i class="fa-solid fa-shield-halved radio-icon"></i>
+                      <span class="radio-label">Opcional</span>
                     </label>
                   </div>
                 </div>
 
-                <!-- Parâmetro 2: Bloqueio dos Dados da Coleta -->
-                <div class="campo" style="margin-bottom: 1.5rem;">
-                  <label style="font-weight: 700; color: #2e532b; font-size: 0.9rem; display: block; margin-bottom: 6px;">
-                    <i class="fa-solid fa-lock"></i> Permissão de Alteração dos Dados da Coleta:<span class="req">*</span>
-                  </label>
-                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
-                    <label class="radio-card-status" style="border: 1.5px solid #c8e6c9; border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; background: #fafdfa;">
-                      <input type="radio" name="bloquear_dados" value="0" checked style="margin-top: 3px;">
-                      <div>
-                        <strong style="display: block; font-size: 0.85rem; color: #1b6d24;"><i class="fa-solid fa-pen-to-square"></i> Permitir Edição</strong>
-                        <span style="font-size: 0.74rem; color: #666; display: block; margin-top: 2px;">Dados de endereço, data, horário e observações permanecem editáveis.</span>
-                      </div>
+                <!-- 3. Permissão de Alteração / Bloqueio de Edição -->
+                <div class="campo" style="margin-bottom: 1.25rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <label style="font-weight: 700; color: #2e532b; font-size: 0.9rem; margin: 0;">
+                        <i class="fa-solid fa-lock"></i> Permissão de Edição da Coleta:<span class="req">*</span>
+                      </label>
+                      <button type="button" class="btn-info-ajuda" data-ajuda="bloqueio" title="Ver orientação sobre bloqueio de edição" aria-label="Ajuda sobre bloqueio de edição">
+                        <i class="fa-solid fa-circle-question"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div id="dica_bloqueio" class="box-dica-campo">
+                    <strong>• Permitir Edição:</strong> Permite que os usuários ajustem datas, endereço e observações.<br>
+                    <strong>• Bloquear Edição:</strong> Trava os dados contra alterações para preservar a auditoria histórica.
+                  </div>
+                  <div class="radio-grid-2">
+                    <label class="radio-card-status" title="Dados de endereço, data e observações permanecem editáveis">
+                      <input type="radio" name="bloquear_dados" value="0" checked>
+                      <i class="fa-solid fa-pen-to-square radio-icon"></i>
+                      <span class="radio-label">Permitir Edição</span>
                     </label>
-                    <label class="radio-card-status" style="border: 1.5px solid #c8e6c9; border-radius: 10px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px; background: #fafdfa;">
-                      <input type="radio" name="bloquear_dados" value="1" style="margin-top: 3px;">
-                      <div>
-                        <strong style="display: block; font-size: 0.85rem; color: #c62828;"><i class="fa-solid fa-lock"></i> Bloquear Dados (Somente Leitura)</strong>
-                        <span style="font-size: 0.74rem; color: #666; display: block; margin-top: 2px;">Campos travados e protegidos contra alterações (igual a Retirada e Cancelada).</span>
-                      </div>
+                    <label class="radio-card-status danger" title="Campos travados e protegidos contra alterações">
+                      <input type="radio" name="bloquear_dados" value="1">
+                      <i class="fa-solid fa-lock radio-icon"></i>
+                      <span class="radio-label">Bloquear Edição</span>
                     </label>
+                  </div>
+                </div>
+
+                <!-- 4. Seletor de Cor de Identificação do Status -->
+                <div class="campo" style="margin-bottom: 1.25rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <label style="font-weight: 700; color: #2e532b; font-size: 0.9rem; margin: 0;">
+                        <i class="fa-solid fa-palette"></i> Cor de Identificação do Status:<span class="req">*</span>
+                      </label>
+                      <button type="button" class="btn-info-ajuda" data-ajuda="cor" title="Ver orientação sobre cores de identificação" aria-label="Ajuda sobre cores">
+                        <i class="fa-solid fa-circle-question"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div id="dica_cor" class="box-dica-campo">
+                    Define o tom visual dos indicadores, cartões e badges de destaque deste status em todo o sistema.
+                  </div>
+                  <input type="hidden" id="input_cor_status" value="verde">
+                  <div id="paleta_cores_status" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 4px 0;">
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                    <span style="font-size: 0.78rem; color: #666; font-weight: 600;">Exemplo de visualização:</span>
+                    <span id="preview_badge_status" style="font-size: 0.72rem; font-weight: 700; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;">
+                      Exemplo
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 5. Seletor de Ícone Representativo com Pré-visualização Dinâmica -->
+                <div class="campo" style="margin-bottom: 1.5rem; position: relative;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <label style="font-weight: 700; color: #2e532b; font-size: 0.9rem; margin: 0;">
+                        <i class="fa-solid fa-icons"></i> Ícone Representativo do Status:<span class="req">*</span>
+                      </label>
+                      <button type="button" class="btn-info-ajuda" data-ajuda="icone" title="Ver orientação sobre o ícone representativo" aria-label="Ajuda sobre o ícone">
+                        <i class="fa-solid fa-circle-question"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div id="dica_icone" class="box-dica-campo">
+                    Clique no botão para abrir o catálogo visual de ícones. Você pode alternar entre visão em Lista detalhada ou Grade compacta.
+                  </div>
+
+                  <input type="hidden" id="input_icone_status" value="fa-tag">
+                  
+                  <div style="position: relative;">
+                    <!-- Botão Gatilho do Dropdown Customizado com Pré-visualização -->
+                    <button type="button" id="btn_seletor_icone" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border: 1.5px solid #a5d6a7; border-radius: 10px; background: #ffffff; cursor: pointer; text-align: left; transition: all 0.2s ease; box-sizing: border-box;">
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        <div id="preview_icone_selecionado" style="width: 36px; height: 36px; border-radius: 8px; background: #f0fdf4; border: 1.5px solid #bbf7d0; display: flex; align-items: center; justify-content: center; color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; flex-shrink: 0;" title="Ícone selecionado">
+                          <i class="fa-solid fa-tag"></i>
+                        </div>
+                        <span id="lbl_icone_selecionado" style="font-size: 0.88rem; font-weight: 700; color: #2e532b;">
+                          Etiqueta Geral / Padrão
+                        </span>
+                      </div>
+                      <i class="fa-solid fa-chevron-down" id="chevron_icone" style="color: #666; font-size: 0.8rem; transition: transform 0.2s ease;"></i>
+                    </button>
+
+                    <!-- Popover de Opções de Ícones com Alternância Lista / Grade -->
+                    <div id="menu_seletor_icone" style="display: none; position: absolute; left: 0; right: 0; top: calc(100% + 4px); background: #ffffff; border: 1.5px solid #a5d6a7; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); padding: 10px; z-index: 100; max-height: 260px; overflow-y: auto;">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #e8f5e9;">
+                        <span style="font-size: 0.74rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.04em;">
+                          Selecione o Ícone
+                        </span>
+                        <div style="display: flex; gap: 4px;">
+                          <button type="button" id="btn_modo_lista" style="padding: 2px 8px; font-size: 0.75rem; border-radius: 6px; border: 1px solid #c8e6c9; background: #e8f5e9; color: #166534; font-weight: 700; cursor: pointer;" title="Visualizar em Lista com Nomes">
+                            <i class="fa-solid fa-list"></i> Lista
+                          </button>
+                          <button type="button" id="btn_modo_grade" style="padding: 2px 8px; font-size: 0.75rem; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; font-weight: 600; cursor: pointer;" title="Visualizar em Grade de Ícones">
+                            <i class="fa-solid fa-table-cells"></i> Grade
+                          </button>
+                        </div>
+                      </div>
+                      <div id="lista_icones_opcoes"></div>
+                    </div>
                   </div>
                 </div>
 
@@ -175,7 +387,7 @@
   <script type="module" src="../js/lib/navMenu.js"></script>
   <script type="module">
     import { protegerRota } from '../js/lib/routeGuard.js';
-    import { listarStatus, criarStatus, atualizarStatus, excluirStatus, contarColetasPorStatus } from '../js/services/status.js';
+    import { listarStatus, criarStatus, atualizarStatus, excluirStatus, contarColetasPorStatus, PALETA_CORES_STATUS, obterCoresStatus } from '../js/services/status.js';
     import { showConfirmModal, showAlertModal } from '../js/lib/modal.js';
 
     const statusMsg = document.getElementById('statusMsg');
@@ -186,11 +398,334 @@
     const formStatus = document.getElementById('form_status');
     const inputEditCod = document.getElementById('edit_cod_status');
     const inputNomeStatus = document.getElementById('input_nome_status');
+    const charCounter = document.getElementById('char_counter_status');
+    const inputIconeStatus = document.getElementById('input_icone_status');
+    const btnSeletorIcone = document.getElementById('btn_seletor_icone');
+    const menuSeletorIcone = document.getElementById('menu_seletor_icone');
+    const chevronIcone = document.getElementById('chevron_icone');
+    const lblIconeSelecionado = document.getElementById('lbl_icone_selecionado');
+    const btnModoLista = document.getElementById('btn_modo_lista');
+    const btnModoGrade = document.getElementById('btn_modo_grade');
+    const previewIconeSel = document.getElementById('preview_icone_selecionado');
+    const inputCorStatus = document.getElementById('input_cor_status');
+    const paletaCoresContainer = document.getElementById('paleta_cores_status');
+    const previewBadgeStatus = document.getElementById('preview_badge_status');
     const btnToggleForm = document.getElementById('btn_toggle_form');
     const btnCancelarForm = document.getElementById('btn_cancelar_form');
     const btnCancelarAcao = document.getElementById('btn_cancelar_acao');
 
     let listaStatusAtual = [];
+    let modoExibicaoIcones = 'lista';
+
+    const ICONES_STATUS_CATALOGO = [
+      { id: 'fa-box-open', label: 'Disponível / Aberta' },
+      { id: 'fa-calendar-check', label: 'Agendada / Marcada' },
+      { id: 'fa-calendar-days', label: 'Reagendada / Datas' },
+      { id: 'fa-truck', label: 'Transporte / Em Trânsito' },
+      { id: 'fa-circle-check', label: 'Concluída / Retirada' },
+      { id: 'fa-ban', label: 'Cancelada / Bloqueada' },
+      { id: 'fa-clock', label: 'Aguardando / Em Espera' },
+      { id: 'fa-clock-rotate-left', label: 'Histórico / Reanálise' },
+      { id: 'fa-triangle-exclamation', label: 'Atenção / Pendência' },
+      { id: 'fa-recycle', label: 'Reciclagem / Triagem' },
+      { id: 'fa-handshake', label: 'Parceria / Acordo' },
+      { id: 'fa-user-check', label: 'Catador Vinculado' },
+      { id: 'fa-boxes-packing', label: 'Material Embalado' },
+      { id: 'fa-tag', label: 'Etiqueta Geral / Padrão' },
+      { id: 'fa-location-dot', label: 'Ponto / Retirada' },
+      { id: 'fa-clipboard-list', label: 'Checklist / Avaliação' }
+    ];
+
+    function renderizarOpcoesIcones() {
+      const container = document.getElementById('lista_icones_opcoes');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const corId = inputCorStatus ? inputCorStatus.value : 'verde';
+      const tema = PALETA_CORES_STATUS[corId] || PALETA_CORES_STATUS.verde;
+      const iconeAtual = inputIconeStatus ? inputIconeStatus.value : 'fa-tag';
+
+      if (modoExibicaoIcones === 'grade') {
+        container.style.display = 'grid';
+        container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(44px, 1fr))';
+        container.style.gap = '6px';
+        container.style.padding = '4px';
+
+        ICONES_STATUS_CATALOGO.forEach(item => {
+          const isSelected = item.id === iconeAtual;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.title = item.label;
+          btn.style.cssText = `
+            width: 100%;
+            height: 44px;
+            border-radius: 8px;
+            background: ${isSelected ? tema.bg : '#f9fafb'};
+            border: 1.5px solid ${isSelected ? tema.cor : '#e5e7eb'};
+            color: ${isSelected ? tema.cor : '#4b5563'};
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: ${isSelected ? `0 0 0 2px ${tema.borda}` : 'none'};
+          `;
+          btn.innerHTML = `<i class="fa-solid ${item.id}"></i>`;
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selecionarIcone(item.id);
+            fecharMenuIcones();
+          });
+          container.appendChild(btn);
+        });
+      } else {
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.gap = '3px';
+        container.style.padding = '0';
+
+        ICONES_STATUS_CATALOGO.forEach(item => {
+          const isSelected = item.id === iconeAtual;
+          const row = document.createElement('div');
+          row.style.cssText = `
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            background: ${isSelected ? tema.bg : 'transparent'};
+            border: 1px solid ${isSelected ? tema.borda : 'transparent'};
+            transition: all 0.15s ease;
+          `;
+          row.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+              <div style="width: 32px; height: 32px; border-radius: 7px; background: ${tema.bg}; border: 1px solid ${tema.borda}; color: ${tema.cor}; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;">
+                <i class="fa-solid ${item.id}"></i>
+              </div>
+              <span style="font-size: 0.86rem; font-weight: ${isSelected ? '700' : '600'}; color: ${isSelected ? tema.cor : '#1f2937'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${item.label}
+              </span>
+            </div>
+            ${isSelected ? `<i class="fa-solid fa-check" style="color: ${tema.cor}; font-size: 0.82rem; margin-left: 8px;"></i>` : ''}
+          `;
+
+          row.addEventListener('mouseenter', () => {
+            if (!isSelected) row.style.background = '#f9fafb';
+          });
+          row.addEventListener('mouseleave', () => {
+            if (!isSelected) row.style.background = 'transparent';
+          });
+          row.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selecionarIcone(item.id);
+            fecharMenuIcones();
+          });
+          container.appendChild(row);
+        });
+      }
+    }
+
+    function abrirMenuIcones() {
+      if (!menuSeletorIcone) return;
+      renderizarOpcoesIcones();
+      menuSeletorIcone.style.display = 'block';
+      if (chevronIcone) chevronIcone.style.transform = 'rotate(180deg)';
+    }
+
+    function fecharMenuIcones() {
+      if (!menuSeletorIcone) return;
+      menuSeletorIcone.style.display = 'none';
+      if (chevronIcone) chevronIcone.style.transform = 'rotate(0deg)';
+    }
+
+    function inicializarSelectIcones() {
+      if (btnSeletorIcone) {
+        btnSeletorIcone.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (menuSeletorIcone && menuSeletorIcone.style.display === 'block') {
+            fecharMenuIcones();
+          } else {
+            abrirMenuIcones();
+          }
+        });
+      }
+
+      document.addEventListener('click', (e) => {
+        if (menuSeletorIcone && !menuSeletorIcone.contains(e.target) && btnSeletorIcone && !btnSeletorIcone.contains(e.target)) {
+          fecharMenuIcones();
+        }
+      });
+
+      if (btnModoLista && btnModoGrade) {
+        btnModoLista.addEventListener('click', (e) => {
+          e.stopPropagation();
+          modoExibicaoIcones = 'lista';
+          btnModoLista.style.background = '#e8f5e9';
+          btnModoLista.style.color = '#166534';
+          btnModoLista.style.fontWeight = '700';
+          btnModoLista.style.borderColor = '#c8e6c9';
+
+          btnModoGrade.style.background = '#f8fafc';
+          btnModoGrade.style.color = '#64748b';
+          btnModoGrade.style.fontWeight = '600';
+          btnModoGrade.style.borderColor = '#e2e8f0';
+          renderizarOpcoesIcones();
+        });
+
+        btnModoGrade.addEventListener('click', (e) => {
+          e.stopPropagation();
+          modoExibicaoIcones = 'grade';
+          btnModoGrade.style.background = '#e8f5e9';
+          btnModoGrade.style.color = '#166534';
+          btnModoGrade.style.fontWeight = '700';
+          btnModoGrade.style.borderColor = '#c8e6c9';
+
+          btnModoLista.style.background = '#f8fafc';
+          btnModoLista.style.color = '#64748b';
+          btnModoLista.style.fontWeight = '600';
+          btnModoLista.style.borderColor = '#e2e8f0';
+          renderizarOpcoesIcones();
+        });
+      }
+
+      selecionarIcone(inputIconeStatus ? inputIconeStatus.value : 'fa-tag');
+    }
+
+    function selecionarIcone(iconId) {
+      if (!iconId) iconId = 'fa-tag';
+      if (inputIconeStatus) inputIconeStatus.value = iconId;
+
+      const itemInfo = ICONES_STATUS_CATALOGO.find(x => x.id === iconId) || { label: 'Etiqueta Geral / Padrão' };
+      if (lblIconeSelecionado) {
+        lblIconeSelecionado.textContent = itemInfo.label;
+      }
+
+      if (previewIconeSel) {
+        previewIconeSel.innerHTML = `<i class="fa-solid ${iconId}"></i>`;
+      }
+      renderizarOpcoesIcones();
+      atualizarPreviewBadge();
+    }
+
+    function inicializarBotoesAjuda() {
+      document.querySelectorAll('.btn-info-ajuda').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const tipoAjuda = btn.dataset.ajuda;
+          const targetBox = document.getElementById(`dica_${tipoAjuda}`);
+          if (!targetBox) return;
+
+          const isVisivel = targetBox.style.display === 'block';
+          // Fecha qualquer outra dica aberta no momento
+          document.querySelectorAll('.box-dica-campo').forEach(el => { el.style.display = 'none'; });
+
+          targetBox.style.display = isVisivel ? 'none' : 'block';
+        });
+      });
+
+      // Fecha as caixas de ajuda ao clicar fora
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.box-dica-campo') && !e.target.closest('.btn-info-ajuda')) {
+          document.querySelectorAll('.box-dica-campo').forEach(el => { el.style.display = 'none'; });
+        }
+      });
+    }
+
+    function inicializarPaletaCores() {
+      if (!paletaCoresContainer) return;
+      paletaCoresContainer.innerHTML = '';
+      Object.keys(PALETA_CORES_STATUS).forEach(corKey => {
+        const item = PALETA_CORES_STATUS[corKey];
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-cor-status-swatch';
+        btn.dataset.cor = item.id;
+        btn.title = item.nome;
+        btn.style.cssText = `
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: ${item.dot};
+          border: 2.5px solid transparent;
+          cursor: pointer;
+          transition: all 0.18s ease;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          box-sizing: border-box;
+          padding: 0;
+        `;
+        btn.addEventListener('click', () => {
+          selecionarCor(item.id);
+        });
+        paletaCoresContainer.appendChild(btn);
+      });
+      selecionarCor('verde');
+    }
+
+    function selecionarCor(corId) {
+      if (!corId || !PALETA_CORES_STATUS[corId]) corId = 'verde';
+      if (inputCorStatus) inputCorStatus.value = corId;
+      const tema = PALETA_CORES_STATUS[corId];
+
+      if (paletaCoresContainer) {
+        paletaCoresContainer.querySelectorAll('.btn-cor-status-swatch').forEach(btn => {
+          if (btn.dataset.cor === corId) {
+            btn.style.transform = 'scale(1.18)';
+            btn.style.boxShadow = `0 0 0 2px #ffffff, 0 0 0 4px ${tema.dot}`;
+            btn.innerHTML = '<i class="fa-solid fa-check" style="color: #ffffff; font-size: 0.72rem;"></i>';
+          } else {
+            btn.style.transform = 'scale(1)';
+            btn.style.boxShadow = 'none';
+            btn.innerHTML = '';
+          }
+        });
+      }
+
+      atualizarPreviewBadge();
+      renderizarOpcoesIcones();
+    }
+
+    function atualizarPreviewBadge() {
+      if (!previewBadgeStatus) return;
+      const corId = inputCorStatus ? inputCorStatus.value : 'verde';
+      const tema = PALETA_CORES_STATUS[corId] || PALETA_CORES_STATUS.verde;
+      const txt = (inputNomeStatus ? inputNomeStatus.value : '').trim() || 'Exemplo';
+
+      previewBadgeStatus.textContent = txt;
+      previewBadgeStatus.style.background = tema.bg;
+      previewBadgeStatus.style.color = tema.cor;
+      previewBadgeStatus.style.borderColor = tema.borda;
+
+      if (previewIconeSel) {
+        previewIconeSel.style.background = tema.bg;
+        previewIconeSel.style.color = tema.cor;
+        previewIconeSel.style.borderColor = tema.borda;
+      }
+    }
+
+    function atualizarContadorCaracteres() {
+      const len = inputNomeStatus.value.length;
+      if (charCounter) {
+        charCounter.textContent = `${len}/25`;
+        if (len >= 25) {
+          charCounter.style.color = '#c62828';
+          charCounter.style.background = '#ffebee';
+          charCounter.style.borderColor = '#ffcdd2';
+        } else {
+          charCounter.style.color = '#666';
+          charCounter.style.background = '#f0fdf4';
+          charCounter.style.borderColor = '#bbf7d0';
+        }
+      }
+      atualizarPreviewBadge();
+    }
+
+    if (inputNomeStatus) {
+      inputNomeStatus.addEventListener('input', atualizarContadorCaracteres);
+    }
 
     function mostrarMsg(texto, tipo = 'success') {
       statusMsg.className = `status-message ${tipo}`;
@@ -216,12 +751,17 @@
         const regras = statusItem.regras || {};
         const catadorVal = regras.regra_catador || 'opcional';
         const bloquearVal = regras.bloquear_dados ? '1' : '0';
+        const iconeVal = regras.icone || 'fa-tag';
+        const corVal = regras.cor || 'verde';
 
         const radioCat = formStatus.querySelector(`input[name="regra_catador"][value="${catadorVal}"]`);
         if (radioCat) radioCat.checked = true;
 
         const radioBloq = formStatus.querySelector(`input[name="bloquear_dados"][value="${bloquearVal}"]`);
         if (radioBloq) radioBloq.checked = true;
+
+        selecionarCor(corVal);
+        selecionarIcone(iconeVal);
       } else {
         formTitle.innerHTML = `<i class="fa-solid fa-circle-plus"></i> Cadastrar Novo Status`;
         inputEditCod.value = '';
@@ -232,8 +772,12 @@
 
         const radioBloq = formStatus.querySelector('input[name="bloquear_dados"][value="0"]');
         if (radioBloq) radioBloq.checked = true;
+
+        selecionarCor('verde');
+        selecionarIcone('fa-tag');
       }
 
+      atualizarContadorCaracteres();
       inputNomeStatus.focus();
       boxForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -242,6 +786,9 @@
       boxForm.style.display = 'none';
       inputEditCod.value = '';
       inputNomeStatus.value = '';
+      atualizarContadorCaracteres();
+      fecharMenuIcones();
+      document.querySelectorAll('.box-dica-campo').forEach(el => { el.style.display = 'none'; });
     }
 
     async function carregarLista() {
@@ -269,61 +816,63 @@
           const card = document.createElement('div');
           card.style.cssText = `
             background: #ffffff;
-            padding: 14px 18px;
+            padding: 12px 16px;
             border-radius: 12px;
-            border: 1px solid #c8e6c9;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.07);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.03);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
+            gap: 12px;
+            transition: all 0.2s ease;
           `;
 
           const nomeFormatado = st.status.charAt(0).toUpperCase() + st.status.slice(1);
           const regras = st.regras || {};
+          const temaCor = obterCoresStatus(st.cod_status, st.status);
 
-          let badgeCatador = '';
+          // Badges minimalistas apenas se relevantes
+          let tagCatador = '';
           if (regras.regra_catador === 'sem_catador') {
-            badgeCatador = `<span style="font-size: 0.72rem; font-weight: 700; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-box-open"></i> Sem Catador</span>`;
+            tagCatador = `<span style="font-size: 0.72rem; font-weight: 600; background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 1px 7px; border-radius: 6px;">Sem Catador</span>`;
           } else if (regras.regra_catador === 'requer_catador') {
-            badgeCatador = `<span style="font-size: 0.72rem; font-weight: 700; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-user-check"></i> Requer Catador</span>`;
-          } else {
-            badgeCatador = `<span style="font-size: 0.72rem; font-weight: 700; background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-shield-halved"></i> Vínculo Neutro</span>`;
+            tagCatador = `<span style="font-size: 0.72rem; font-weight: 600; background: #fefce8; color: #854d0e; border: 1px solid #fef08a; padding: 1px 7px; border-radius: 6px;">Requer Catador</span>`;
           }
 
-          let badgeBloqueio = '';
+          let tagBloqueio = '';
           if (regras.bloquear_dados) {
-            badgeBloqueio = `<span style="font-size: 0.72rem; font-weight: 700; background: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-lock"></i> Dados Bloqueados</span>`;
-          } else {
-            badgeBloqueio = `<span style="font-size: 0.72rem; font-weight: 700; background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-pen"></i> Dados Editáveis</span>`;
+            tagBloqueio = `<span title="Coletas com este status têm a edição de dados bloqueada contra alterações" style="font-size: 0.72rem; font-weight: 600; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 2px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-lock" style="font-size: 0.65rem; color: #64748b;"></i> Edição Bloqueada</span>`;
           }
+
+          const iconeStatus = regras.icone || 'fa-tag';
+          const textoColetas = countColetas === 0 ? 'Sem coletas' : (countColetas === 1 ? '1 coleta' : `${countColetas} coletas`);
 
           card.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <span style="font-size: 0.8rem; font-weight: 800; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); padding: 4px 8px; border-radius: 6px;">
-                #${st.cod_status}
-              </span>
-              <div>
+            <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
+              <div style="width: 36px; height: 36px; border-radius: 8px; background: ${temaCor.bg}; border: 1px solid ${temaCor.borda}; display: flex; align-items: center; justify-content: center; color: ${temaCor.cor}; font-size: 1rem; flex-shrink: 0;">
+                <i class="fa-solid ${iconeStatus}"></i>
+              </div>
+              <div style="min-width: 0;">
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                  <strong style="font-size: 1.05rem; color: var(--verde-escuro, #1b6d24); text-transform: capitalize;">
+                  <span style="font-size: 0.98rem; font-weight: 700; color: #1f2937; text-transform: capitalize; display: inline-flex; align-items: center; gap: 6px;">
                     ${nomeFormatado}
-                  </strong>
-                  ${badgeBloqueio}
-                  ${badgeCatador}
+                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${temaCor.dot};" title="Cor: ${temaCor.nome || st.status}"></span>
+                  </span>
+                  ${tagCatador}
+                  ${tagBloqueio}
                 </div>
-                <div style="font-size: 0.78rem; color: #666; margin-top: 4px;">
-                  <i class="fa-solid fa-recycle" style="color: #2e7d32;"></i> ${countColetas} coleta(s) vinculada(s)
+                <div style="font-size: 0.76rem; color: #6b7280; margin-top: 1px;">
+                  #${st.cod_status} • <span style="color: ${countColetas > 0 ? '#1b6d24' : '#6b7280'}; font-weight: ${countColetas > 0 ? '700' : '400'};">${textoColetas}</span>
                 </div>
               </div>
             </div>
 
-            <div style="display: flex; gap: 8px;">
-              <button type="button" class="btn-editar-status btn-secondary-pill" data-id="${st.cod_status}" style="padding: 6px 14px; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="fa-solid fa-pen-to-square"></i> Editar
+            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+              <button type="button" class="btn-editar-status btn-secondary-pill" data-id="${st.cod_status}" style="padding: 5px 12px; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                <i class="fa-solid fa-pen"></i> Editar
               </button>
-              <button type="button" class="btn-excluir-status btn-secondary-pill" data-id="${st.cod_status}" data-nome="${st.status}" data-count="${countColetas}" style="padding: 6px 12px; font-size: 0.82rem; cursor: pointer; color: #c62828; border-color: #ef9a9a; background: #fff5f5; display: inline-flex; align-items: center; gap: 6px;">
-                <i class="fa-solid fa-trash"></i> Excluir
+              <button type="button" class="btn-excluir-status btn-secondary-pill" data-id="${st.cod_status}" data-nome="${st.status}" data-count="${countColetas}" style="padding: 5px 10px; font-size: 0.8rem; cursor: pointer; color: #b91c1c; border-color: #fecaca; background: #fff5f5; display: inline-flex; align-items: center; gap: 5px;" title="Excluir status">
+                <i class="fa-solid fa-trash"></i>
               </button>
             </div>
           `;
@@ -389,48 +938,62 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Inicializa componentes visuais de forma segura
+      try { inicializarPaletaCores(); } catch (e) { console.warn('Paleta:', e); }
+      try { inicializarSelectIcones(); } catch (e) { console.warn('SelectIcones:', e); }
+      try { inicializarBotoesAjuda(); } catch (e) { console.warn('BotoesAjuda:', e); }
+
+      // 2. Proteção de rota para administradores
       const acesso = await protegerRota(['administrador']).catch(() => ({ permitido: false }));
       if (!acesso || !acesso.permitido) return;
 
-      btnToggleForm.addEventListener('click', () => abrirFormulario('novo'));
-      btnCancelarForm.addEventListener('click', fecharFormulario);
-      btnCancelarAcao.addEventListener('click', fecharFormulario);
+      // 3. Listeners de controle do formulário
+      if (btnToggleForm) btnToggleForm.addEventListener('click', () => abrirFormulario('novo'));
+      if (btnCancelarForm) btnCancelarForm.addEventListener('click', fecharFormulario);
+      if (btnCancelarAcao) btnCancelarAcao.addEventListener('click', fecharFormulario);
 
-      formStatus.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const codStatus = inputEditCod.value ? parseInt(inputEditCod.value, 10) : null;
-        const nomeStatus = inputNomeStatus.value.trim();
+      if (formStatus) {
+        formStatus.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const codStatus = inputEditCod.value ? parseInt(inputEditCod.value, 10) : null;
+          const nomeStatus = inputNomeStatus.value.trim();
 
-        if (!nomeStatus) {
-          mostrarMsg('Por favor, informe o nome do status.', 'error');
-          return;
-        }
-
-        const radioCat = formStatus.querySelector('input[name="regra_catador"]:checked');
-        const regraCatador = radioCat ? radioCat.value : 'opcional';
-        const radioBloq = formStatus.querySelector('input[name="bloquear_dados"]:checked');
-        const bloquearDados = radioBloq ? (radioBloq.value === '1') : false;
-
-        const regrasPayload = {
-          regra_catador: regraCatador,
-          bloquear_dados: bloquearDados
-        };
-
-        try {
-          if (codStatus) {
-            await atualizarStatus(codStatus, nomeStatus, regrasPayload);
-            mostrarMsg(`Status #${codStatus} atualizado com sucesso!`, 'success');
-          } else {
-            await criarStatus(nomeStatus, regrasPayload);
-            mostrarMsg(`Novo status "${nomeStatus}" cadastrado com sucesso!`, 'success');
+          if (!nomeStatus) {
+            mostrarMsg('Por favor, informe o nome do status.', 'error');
+            return;
           }
-          fecharFormulario();
-          carregarLista();
-        } catch (err) {
-          mostrarMsg(err.message, 'error');
-        }
-      });
 
+          const radioCat = formStatus.querySelector('input[name="regra_catador"]:checked');
+          const regraCatador = radioCat ? radioCat.value : 'opcional';
+          const radioBloq = formStatus.querySelector('input[name="bloquear_dados"]:checked');
+          const bloquearDados = radioBloq ? (radioBloq.value === '1') : false;
+          const iconeSelecionado = inputIconeStatus ? inputIconeStatus.value : 'fa-tag';
+          const corSelecionada = inputCorStatus ? inputCorStatus.value : 'verde';
+
+          const regrasPayload = {
+            regra_catador: regraCatador,
+            bloquear_dados: bloquearDados,
+            icone: iconeSelecionado,
+            cor: corSelecionada
+          };
+
+          try {
+            if (codStatus) {
+              await atualizarStatus(codStatus, nomeStatus, regrasPayload);
+              mostrarMsg(`Status #${codStatus} atualizado com sucesso!`, 'success');
+            } else {
+              await criarStatus(nomeStatus, regrasPayload);
+              mostrarMsg(`Novo status "${nomeStatus}" cadastrado com sucesso!`, 'success');
+            }
+            fecharFormulario();
+            carregarLista();
+          } catch (err) {
+            mostrarMsg(err.message, 'error');
+          }
+        });
+      }
+
+      // 4. Carrega a lista de status imediatamente
       await carregarLista();
     });
   </script>

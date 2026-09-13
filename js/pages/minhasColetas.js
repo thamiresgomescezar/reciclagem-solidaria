@@ -7,6 +7,7 @@ import {
   listarCatadoresParaVincular,
   vincularCatadorColeta,
   getStatusDisponiveis,
+  getStatusDisponiveisCache,
   atualizarStatusColeta,
   atualizarColetaCompleta,
   listarLocaisRetirada,
@@ -15,6 +16,7 @@ import {
 import { supabase } from '../lib/supabaseClient.js';
 import { showConfirmModal, showAlertModal } from '../lib/modal.js';
 import { abrirModalEdicaoColeta, confirmarRetiradaComModal, abrirModalAtribuirCatador } from '../lib/modalColeta.js';
+import { obterRegrasStatus, obterCoresStatus } from '../services/status.js';
 
 async function init() {
   const listaContainer = document.getElementById('lista-minhas-coletas');
@@ -26,7 +28,9 @@ async function init() {
   if (!perfil) return;
 
   // 2. Carregamento da lista apropriada para o perfil
-  await carregarLista(listaContainer, feedbackMsg, perfil);
+  const urlParams = new URLSearchParams(window.location.search);
+  const statusParam = urlParams.get('status') || 'todos';
+  await carregarLista(listaContainer, feedbackMsg, perfil, statusParam);
 
   if (btnVoltar && perfil) {
     btnVoltar.addEventListener('click', (e) => {
@@ -155,13 +159,22 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
         contagemPorNome[nome] = (contagemPorNome[nome] || 0) + 1;
       });
 
-      // Lista de status a exibir na toolbar: se listaStatus existir e tiver itens, usa ela; senão usa padrão
-      const statusListaEfetiva = (listaStatus && listaStatus.length > 0) ? listaStatus : [
+      // Lista de status a exibir na toolbar: se listaStatus existir e tiver itens, usa ela; senão usa cache ou padrão
+      const statusEmCache = getStatusDisponiveisCache();
+      let statusListaEfetiva = (listaStatus && listaStatus.length > 0) ? [...listaStatus] : (statusEmCache ? [...statusEmCache] : [
         { cod_status: 1, status: 'disponível' },
-        { cod_status: 2, status: 'agendado' },
-        { cod_status: 3, status: 'retirado' },
-        { cod_status: 4, status: 'cancelado' }
-      ];
+        { cod_status: 2, status: 'agendada' },
+        { cod_status: 6, status: 'reagendada' },
+        { cod_status: 3, status: 'retirada' },
+        { cod_status: 4, status: 'cancelada' }
+      ]);
+
+      if (éCatador) {
+        statusListaEfetiva = statusListaEfetiva.filter(st => {
+          const s = (st.status || '').toLowerCase().trim();
+          return st.cod_status !== 1 && !/dispon/i.test(s);
+        });
+      }
 
       let tabsHtml = `
         <button type="button" class="btn-tab ${filtroStatusAtivo === 'todos' ? 'active' : ''}" data-filtro="todos" data-status="todos">
@@ -172,25 +185,38 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
       statusListaEfetiva.forEach(st => {
         const cod = st.cod_status;
         const stNomeLower = (st.status || '').toLowerCase().trim();
-        let icon = '<i class="fa-solid fa-tag"></i>';
+        const regras = st.regras || obterRegrasStatus(st.cod_status, st.status);
+        let iconClass = regras.icone;
         let nomeDisplay = st.status.charAt(0).toUpperCase() + st.status.slice(1);
 
-        if (/cancel/i.test(stNomeLower)) {
-          icon = '<i class="fa-solid fa-ban"></i>';
+        if (/cancel/i.test(stNomeLower) || cod === 4 || cod === 5) {
+          iconClass = 'fa-ban';
           nomeDisplay = 'Canceladas';
-        } else if (/(retirad|conclu)/i.test(stNomeLower)) {
-          icon = '<i class="fa-solid fa-circle-check"></i>';
-          nomeDisplay = 'Retiradas';
-        } else if (/reagend/i.test(stNomeLower)) {
-          icon = '<i class="fa-solid fa-calendar-days"></i>';
-          nomeDisplay = 'Reagendadas';
-        } else if (/agend/i.test(stNomeLower)) {
-          icon = '<i class="fa-solid fa-calendar-check"></i>';
-          nomeDisplay = 'Agendadas';
-        } else if (/dispon/i.test(stNomeLower)) {
-          icon = '<i class="fa-solid fa-clock"></i>';
-          nomeDisplay = 'Disponíveis';
+        } else if (!iconClass) {
+          if (/(retirad|conclu)/i.test(stNomeLower)) {
+            iconClass = 'fa-circle-check';
+            nomeDisplay = 'Retiradas';
+          } else if (/reagend/i.test(stNomeLower)) {
+            iconClass = 'fa-calendar-days';
+            nomeDisplay = 'Reagendadas';
+          } else if (/agend/i.test(stNomeLower)) {
+            iconClass = 'fa-calendar-check';
+            nomeDisplay = 'Agendadas';
+          } else if (/dispon/i.test(stNomeLower)) {
+            iconClass = 'fa-box-open';
+            nomeDisplay = 'Disponíveis';
+          } else {
+            iconClass = 'fa-tag';
+          }
+        } else {
+          if (/(retirad|conclu)/i.test(stNomeLower)) nomeDisplay = 'Retiradas';
+          else if (/reagend/i.test(stNomeLower)) nomeDisplay = 'Reagendadas';
+          else if (/agend/i.test(stNomeLower)) nomeDisplay = 'Agendadas';
+          else if (/dispon/i.test(stNomeLower)) nomeDisplay = 'Disponíveis';
+          else if (/cancel/i.test(stNomeLower)) nomeDisplay = 'Canceladas';
         }
+
+        const icon = `<i class="fa-solid ${iconClass}"></i>`;
 
         // Calcula contagem com suporte a canceladas (cod 4 e 5) e compatibilidade de nome
         let count = contagemPorCodigo[cod] || 0;
@@ -200,10 +226,18 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
           count = contagemPorNome[stNomeLower];
         }
 
-        const ehAtivo = filtroStatusAtivo === String(cod) || filtroStatusAtivo === stNomeLower;
+        const ehAtivo = filtroStatusAtivo === String(cod) || filtroStatusAtivo === stNomeLower ||
+          (filtroStatusAtivo === 'disponivel' && /dispon/i.test(stNomeLower)) ||
+          (filtroStatusAtivo === 'cancelada' && /cancel/i.test(stNomeLower)) ||
+          (filtroStatusAtivo === 'retirada' && /(retirad|conclu)/i.test(stNomeLower)) ||
+          (filtroStatusAtivo === 'agendada' && /agend/i.test(stNomeLower));
+
+        const temaCor = obterCoresStatus(cod, stNomeLower);
+        const corId = (regras && regras.cor) ? regras.cor : (temaCor ? temaCor.id : 'verde');
+
         tabsHtml += `
-          <button type="button" class="btn-tab ${ehAtivo ? 'active' : ''}" data-filtro="${cod}" data-status="${cod}" data-nome="${stNomeLower}">
-            ${icon} ${nomeDisplay} (${count})
+          <button type="button" class="btn-tab ${ehAtivo ? 'active' : ''}" data-filtro="${cod}" data-status="${cod}" data-nome="${stNomeLower}" data-cor="${corId}" style="--cor-bg: ${temaCor.bg}; --cor-texto: ${temaCor.cor}; --cor-borda: ${temaCor.borda}; --cor-dot: ${temaCor.dot};" title="${st.status}">
+            ${icon} <span>${nomeDisplay} (${count})</span>
           </button>
         `;
       });
@@ -405,61 +439,63 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
         const ehCancelada = statusInfo.ehCancelada;
         const ehDisponivel = statusInfo.ehDisponivel;
 
-        let badgeCor = '#e8f5e9';
-        let badgeTexto = '#1b5e20';
-        let stFormatado = statusInfo.rotulo;
+        const temaCard = statusInfo.temaCor || { bg: '#f0fdf4', cor: '#166534', borda: '#bbf7d0', dot: '#16a34a' };
+        const iconeCard = statusInfo.regras?.icone || (ehRetirada ? 'fa-circle-check' : ehAgendada ? 'fa-calendar-check' : ehCancelada ? 'fa-ban' : 'fa-clock');
+        const rotuloCard = (statusInfo.rotulo || 'COLETA')
+          .replace(/RETIRADO/gi, 'RETIRADA')
+          .replace(/CANCELADO/gi, 'CANCELADA')
+          .replace(/REAGENDADO/gi, 'REAGENDADA')
+          .replace(/AGENDADO/gi, 'AGENDADA');
+        const nomeCap = statusInfo.nome ? (statusInfo.nome.charAt(0).toUpperCase() + statusInfo.nome.slice(1)) : 'Status';
 
-        if (ehAgendada) {
-          badgeCor = '#fff8e1';
-          badgeTexto = '#b78103';
-        } else if (ehRetirada) {
-          badgeCor = '#e8f5e9';
-          badgeTexto = '#1b5e20';
-        } else if (ehCancelada) {
-          badgeCor = '#ffebee';
-          badgeTexto = '#c62828';
-        }
+        let badgeBg = temaCard.bg;
+        let badgeTexto = temaCard.cor;
+        let badgeBorda = temaCard.borda;
+        let stFormatado = rotuloCard;
 
         let acoesHtml = '';
         if (éCatador) {
           if (ehAgendada) {
             acoesHtml = `
-              <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid #edf2ed;">
-                <button type="button" class="btn-abrir-mapa btn-secondary-pill" data-local="${localNome}" data-endereco="${enderecoCompleto}" style="height: 38px; padding: 0 12px; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #ffffff; border: 1.5px solid #2e7d32; color: #2e7d32; flex: 1; white-space: nowrap; box-sizing: border-box; border-radius: 999px;">
-                  <i class="fa-solid fa-map-location-dot" style="color: #2e7d32;"></i> Ver no Mapa
-                </button>
-                ${coleta.cidadao_id ? `
-                  <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-secondary-pill" style="height: 38px; padding: 0 12px; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; flex: 1; white-space: nowrap; box-sizing: border-box; border-radius: 999px;">
-                    <i class="fa-solid fa-comments"></i> Conversar
-                  </a>
-                ` : ''}
-                <button type="button" class="btn-desistir-agendamento btn-secondary-pill" data-id="${coleta.cod_coleta}" style="height: 38px; padding: 0 16px; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #fff5f5; border: 1.5px solid #ef9a9a; color: #c62828; width: 100%; border-radius: 999px; white-space: nowrap; box-sizing: border-box;">
+              <div class="card-coleta-acoes">
+                <div class="acoes-sublinha-dupla">
+                  <button type="button" class="btn-abrir-mapa btn-coleta-secondary" data-local="${localNome}" data-endereco="${enderecoCompleto}">
+                    <i class="fa-solid fa-map-location-dot"></i> Ver no Mapa
+                  </button>
+                  ${coleta.cidadao_id ? `
+                    <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-coleta-secondary">
+                      <i class="fa-solid fa-comments"></i> Conversar
+                    </a>
+                  ` : ''}
+                </div>
+                <button type="button" class="btn-desistir-agendamento btn-coleta-danger" data-id="${coleta.cod_coleta}" style="width: 100%;">
                   <i class="fa-solid fa-calendar-xmark"></i> Cancelar Agendamento
                 </button>
               </div>
             `;
           } else if (ehRetirada) {
             acoesHtml = `
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #edf2ed;">
-                <div style="font-size: 0.82rem; color: #2e7d32; font-weight: 800; background: #e8f5e9; padding: 6px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-circle-check"></i> Coleta Concluída
+              <div class="card-coleta-finalizada">
+                <div class="acoes-finalizadas-botoes">
+                  <button type="button" class="btn-editar-coleta btn-coleta-secondary" data-id="${coleta.cod_coleta}">
+                    <i class="fa-solid fa-eye"></i> Detalhes
+                  </button>
+                  ${coleta.cidadao_id ? `
+                    <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-coleta-secondary">
+                      <i class="fa-solid fa-comments"></i> Mensagens
+                    </a>
+                  ` : ''}
                 </div>
-                ${coleta.cidadao_id ? `
-                  <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-secondary-pill" style="height: 32px; padding: 0 12px; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: 700; background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1px solid #a5d6a7; border-radius: 999px;">
-                    <i class="fa-solid fa-comments"></i> Mensagens
-                  </a>
-                ` : ''}
               </div>
             `;
           } else if (ehCancelada) {
             acoesHtml = `
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #edf2ed;">
-                <div style="font-size: 0.82rem; color: #c62828; font-weight: 800; background: #ffebee; padding: 6px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-ban"></i> Coleta Cancelada
+              <div class="card-coleta-finalizada">
+                <div class="acoes-finalizadas-botoes">
+                  <button type="button" class="btn-editar-coleta btn-coleta-secondary" data-id="${coleta.cod_coleta}">
+                    <i class="fa-solid fa-eye"></i> Detalhes
+                  </button>
                 </div>
-                <button type="button" class="btn-editar-coleta" data-id="${coleta.cod_coleta}" style="background: #ffffff; color: #555; border: 1px solid #ccc; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-eye"></i> Detalhes
-                </button>
               </div>
             `;
           }
@@ -467,143 +503,182 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
           // CIDADÃO (ou Admin): Ações contextuais limpas e diretas
           const catadorAuthId = coleta.catador?.auth_user_id || (coleta.catador?.id ? coleta.catador.id : null);
           acoesHtml = `
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end; margin-top: 10px; padding-top: 10px; border-top: 1px solid #edf2ed;">
-              ${ehAgendada ? `
-                <button type="button" class="btn-confirmar-retirada" data-id="${coleta.cod_coleta}" data-catador="${coleta.catador_id || ''}" style="background: var(--verde-escuro, #1b6d24); color: white; border: none; border-radius: 999px; padding: 9px 18px; font-weight: 700; font-size: 0.84rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(27,109,36,0.25);">
+            ${ehAgendada ? `
+              <div class="card-coleta-acoes">
+                <button type="button" class="btn-confirmar-retirada btn-coleta-primary btn-acao-destaque" data-id="${coleta.cod_coleta}" data-catador="${coleta.catador_id || ''}">
                   <i class="fa-solid fa-circle-check"></i> Confirmar Retirada
                 </button>
-                <button type="button" class="btn-atribuir-catador" data-id="${coleta.cod_coleta}" style="background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                  <i class="fa-solid fa-calendar-days"></i> Reagendar / Trocar Catador
-                </button>
-                <button type="button" class="btn-editar-coleta" data-id="${coleta.cod_coleta}" style="background: #ffffff; color: #555; border: 1px solid #ccc; border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                  <i class="fa-solid fa-pen-to-square"></i> Editar Dados
-                </button>
-              ` : ehRetirada ? `
-                <div style="font-size: 0.82rem; color: #2e7d32; font-weight: 800; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 6px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-circle-check"></i> Concluída
+                <div class="acoes-linha-botoes">
+                  <button type="button" class="btn-atribuir-catador btn-coleta-secondary btn-acao-larga" data-id="${coleta.cod_coleta}">
+                    <i class="fa-solid fa-calendar-days"></i> Reagendar / Trocar Catador
+                  </button>
+                  <div class="acoes-sublinha-dupla">
+                    <button type="button" class="btn-editar-coleta btn-coleta-secondary" data-id="${coleta.cod_coleta}">
+                      <i class="fa-solid fa-pen-to-square"></i> Editar Dados
+                    </button>
+                    ${catadorAuthId ? `
+                      <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-coleta-secondary">
+                        <i class="fa-solid fa-comments"></i> Conversar
+                      </a>
+                    ` : ''}
+                  </div>
                 </div>
-                <button type="button" class="btn-editar-coleta" data-id="${coleta.cod_coleta}" style="background: #ffffff; color: #555; border: 1px solid #ccc; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                  <i class="fa-solid fa-eye"></i> Ver Detalhes
-                </button>
-              ` : ehCancelada ? `
-                <div style="font-size: 0.82rem; color: #c62828; font-weight: 800; background: #ffebee; border: 1px solid #ffcdd2; padding: 6px 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px;">
-                  <i class="fa-solid fa-ban"></i> Cancelada
+              </div>
+            ` : ehRetirada ? `
+              <div class="card-coleta-finalizada">
+                <div class="acoes-finalizadas-botoes">
+                  <button type="button" class="btn-editar-coleta btn-coleta-secondary" data-id="${coleta.cod_coleta}">
+                    <i class="fa-solid fa-eye"></i> Ver Detalhes
+                  </button>
+                  ${catadorAuthId ? `
+                    <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-coleta-secondary">
+                      <i class="fa-solid fa-comments"></i> Conversar
+                    </a>
+                  ` : ''}
                 </div>
-                <button type="button" class="btn-editar-coleta" data-id="${coleta.cod_coleta}" style="background: #ffffff; color: #555; border: 1px solid #ccc; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                  <i class="fa-solid fa-eye"></i> Ver Detalhes
-                </button>
-              ` : `
-                <!-- Disponível -->
-                <button type="button" class="btn-atribuir-catador" data-id="${coleta.cod_coleta}" style="background: var(--verde-escuro, #1b6d24); color: white; border: none; border-radius: 999px; padding: 9px 20px; font-weight: 700; font-size: 0.84rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(27,109,36,0.25);">
-                  <i class="fa-solid fa-user-plus"></i> Atribuir Catador / Agendar
-                </button>
-                <button type="button" class="btn-editar-coleta" data-id="${coleta.cod_coleta}" style="background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-                  <i class="fa-solid fa-pen-to-square"></i> Editar Dados
-                </button>
-              `}
-
-              ${catadorAuthId ? `
-                <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-secondary-pill" style="height: 35px; padding: 0 14px; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; border-radius: 999px;">
-                  <i class="fa-solid fa-comments"></i> Conversar
-                </a>
-              ` : ''}
-            </div>
+              </div>
+            ` : ehCancelada ? `
+              <div class="card-coleta-finalizada">
+                <div class="acoes-finalizadas-botoes">
+                  <button type="button" class="btn-editar-coleta btn-coleta-secondary" data-id="${coleta.cod_coleta}">
+                    <i class="fa-solid fa-eye"></i> Ver Detalhes
+                  </button>
+                </div>
+              </div>
+            ` : `
+              <!-- Disponível -->
+              <div class="card-coleta-acoes">
+                <div class="acoes-linha-botoes">
+                  <button type="button" class="btn-atribuir-catador btn-coleta-primary btn-acao-larga" data-id="${coleta.cod_coleta}">
+                    <i class="fa-solid fa-user-plus"></i> Atribuir Catador / Agendar
+                  </button>
+                  <div class="acoes-sublinha-dupla">
+                    <button type="button" class="btn-editar-coleta btn-coleta-secondary" data-id="${coleta.cod_coleta}">
+                      <i class="fa-solid fa-pen-to-square"></i> Editar Dados
+                    </button>
+                    ${catadorAuthId ? `
+                      <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-coleta-secondary">
+                        <i class="fa-solid fa-comments"></i> Conversar
+                      </a>
+                    ` : ''}
+                  </div>
+                </div>
+              </div>
+            `}
           `;
         }
 
         const fotoTag = (coleta.foto_url && coleta.foto_url.trim() !== '')
-          ? `<div style="position: relative; overflow: hidden; border-radius: 12px; background: #e8f5e9; border: 1.5px solid #a5d6a7; margin-bottom: 2px;">
-              <img src="${coleta.foto_url}" data-src="${coleta.foto_url}" alt="${tipoMaterial} (${coleta.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 180px; object-fit: cover; border-radius: 10px; cursor: pointer; transition: transform 0.2s;" title="Clique para ampliar a foto do material">
+          ? `<div style="position: relative; overflow: hidden; border-radius: 12px; background: #e8f5e9; border: 1.5px solid #a5d6a7; margin-top: 8px; margin-bottom: 2px;">
+              <img src="${coleta.foto_url}" data-src="${coleta.foto_url}" alt="${tipoMaterial} (${coleta.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 180px; object-fit: cover; border-radius: 10px; cursor: pointer; transition: transform 0.2s;" title="Clique para ampliar a foto">
               <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #ffffff; padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">
                 <i class="fa-solid fa-magnifying-glass-plus"></i> Ampliar
               </div>
             </div>`
           : '';
 
+        let tituloBanner = 'Coleta';
+        if (ehRetirada || /retirad/i.test(statusInfo.nome)) tituloBanner = 'Coleta Retirada';
+        else if (ehAgendada) tituloBanner = 'Coleta Agendada';
+        else if (ehCancelada) tituloBanner = 'Coleta Cancelada';
+        else if (ehDisponivel) tituloBanner = 'Oferta Disponível';
+        else {
+          const n = String(statusInfo.nome || '').trim().toLowerCase();
+          if (n.endsWith('o')) {
+            tituloBanner = 'Coleta ' + (n.charAt(0).toUpperCase() + n.slice(1, -1) + 'a');
+          } else {
+            tituloBanner = 'Coleta ' + nomeCap;
+          }
+        }
+
         let bannerDataHoraHtml = '';
-        if (ehRetirada) {
+        if (ehRetirada || /retirad/i.test(statusInfo.nome)) {
           bannerDataHoraHtml = `
-            <div style="background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #1b5e20;">
-              <i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.25rem;"></i>
-              <div style="display: flex; flex-direction: column;">
-                <span style="font-size: 0.85rem; font-weight: 800;">Coleta Retirada</span>
-                <span style="font-size: 0.82rem; color: #2e7d32; font-weight: 600;">Retirado em: <strong>${dataHoraRetiradaFormatada || dataFormatada || 'Data registrada'}</strong></span>
+            <div style="background: ${temaCard.bg}; border: 1px solid ${temaCard.borda}; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+              <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
+              <div style="display: flex; flex-direction: column; gap: 1px;">
+                <span style="font-size: 0.82rem; font-weight: 700; color: ${temaCard.cor};">${tituloBanner}</span>
+                <span style="font-size: 0.8rem; color: #4b5563;">Retirada em: <strong style="color: #111827; font-weight: 600;">${dataHoraRetiradaFormatada || dataFormatada || 'Data registrada'}</strong></span>
               </div>
             </div>
           `;
         } else if (ehAgendada) {
           bannerDataHoraHtml = `
-            <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #856404;">
-              <i class="fa-regular fa-calendar-check" style="color: #b78103; font-size: 1.25rem;"></i>
-              <div style="display: flex; flex-direction: column;">
-                <span style="font-size: 0.85rem; font-weight: 800;">Coleta Agendada</span>
-                <span style="font-size: 0.82rem; color: #5d4037; font-weight: 600;">Data e Horário Previsto: <strong>${dataHoraAgendadaFormatada || 'A combinar'}</strong></span>
+            <div style="background: ${temaCard.bg}; border: 1px solid ${temaCard.borda}; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+              <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
+              <div style="display: flex; flex-direction: column; gap: 1px;">
+                <span style="font-size: 0.82rem; font-weight: 700; color: ${temaCard.cor};">${tituloBanner}</span>
+                <span style="font-size: 0.8rem; color: #57534e;">Data e horário previsto: <strong style="color: #1c1917; font-weight: 600;">${dataHoraAgendadaFormatada || 'A combinar'}</strong></span>
               </div>
             </div>
           `;
         } else if (ehCancelada) {
           bannerDataHoraHtml = `
-            <div style="background: #fff5f5; border: 1px solid #ef9a9a; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #c62828;">
-              <i class="fa-solid fa-ban" style="color: #c62828; font-size: 1.25rem;"></i>
-              <div style="display: flex; flex-direction: column;">
-                <span style="font-size: 0.85rem; font-weight: 800;">Coleta Cancelada</span>
-                <span style="font-size: 0.82rem; color: #c62828; font-weight: 600;">Cancelado em: <strong>${dataHoraCanceladaFormatada || dataFormatada || 'Data arquivada'}</strong></span>
+            <div style="background: ${temaCard.bg}; border: 1px solid ${temaCard.borda}; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+              <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
+              <div style="display: flex; flex-direction: column; gap: 1px;">
+                <span style="font-size: 0.82rem; font-weight: 700; color: ${temaCard.cor};">${tituloBanner}</span>
+                <span style="font-size: 0.8rem; color: #4b5563;">Cancelada em: <strong style="color: #111827; font-weight: 600;">${dataHoraCanceladaFormatada || dataFormatada || 'Data arquivada'}</strong></span>
               </div>
             </div>
           `;
         } else {
           bannerDataHoraHtml = `
-            <div style="background: #f4fbf5; border: 1px dashed #a5d6a7; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; color: #2e7d32;">
-              <i class="fa-regular fa-clock" style="color: #2e7d32; font-size: 1.25rem;"></i>
-              <div style="display: flex; flex-direction: column;">
-                <span style="font-size: 0.85rem; font-weight: 800;">Oferta Disponível</span>
-                <span style="font-size: 0.82rem; color: #555; font-weight: 500;">Aguardando atribuição de catador e agendamento da retirada</span>
+            <div style="background: ${temaCard.bg}; border: 1.5px dashed ${temaCard.borda}; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; margin-top: 4px;">
+              <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
+              <div style="display: flex; flex-direction: column; gap: 1px;">
+                <span style="font-size: 0.84rem; font-weight: 800; color: ${temaCard.cor};">${tituloBanner}</span>
+                <span style="font-size: 0.8rem; color: ${temaCard.cor}; opacity: 0.9; font-weight: 500;">Aguardando atribuição de catador e agendamento da retirada</span>
               </div>
             </div>
           `;
         }
 
+
         card.innerHTML = `
-          ${fotoTag}
-          
           <!-- Cabeçalho Único: Material + Data de Criação + Status -->
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; flex-direction: column; gap: 2px;">
-              <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.15rem; font-weight: 800;">
-                ${tipoMaterial} — ${coleta.quantidade || 'Qtd aproximada'}
+              <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-recycle" style="color: var(--verde-escuro, #1b6d24);"></i> ${tipoMaterial} — ${coleta.quantidade || 'Qtd aproximada'}
               </strong>
-              <span style="font-size: 0.78rem; color: #6b7280; font-weight: 600; display: flex; align-items: center; gap: 5px;">
-                <i class="fa-regular fa-calendar" style="color: #2e7d32;"></i> Criada em ${dataFormatada || 'Data recente'}
+              <span style="font-size: 0.76rem; color: #6b7280; font-weight: 500; display: flex; align-items: center; gap: 5px;">
+                <i class="fa-regular fa-calendar" style="color: #9ca3af;"></i> Criada em ${dataFormatada || 'Data recente'}
               </span>
             </div>
-            <span style="font-size: 0.74rem; font-weight: 800; background: ${badgeCor}; color: ${badgeTexto}; padding: 4px 12px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px;">
+            <span style="font-size: 0.72rem; font-weight: 700; background: ${badgeBg}; color: ${badgeTexto}; border: 1px solid ${badgeBorda}; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;">
               ${stFormatado}
             </span>
           </div>
 
           <!-- Corpo de Dados Integrado (Bloco Único) -->
-          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; color: #374151; padding: 4px 0;">
-            <div>
-              <strong style="color: var(--verde-escuro, #1b6d24);"><i class="fa-solid fa-location-dot" style="color: #2e7d32; width: 18px;"></i> Ponto de Retirada:</strong>
-              <span style="font-weight: 600;">${localNome}</span>
-              <div style="font-size: 0.81rem; color: #6b7280; padding-left: 22px; margin-top: 2px;">${enderecoCompleto}</div>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.86rem; color: #374151; padding: 2px 0;">
+            <div style="display: flex; align-items: flex-start; gap: 8px;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex-shrink: 0; color: var(--verde-escuro, #1b6d24); margin-top: 1px;">
+                <i class="fa-solid fa-location-dot" style="font-size: 0.95rem;"></i>
+              </span>
+              <div>
+                <span style="color: #4b5563; font-weight: 600;">Ponto de Retirada:</span>
+                <span style="color: #111827; font-weight: 600;">${localNome}</span>
+                <div style="font-size: 0.8rem; color: #6b7280; margin-top: 1px;">${enderecoCompleto}</div>
+              </div>
             </div>
 
-            <div>
-              ${éCatador ? `
-                <strong style="color: var(--verde-escuro, #1b6d24);"><i class="fa-solid fa-user" style="color: #0288d1; width: 18px;"></i> Ofertante:</strong>
-                <span>${doadorNome}</span>
-              ` : `
-                <strong style="color: var(--verde-escuro, #1b6d24);"><i class="fa-solid fa-user-check" style="color: #2e7d32; width: 18px;"></i> Catador Atribuído:</strong>
-                <span style="font-weight: ${coleta.catador_id ? '700' : '500'}; color: ${coleta.catador_id ? '#1b5e20' : '#777'};">
-                  ${coleta.catador_id ? catadorNome : 'Aguardando atribuição de catador'}
-                </span>
-              `}
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex-shrink: 0; color: var(--verde-escuro, #1b6d24);">
+                <i class="fa-solid ${éCatador ? 'fa-user' : 'fa-user-check'}" style="font-size: 0.95rem;"></i>
+              </span>
+              <span style="color: #4b5563; font-weight: 600;">${éCatador ? 'Ofertante:' : 'Catador Atribuído:'}</span>
+              <span style="color: ${coleta.catador_id || éCatador ? '#111827' : '#9ca3af'}; font-weight: ${coleta.catador_id || éCatador ? '600' : '500'};">
+                ${éCatador ? doadorNome : (coleta.catador_id ? catadorNome : 'Aguardando atribuição de catador')}
+              </span>
             </div>
 
             <!-- Banner Informativo de Situação e Horário -->
             ${bannerDataHoraHtml}
           </div>
+
+          ${fotoTag}
 
           <!-- Rodapé de Ações Contextuais -->
           ${acoesHtml}
@@ -679,13 +754,15 @@ function vincularEventosCards(listaContainer, feedbackMsg, perfil, todasColetas,
       const coletaAlvo = todasColetas.find(c => (c.cod_coleta || c.id) === id);
 
       confirmarRetiradaComModal({
+        coleta: coletaAlvo,
         cod_coleta: id,
         catador_id: catId,
         material: coletaAlvo?.materiais?.tipo || coletaAlvo?.materiais?.nome,
         quantidade: coletaAlvo?.quantidade,
-        onConfirmada: (msg) => {
+        onConfirmada: (msg, infoStatus) => {
           showSuccess(feedbackMsg, msg);
-          carregarLista(listaContainer, feedbackMsg, perfil);
+          const statusDestino = (infoStatus && infoStatus.cod_status) ? String(infoStatus.cod_status) : '3';
+          carregarLista(listaContainer, feedbackMsg, perfil, statusDestino);
         }
       });
     });
@@ -708,9 +785,12 @@ function vincularEventosCards(listaContainer, feedbackMsg, perfil, todasColetas,
         listaStatus,
         locaisRetirada,
         ehAdmin: perfil?.tipo === 'administrador',
-        onSalvar: (msg) => {
+        onSalvar: (msg, infoStatus) => {
           showSuccess(feedbackMsg, msg);
-          carregarLista(listaContainer, feedbackMsg, perfil);
+          const statusDestino = (infoStatus && (infoStatus.cod_status || infoStatus.nome_status))
+            ? String(infoStatus.cod_status || infoStatus.nome_status)
+            : filtroStatusAtivo;
+          carregarLista(listaContainer, feedbackMsg, perfil, statusDestino);
         }
       });
     });
@@ -730,9 +810,10 @@ function vincularEventosCards(listaContainer, feedbackMsg, perfil, todasColetas,
       abrirModalAtribuirCatador({
         coleta: coletaAlvo,
         catadores,
-        onSalvar: (msg) => {
+        onSalvar: (msg, infoStatus) => {
           showSuccess(feedbackMsg, msg);
-          carregarLista(listaContainer, feedbackMsg, perfil);
+          const statusDestino = (infoStatus && infoStatus.cod_status) ? String(infoStatus.cod_status) : '2';
+          carregarLista(listaContainer, feedbackMsg, perfil, statusDestino);
         }
       });
     });

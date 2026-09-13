@@ -2,7 +2,7 @@ import { showConfirmModal, showAlertModal } from './modal.js';
 import { atualizarColetaCompleta, confirmarRetirada, vincularCatadorColeta, resolverStatusColeta } from '../services/coletas.js';
 import { formatarQuantidadePadrao, decomporQuantidade } from './validation.js';
 import { obterHorarioFuncionamentoData, validarHorarioAgendamento, gerarHorariosValidosData, listarAgendaPorLocal } from '../services/agenda.js';
-import { renderCalendarGrid, resetCalendarPendingMap } from '../pages/calendarPicker.js';
+import { renderCalendarGrid, resetCalendarPendingMap, gerarOpcoesHorarioSelect } from '../pages/calendarPicker.js';
 import { obterRegrasStatus } from '../services/status.js';
 
 /**
@@ -27,6 +27,7 @@ function habilitarPickerAoClicar(input, label) {
       console.warn('showPicker não suportado neste navegador:', err);
     }
   };
+
 
   input.addEventListener('click', disparar);
   if (label) {
@@ -66,21 +67,15 @@ export function abrirModalEdicaoColeta({ coleta, catadores = [], listaStatus = [
       const cod = st.cod_status;
       const isSelected = (coleta.cod_status === cod || (!coleta.cod_status && cod === 1)) ? 'selected' : '';
       const nomeFmt = st.status.charAt(0).toUpperCase() + st.status.slice(1);
-      const r = st.regras || obterRegrasStatus(cod, st.status);
-      let extra = '';
-      if (r.regra_catador === 'requer_catador') extra = ' (Requer Catador / Agenda)';
-      else if (r.regra_catador === 'sem_catador') extra = ' (Liberar para outros)';
-      else if (r.bloquear_dados) extra = ' (Finalizar / Bloquear)';
-      statusOptionsHtml += `<option value="${cod}" ${isSelected}>${nomeFmt}${extra}</option>`;
+      statusOptionsHtml += `<option value="${cod}" ${isSelected}>${nomeFmt}</option>`;
     });
   } else {
     // Fallback padrão se listaStatus não tiver sido repassada
     statusOptionsHtml = `
-      <option value="1" ${coleta.cod_status === 1 ? 'selected' : ''}>Disponível (Liberar para outros)</option>
-      <option value="2" ${coleta.cod_status === 2 ? 'selected' : ''}>Agendada (Definir Catador e Data)</option>
-      <option value="3" ${coleta.cod_status === 3 ? 'selected' : ''}>Retirada (Concluída)</option>
+      <option value="1" ${coleta.cod_status === 1 ? 'selected' : ''}>Disponível</option>
+      <option value="2" ${coleta.cod_status === 2 ? 'selected' : ''}>Agendada</option>
+      <option value="3" ${coleta.cod_status === 3 ? 'selected' : ''}>Retirada</option>
       <option value="4" ${coleta.cod_status === 4 || coleta.cod_status === 5 ? 'selected' : ''}>Cancelada</option>
-      <option value="6" ${coleta.cod_status === 6 ? 'selected' : ''}>Reagendada (Definir Catador e Data)</option>
     `;
   }
 
@@ -386,7 +381,7 @@ export function abrirModalEdicaoColeta({ coleta, catadores = [], listaStatus = [
   let horaSelecionadaEdicaoStr = horaValor || '09:00';
   let calendarioEdicaoInicializado = false;
 
-  async function onDiaSelecionadoEdicao(dateStr) {
+  async function onDiaSelecionadoEdicao(dateStr, autoScroll = false) {
     dataSelecionadaEdicaoStr = dateStr;
     const inputOcultoData = modal.querySelector('#input_modal_data');
     if (inputOcultoData) inputOcultoData.value = dateStr;
@@ -403,9 +398,11 @@ export function abrirModalEdicaoColeta({ coleta, catadores = [], listaStatus = [
     if (lblDataDisp) lblDataDisp.textContent = dataFmt;
     if (boxConf) {
       boxConf.style.display = 'flex';
-      setTimeout(() => {
-        boxConf.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 50);
+      if (autoScroll) {
+        setTimeout(() => {
+          boxConf.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
+      }
     }
     if (dicaCal) dicaCal.style.display = 'none';
 
@@ -455,9 +452,16 @@ export function abrirModalEdicaoColeta({ coleta, catadores = [], listaStatus = [
     if (!calCont) return;
 
     try {
-      resetCalendarPendingMap();
+      resetCalendarPendingMap(null);
       const selLoc = modal.querySelector('#input_modal_local');
-      const locId = selLoc ? selLoc.value : (coleta.local_retirada_id || coleta.local_retirada?.id);
+      let locId = selLoc ? selLoc.value : (coleta.local_retirada_id || coleta.local_retirada?.id);
+      if (!locId) {
+        try {
+          const { getLocalRetiradaPadrao } = await import('../services/coletas.js');
+          const padrao = await getLocalRetiradaPadrao();
+          if (padrao) locId = padrao.id;
+        } catch (e) {}
+      }
       const agendaData = await listarAgendaPorLocal(locId);
 
       let initialAno = null;
@@ -476,21 +480,26 @@ export function abrirModalEdicaoColeta({ coleta, catadores = [], listaStatus = [
         ano: initialAno,
         mes: initialMes,
         onSelectDay: (dateStr) => {
-          onDiaSelecionadoEdicao(dateStr);
+          onDiaSelecionadoEdicao(dateStr, false);
         }
       });
 
       calendarioEdicaoInicializado = true;
 
-      // Se já possui data pré-definida válida (coleta agendada), destaca visualmente o dia
+      // Se já possui data pré-definida válida (coleta agendada), destaca visualmente o dia sem rolar a tela
       if (dataSelecionadaEdicaoStr) {
         const cell = calCont.querySelector(`#cell_${dataSelecionadaEdicaoStr}`);
         if (cell && cell.classList.contains('disponivel')) {
           cell.style.transform = 'scale(1.06)';
           cell.style.boxShadow = '0 0 0 3px #1b6d24';
         }
-        await onDiaSelecionadoEdicao(dataSelecionadaEdicaoStr);
+        await onDiaSelecionadoEdicao(dataSelecionadaEdicaoStr, false);
       }
+
+      // Garante que o formulário do modal permaneça no topo ao abrir
+      const formEl = modal.querySelector('#form-editar-coleta');
+      if (formEl) formEl.scrollTop = 0;
+
     } catch (err) {
       console.warn('Erro ao carregar calendário na edição:', err);
       calCont.innerHTML = '<div style="color: #c62828; font-size: 0.85rem; padding: 16px; text-align: center;">Não foi possível carregar o calendário de atendimento deste local.</div>';
@@ -797,7 +806,10 @@ export function abrirModalEdicaoColeta({ coleta, catadores = [], listaStatus = [
               fechar();
               if (typeof onSalvar === 'function') {
                 const qtdExibicao = qtdVal ? ` (${qtdVal})` : (coleta.quantidade ? ` (${coleta.quantidade})` : '');
-                onSalvar(`Coleta de ${tipoMaterial}${qtdExibicao} atualizada com sucesso!`);
+                onSalvar(`Coleta de ${tipoMaterial}${qtdExibicao} atualizada com sucesso!`, {
+                  cod_status: novoCodStatus,
+                  nome_status: nomeNovoStatus
+                });
               }
             } catch (err) {
               btnSalvar.disabled = false;
@@ -830,10 +842,11 @@ export function abrirModalEdicaoColeta({ coleta, catadores = [], listaStatus = [
 }
 
 /**
- * Confirmar Retirada de Coleta com Diálogo Modal e Validação de Catador
+ * Confirmar Retirada de Coleta com Modal Especializado para Ajuste de Data e Horário Reais
  */
-export function confirmarRetiradaComModal({ cod_coleta, catador_id, material, quantidade, onConfirmada }) {
-  if (!catador_id) {
+export function confirmarRetiradaComModal({ coleta, cod_coleta, catador_id, material, quantidade, onConfirmada }) {
+  const catIdEfetivo = catador_id || coleta?.catador_id;
+  if (!catIdEfetivo) {
     showAlertModal({
       title: 'Catador Obrigatório',
       message: 'Para a coleta ter a retirada confirmada, é obrigatório haver um catador alocado.\n\nPor favor, utilize a opção "Editar Informações" ou atribua um catador antes de confirmar a retirada.',
@@ -844,30 +857,183 @@ export function confirmarRetiradaComModal({ cod_coleta, catador_id, material, qu
     return;
   }
 
-  showConfirmModal({
-    title: 'Confirmar Retirada do Material',
-    message: 'Confirma que o material reciclável já foi recolhido do ponto de retirada pelo catador?',
-    confirmText: 'Sim, Confirmar Retirada',
-    cancelText: 'Voltar',
-    confirmColor: '#1b6d24',
-    icon: '<i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.25rem;"></i>',
-    onConfirm: async () => {
-      try {
-        await confirmarRetirada(cod_coleta);
-        if (typeof onConfirmada === 'function') {
-          const matTxt = material ? ` de ${material}${quantidade ? ` (${quantidade})` : ''}` : '';
-          onConfirmada(`Retirada da coleta${matTxt} confirmada com sucesso!`);
-        }
-      } catch (err) {
-        showAlertModal({
-          title: 'Erro ao Confirmar Retirada',
-          message: err.message || 'Não foi possível confirmar a retirada no momento.',
-          buttonText: 'Fechar',
-          confirmColor: '#c62828'
+  const agora = new Date();
+  const hojeDataStr = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
+  const horaAgoraStr = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+
+  const dataAgendada = coleta?.data ? coleta.data.slice(0, 10) : '';
+  const horaAgendada = coleta?.hora ? coleta.hora.slice(0, 5) : '';
+  const matNome = material || coleta?.materiais?.tipo || coleta?.materiais?.nome || 'Material Reciclável';
+  const qtdTxt = quantidade || coleta?.quantidade || '';
+  const catNome = coleta?.catador?.nome || '';
+
+  // Sugestão de data e horário:
+  // Se estava agendada para data futura (ex.: dia 16 e hoje é 12), a data sugerida para a retirada é HOJE.
+  // Se estava agendada para hoje ou passado, sugere a data agendada (ou hoje).
+  let dataPadrao = hojeDataStr;
+  let horaPadrao = horaAgoraStr;
+  let bannerPrevisaoHtml = '';
+
+  if (dataAgendada) {
+    const partes = dataAgendada.split('-');
+    const dataFmt = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dataAgendada;
+    const horaFmt = horaAgendada ? ` às ${horaAgendada}` : '';
+
+    if (dataAgendada > hojeDataStr) {
+      bannerPrevisaoHtml = `
+        <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 10px; padding: 10px 14px; display: flex; align-items: flex-start; gap: 10px;">
+          <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;"></i>
+          <div style="font-size: 0.82rem; color: #854d0e; line-height: 1.45;">
+            Esta coleta estava agendada originalmente para <strong>${dataFmt}${horaFmt}</strong>.<br>
+            Como a retirada ocorreu <strong>antecipadamente</strong>, os campos abaixo foram pré-preenchidos com a data e horário de hoje. Ajuste se necessário.
+          </div>
+        </div>
+      `;
+      dataPadrao = hojeDataStr;
+      horaPadrao = horaAgoraStr;
+    } else {
+      bannerPrevisaoHtml = `
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; display: flex; align-items: flex-start; gap: 10px;">
+          <i class="fa-solid fa-calendar-check" style="color: #16a34a; font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;"></i>
+          <div style="font-size: 0.82rem; color: #166534; line-height: 1.45;">
+            Previsão agendada: <strong>${dataFmt}${horaFmt}</strong>.<br>
+            Confirme abaixo a data e o horário em que o material foi recolhido pelo catador.
+          </div>
+        </div>
+      `;
+      dataPadrao = dataAgendada;
+      horaPadrao = horaAgendada || horaAgoraStr;
+    }
+  }
+
+  // Remove modal anterior se houver
+  const existingModal = document.getElementById('modal-confirmar-retirada-dialog');
+  if (existingModal) existingModal.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'modal-confirmar-retirada-dialog';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 16px;
+    box-sizing: border-box;
+  `;
+
+  modal.innerHTML = `
+    <div style="background: #ffffff; border-radius: 16px; max-width: 480px; width: 100%; box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2); border: 1.5px solid #a5d6a7; overflow: hidden; display: flex; flex-direction: column;">
+      
+      <!-- Cabeçalho -->
+      <div style="background: var(--verde-escuro, #1b6d24); color: #ffffff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px; color: #ffffff;">
+          <i class="fa-solid fa-circle-check" style="color: #86efac;"></i> Confirmar Retirada do Material
+        </h3>
+        <button type="button" id="btn-fechar-modal-retirada-x" style="background: none; border: none; color: #ffffff; font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 0 4px; opacity: 0.9;" title="Fechar">&times;</button>
+      </div>
+
+      <!-- Corpo -->
+      <div style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- Resumo do Material e Catador -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+          <strong style="color: var(--verde-escuro, #1b6d24); font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-recycle"></i> ${matNome} ${qtdTxt ? `— ${qtdTxt}` : ''}
+          </strong>
+          ${catNome ? `<span style="font-size: 0.8rem; color: #4b5563; font-weight: 600; display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-user-check" style="color: var(--verde-escuro, #1b6d24);"></i> ${catNome}</span>` : ''}
+        </div>
+
+        ${bannerPrevisaoHtml}
+
+        <p style="margin: 0; font-size: 0.88rem; color: #374151; line-height: 1.45;">
+          Confirma que o material já foi recolhido? Ajuste ou confirme a <strong>data e horário</strong> em que a retirada ocorreu:
+        </p>
+
+        <!-- Inputs de Data e Horário de Retirada -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label for="input_retirada_data" style="font-size: 0.82rem; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 5px;">
+              <i class="fa-regular fa-calendar-check"></i> Data da Retirada:<span style="color:#c62828;">*</span>
+            </label>
+            <input type="date" id="input_retirada_data" value="${dataPadrao}" max="${hojeDataStr}" style="width: 100%; box-sizing: border-box; font-size: 0.88rem; padding: 8px 10px; border: 1.5px solid #a5d6a7; border-radius: 8px; font-weight: 600; font-family: inherit; color: #111827; background: #ffffff;">
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label for="input_retirada_hora" style="font-size: 0.82rem; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 5px;">
+              <i class="fa-regular fa-clock"></i> Horário da Retirada:<span style="color:#c62828;">*</span>
+            </label>
+            <select id="input_retirada_hora" class="input-pill" style="width: 100%; box-sizing: border-box; font-size: 0.88rem; padding: 8px 10px; border: 1.5px solid #a5d6a7; border-radius: 8px; font-weight: 700; font-family: inherit; color: #111827; background: #ffffff; cursor: pointer;">
+              ${gerarOpcoesHorarioSelect(horaPadrao, { incluirVazio: false })}
+            </select>
+          </div>
+        </div>
+
+        <span style="font-size: 0.76rem; color: #6b7280; line-height: 1.35;">
+          <i class="fa-solid fa-circle-info"></i> Ao confirmar, a coleta será encerrada e arquivada como <strong>Retirada</strong> com estes dados no histórico.
+        </span>
+      </div>
+
+      <!-- Rodapé com Botões -->
+      <div style="background: #f9fbf9; padding: 12px 20px; border-top: 1px solid #e0f2e9; display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" id="btn-voltar-modal-retirada" class="btn-secondary-pill" style="padding: 8px 18px; font-size: 0.85rem; cursor: pointer;">
+          Voltar
+        </button>
+        <button type="button" id="btn-confirmar-retirada-submit" class="btn-avancar" style="width: auto; margin-top: 0; padding: 8px 22px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-circle-check"></i> Sim, Confirmar Retirada
+        </button>
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const fechar = () => {
+    modal.remove();
+  };
+
+  modal.querySelector('#btn-fechar-modal-retirada-x').onclick = fechar;
+  modal.querySelector('#btn-voltar-modal-retirada').onclick = fechar;
+  modal.onclick = (e) => { if (e.target === modal) fechar(); };
+
+  const btnConfirmar = modal.querySelector('#btn-confirmar-retirada-submit');
+  btnConfirmar.onclick = async () => {
+    const inputData = modal.querySelector('#input_retirada_data');
+    const inputHora = modal.querySelector('#input_retirada_hora');
+    const dataFinal = inputData?.value || hojeDataStr;
+    const horaFinal = inputHora?.value || horaAgoraStr;
+
+    btnConfirmar.disabled = true;
+    btnConfirmar.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Confirmando...';
+
+    try {
+      await confirmarRetirada(cod_coleta, { data: dataFinal, hora: horaFinal });
+      fechar();
+      if (typeof onConfirmada === 'function') {
+        const matTxt = matNome ? ` de ${matNome}${qtdTxt ? ` (${qtdTxt})` : ''}` : '';
+        onConfirmada(`Retirada da coleta${matTxt} confirmada com sucesso!`, {
+          cod_status: 3,
+          nome_status: 'retirada'
         });
       }
+    } catch (err) {
+      btnConfirmar.disabled = false;
+      btnConfirmar.innerHTML = '<i class="fa-solid fa-circle-check"></i> Sim, Confirmar Retirada';
+      showAlertModal({
+        title: 'Erro ao Confirmar Retirada',
+        message: err.message || 'Não foi possível confirmar a retirada no momento.',
+        buttonText: 'Fechar',
+        confirmColor: '#c62828'
+      });
     }
-  });
+  };
 }
 
 /**
@@ -1035,12 +1201,12 @@ export function abrirModalAtribuirCatador({ coleta, catadores = [], onSalvar }) 
   const lblDataDisplay = modal.querySelector('#lbl-data-atribuir-display');
   const lblFuncDia = modal.querySelector('#lbl-horario-funcionamento-dia');
 
-  const locIdEfetivo = coleta.local_retirada_id || coleta.local_retirada?.id;
+  let locIdEfetivo = coleta.local_retirada_id || coleta.local_retirada?.id;
 
   let dataSelecionadaStr = (dataAtual && dataAtual >= hojeMin) ? dataAtual : null;
   let horaSelecionadaStr = horaAtual || '09:00';
 
-  async function onDiaSelecionado(dateStr) {
+  async function onDiaSelecionado(dateStr, autoScroll = false) {
     dataSelecionadaStr = dateStr;
     const partes = dateStr.split('-');
     const dataFmt = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : dateStr;
@@ -1048,15 +1214,24 @@ export function abrirModalAtribuirCatador({ coleta, catadores = [], onSalvar }) 
     if (lblDataDisplay) lblDataDisplay.textContent = dataFmt;
     if (boxConfirmar) {
       boxConfirmar.style.display = 'flex';
-      setTimeout(() => {
-        boxConfirmar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 50);
+      if (autoScroll) {
+        setTimeout(() => {
+          boxConfirmar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
+      }
     }
     if (dicaCal) dicaCal.style.display = 'none';
 
     if (selHora) {
       selHora.innerHTML = '<option value="">Carregando horários...</option>';
       try {
+        if (!locIdEfetivo) {
+          try {
+            const { getLocalRetiradaPadrao } = await import('../services/coletas.js');
+            const padrao = await getLocalRetiradaPadrao();
+            if (padrao) locIdEfetivo = padrao.id;
+          } catch (e) {}
+        }
         const infoFunc = await obterHorarioFuncionamentoData(locIdEfetivo, dateStr);
         if (lblFuncDia) {
           if (infoFunc && infoFunc.disponivel) {
@@ -1093,7 +1268,14 @@ export function abrirModalAtribuirCatador({ coleta, catadores = [], onSalvar }) 
 
   async function inicializarCalendarioModal() {
     try {
-      resetCalendarPendingMap();
+      resetCalendarPendingMap(null);
+      if (!locIdEfetivo) {
+        try {
+          const { getLocalRetiradaPadrao } = await import('../services/coletas.js');
+          const padrao = await getLocalRetiradaPadrao();
+          if (padrao) locIdEfetivo = padrao.id;
+        } catch (e) {}
+      }
       const agendaData = await listarAgendaPorLocal(locIdEfetivo);
 
       let initialAno = null;
@@ -1112,19 +1294,23 @@ export function abrirModalAtribuirCatador({ coleta, catadores = [], onSalvar }) 
         ano: initialAno,
         mes: initialMes,
         onSelectDay: (dateStr) => {
-          onDiaSelecionado(dateStr);
+          onDiaSelecionado(dateStr, false);
         }
       });
 
-      // Se já tinha data pré-definida válida, ativa visualmente a célula e carrega os horários
+      // Se já tinha data pré-definida válida, ativa visualmente a célula e carrega os horários sem rolar a tela
       if (dataSelecionadaStr) {
         const cell = calContainer.querySelector(`#cell_${dataSelecionadaStr}`);
         if (cell && cell.classList.contains('disponivel')) {
           cell.style.transform = 'scale(1.06)';
           cell.style.boxShadow = '0 0 0 3px #1b6d24';
         }
-        await onDiaSelecionado(dataSelecionadaStr);
+        await onDiaSelecionado(dataSelecionadaStr, false);
       }
+
+      // Garante que o modal permaneça no topo ao abrir
+      const formEl = modal.querySelector('form') || modal.querySelector('div[style*="overflow-y: auto"]');
+      if (formEl) formEl.scrollTop = 0;
     } catch (err) {
       console.warn('Erro ao carregar calendário do modal:', err);
       calContainer.innerHTML = '<div style="color: #c62828; font-size: 0.85rem; padding: 16px; text-align: center;">Não foi possível carregar o calendário de atendimento deste local.</div>';
@@ -1132,6 +1318,7 @@ export function abrirModalAtribuirCatador({ coleta, catadores = [], onSalvar }) 
   }
 
   inicializarCalendarioModal();
+
 
   btnSalvar.onclick = async () => {
     const catadorId = (selCat.value || '').trim();
@@ -1213,7 +1400,10 @@ export function abrirModalAtribuirCatador({ coleta, catadores = [], onSalvar }) 
           fechar();
           if (typeof onSalvar === 'function') {
             const qtdExibicao = coleta.quantidade ? ` (${coleta.quantidade})` : '';
-            onSalvar(`Coleta de ${tipoMaterial}${qtdExibicao} agendada com sucesso com o catador "${nomeCatador}" para ${dataFmt} às ${horaVal}!`);
+            onSalvar(`Coleta de ${tipoMaterial}${qtdExibicao} agendada com sucesso com o catador "${nomeCatador}" para ${dataFmt} às ${horaVal}!`, {
+              cod_status: 2,
+              nome_status: 'agendada'
+            });
           }
         } catch (err) {
           btnSalvar.disabled = false;
