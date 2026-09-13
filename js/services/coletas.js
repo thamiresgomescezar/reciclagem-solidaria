@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabaseClient.js';
 import { validarHorarioAgendamento } from './agenda.js';
-import { obterRegrasStatus } from './status.js';
+import { obterRegrasStatus, obterCoresStatus } from './status.js';
 
 /**
  * Serviço de Coletas — Consulta de Dados Reais vinculados ao Cidadão e Apoios
@@ -24,18 +24,23 @@ export async function listarLocaisRetirada() {
 
 export async function getLocalRetiradaPadrao() {
   try {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('local_retirada')
       .select('*')
       .eq('ativo', true)
       .limit(1)
       .maybeSingle();
 
-    if (error) throw error;
-    return data || null;
+    if (!data) {
+      const res = await supabase.from('local_retirada').select('*').limit(1).maybeSingle();
+      if (res.data) data = res.data;
+    }
+
+    if (error && !data) throw error;
+    return data || { id: '11111111-1111-1111-1111-111111111111', nome: 'Fatec Franco da Rocha' };
   } catch (e) {
     console.error('Erro ao obter local padrão:', e);
-    return null;
+    return { id: '11111111-1111-1111-1111-111111111111', nome: 'Fatec Franco da Rocha' };
   }
 }
 
@@ -143,11 +148,25 @@ export function resolverStatusColeta(c) {
     /dispon/i.test(stNome)
   );
 
-  const rotulo = stNome ? stNome.toUpperCase() : (ehCancelada ? 'CANCELADA' : ehRetirada ? 'RETIRADA' : ehAgendada ? 'AGENDADA' : 'DISPONÍVEL');
+  let rotulo = stNome ? stNome.toUpperCase() : (ehCancelada ? 'CANCELADA' : ehRetirada ? 'RETIRADA' : ehAgendada ? 'AGENDADA' : 'DISPONÍVEL');
+  rotulo = rotulo
+    .replace(/RETIRADO/gi, 'RETIRADA')
+    .replace(/CANCELADO/gi, 'CANCELADA')
+    .replace(/REAGENDADO/gi, 'REAGENDADA')
+    .replace(/AGENDADO/gi, 'AGENDADA');
+
+  let nomeFinal = stNome || (ehCancelada ? 'cancelada' : ehRetirada ? 'retirada' : ehAgendada ? 'agendada' : 'disponível');
+  nomeFinal = nomeFinal
+    .replace(/retirado/gi, 'retirada')
+    .replace(/cancelado/gi, 'cancelada')
+    .replace(/reagendado/gi, 'reagendada')
+    .replace(/agendado/gi, 'agendada');
+
+  const temaCor = obterCoresStatus(codSt, stNome);
 
   return {
     codigo: codSt,
-    nome: stNome || (ehCancelada ? 'cancelado' : ehRetirada ? 'retirado' : ehAgendada ? 'agendado' : 'disponível'),
+    nome: nomeFinal,
     rotulo,
     ehCancelada,
     ehRetirada,
@@ -156,7 +175,8 @@ export function resolverStatusColeta(c) {
     bloquearDados: Boolean(regras.bloquear_dados || ehCancelada || ehRetirada),
     requerCatador: Boolean(regras.regra_catador === 'requer_catador' || (ehAgendada && !ehCancelada && !ehRetirada)),
     semCatador: Boolean(regras.regra_catador === 'sem_catador' || ehDisponivel),
-    regras
+    regras,
+    temaCor
   };
 }
 
@@ -268,14 +288,39 @@ export async function listarMinhasColetasCatador() {
   return [];
 }
 
+export function getStatusDisponiveisCache() {
+  try {
+    const raw = localStorage.getItem('reciclagem_lista_status');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  return null;
+}
+
 export async function getStatusDisponiveis() {
   try {
     const { data, error } = await supabase
       .from('status')
       .select('*')
       .order('cod_status', { ascending: true });
-    if (!error && data && data.length > 0) return data;
+    if (!error && data && data.length > 0) {
+      const listaMapeada = data.map(st => {
+        const regras = obterRegrasStatus(st.cod_status, st.status);
+        return {
+          ...st,
+          regras
+        };
+      });
+      try {
+        localStorage.setItem('reciclagem_lista_status', JSON.stringify(listaMapeada));
+      } catch (e) {}
+      return listaMapeada;
+    }
   } catch (e) {}
+  const cached = getStatusDisponiveisCache();
+  if (cached) return cached;
   return [];
 }
 
@@ -298,7 +343,7 @@ async function obterCodStatusReal(termoStatus, fallbackNum = 1) {
   return fallbackNum;
 }
 
-export async function confirmarRetirada(cod_coleta) {
+export async function confirmarRetirada(cod_coleta, dadosOpcionais = {}) {
   // Validação: a coleta precisa ter um catador alocado para ser marcada como retirada
   const { data: col } = await supabase
     .from('coleta')
@@ -318,12 +363,10 @@ export async function confirmarRetirada(cod_coleta) {
 
   const payloadUpdate = {
     cod_status: codStatus,
-    atualizado_em: agora.toISOString()
+    atualizado_em: agora.toISOString(),
+    data: (dadosOpcionais && dadosOpcionais.data) ? dadosOpcionais.data : dataHoje,
+    hora: (dadosOpcionais && dadosOpcionais.hora) ? dadosOpcionais.hora : horaAgora
   };
-
-  // Se a coleta ainda não possuía data ou hora gravadas, registra a data e horário da retirada
-  if (!col.data) payloadUpdate.data = dataHoje;
-  if (!col.hora) payloadUpdate.hora = horaAgora;
 
   const { data, error } = await supabase
     .from('coleta')
@@ -793,22 +836,22 @@ async function enriquecerColetas(coletasBrutas) {
       
       let stObj = c.status || stMap[c.cod_status];
       if (!stObj) {
-        if (c.cod_status === 4 || c.cod_status === 5) stObj = { cod_status: c.cod_status, status: 'cancelado' };
-        else if (c.cod_status === 3) stObj = { cod_status: 3, status: 'retirado' };
-        else if (c.cod_status === 2) stObj = { cod_status: 2, status: 'agendado' };
-        else if (c.cod_status === 6) stObj = { cod_status: 6, status: 'reagendado' };
+        if (c.cod_status === 4 || c.cod_status === 5) stObj = { cod_status: c.cod_status, status: 'cancelada' };
+        else if (c.cod_status === 3) stObj = { cod_status: 3, status: 'retirada' };
+        else if (c.cod_status === 2) stObj = { cod_status: 2, status: 'agendada' };
+        else if (c.cod_status === 6) stObj = { cod_status: 6, status: 'reagendada' };
         else stObj = { cod_status: 1, status: 'disponível' };
       }
 
       // Se cod_status for 4 ou 5 ou texto cancelado
       if (c.cod_status === 4 || c.cod_status === 5 || /cancel/i.test(stObj.status || '')) {
-        stObj = { cod_status: stObj.cod_status || 4, status: 'cancelado' };
+        stObj = { cod_status: stObj.cod_status || 4, status: 'cancelada' };
       } else if (c.cod_status === 3 || /(retirad|conclu)/i.test(stObj.status || '')) {
-        stObj = { cod_status: 3, status: 'retirado' };
-      } else if (c.cod_status === 2) {
-        stObj = { cod_status: 2, status: 'agendado' };
-      } else if (c.cod_status === 6) {
-        stObj = { cod_status: 6, status: 'reagendado' };
+        stObj = { cod_status: 3, status: 'retirada' };
+      } else if (c.cod_status === 2 || (/(^|\s)agend/i.test(stObj.status || '') && !/reagend/i.test(stObj.status || ''))) {
+        stObj = { cod_status: 2, status: 'agendada' };
+      } else if (c.cod_status === 6 || /reagend/i.test(stObj.status || '')) {
+        stObj = { cod_status: 6, status: 'reagendada' };
       }
 
       let cData = c.data;

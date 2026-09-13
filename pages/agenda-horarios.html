@@ -46,9 +46,12 @@
         <!-- 2/4 Centro: Calendário Visual de Dias Cadastrados -->
         <main class="center-panel" style="align-items: stretch; justify-content: flex-start;">
           <div style="width: 100%; padding-bottom: 2rem;">
-            <h1 id="titulo_pagina_agenda" style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem;">
+            <h1 id="titulo_pagina_agenda" style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.5rem; margin-top: 0;">
               Agenda & Horários de Atendimento
             </h1>
+            <p style="font-size: 0.9rem; color: var(--cinza-texto-aux, #666); text-align: center; margin-bottom: 1.25rem;">
+              Consulte os dias de funcionamento e horários disponíveis para descarte, agendamento e retirada de coletas.
+            </p>
 
             <!-- Calendário Visual de Dias Cadastrados -->
             <div id="calendar-picker-box"></div>
@@ -105,7 +108,7 @@
       atualizarBotaoVoltar();
 
       try {
-        const localPadrao = await getLocalRetiradaPadrao().catch(() => ({ id: '11111111-1111-1111-1111-111111111111' }));
+        const localPadrao = (await getLocalRetiradaPadrao()) || { id: '11111111-1111-1111-1111-111111111111' };
         const agendaBanco = await listarAgendaPorLocal(localPadrao.id).catch(() => []);
 
         resetCalendarPendingMap(null);

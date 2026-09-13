@@ -9,6 +9,8 @@ export function showConfirmModal({
   confirmText = 'Confirmar',
   cancelText = 'Voltar',
   confirmColor = '#1b6d24',
+  confirmClass = 'btn-acao-primaria',
+  cancelClass = 'btn-acao-secundaria',
   icon = '<i class="fa-solid fa-circle-question" style="color: #2e7d32;"></i>',
   onConfirm = () => {},
   onCancel = () => {}
@@ -48,6 +50,32 @@ export function showConfirmModal({
     border: 1px solid #e0e0e0;
   `;
 
+  const confirmStyle = confirmClass === 'btn-acao-primaria'
+    ? `padding: 9px 20px; font-size: 0.88rem; background: ${confirmColor} !important; border-color: ${confirmColor} !important; color: #ffffff !important; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);`
+    : `padding: 9px 18px; font-size: 0.88rem; cursor: pointer; border-radius: 8px;`;
+
+  const cancelStyle = cancelClass === 'btn-acao-primaria'
+    ? `padding: 9px 20px; font-size: 0.88rem; background: ${confirmColor} !important; border-color: ${confirmColor} !important; color: #ffffff !important; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);`
+    : `padding: 9px 18px; font-size: 0.88rem; cursor: pointer; border-radius: 8px;`;
+
+  const buttonsHtml = (confirmClass === 'btn-acao-secundaria' && cancelClass === 'btn-acao-primaria')
+    ? `
+      <button id="modal-btn-confirm" class="${confirmClass}" style="${confirmStyle}">
+        ${confirmText}
+      </button>
+      <button id="modal-btn-cancel" class="${cancelClass}" style="${cancelStyle}">
+        ${cancelText}
+      </button>
+    `
+    : `
+      <button id="modal-btn-cancel" class="${cancelClass}" style="${cancelStyle}">
+        ${cancelText}
+      </button>
+      <button id="modal-btn-confirm" class="${confirmClass}" style="${confirmStyle}">
+        ${confirmText}
+      </button>
+    `;
+
   box.innerHTML = `
     <h3 style="margin: 0; font-size: 1.18rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; gap: 8px;">
       ${icon} ${title}
@@ -56,12 +84,7 @@ export function showConfirmModal({
       ${message}
     </p>
     <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
-      <button id="modal-btn-cancel" style="padding: 10px 18px; font-size: 0.88rem; background: #f1f3f1; color: #444; border: 1px solid #d0d0d0; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s;">
-        ${cancelText}
-      </button>
-      <button id="modal-btn-confirm" style="padding: 10px 20px; font-size: 0.88rem; background: ${confirmColor}; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: opacity 0.2s;">
-        ${confirmText}
-      </button>
+      ${buttonsHtml}
     </div>
   `;
 
@@ -139,7 +162,7 @@ export function showAlertModal({
       ${message}
     </p>
     <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
-      <button id="modal-alert-ok" style="padding: 10px 22px; font-size: 0.88rem; background: ${confirmColor}; color: #ffffff; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+      <button id="modal-alert-ok" class="btn-acao-primaria" style="padding: 9px 22px; font-size: 0.88rem; background: ${confirmColor} !important; border-color: ${confirmColor} !important; color: #ffffff; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
         ${buttonText}
       </button>
     </div>

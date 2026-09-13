@@ -3,11 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quem Somos — Reciclagem Solidária</title>
+  <title>Sobre Nós — Reciclagem Solidária</title>
   <link rel="stylesheet" href="../css/design-tokens.css">
   <link rel="stylesheet" href="../css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .card-institucional {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      border: 1.5px solid #c8e6c9;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+    }
+    .grid-tripe {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 680px) {
+      .grid-tripe {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+    .ods-card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .ods-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    }
+    .ods-badge {
+      color: white;
+      font-weight: 800;
+      font-size: 0.8rem;
+      padding: 6px 10px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      text-align: center;
+      min-width: 62px;
+    }
+  </style>
 </head>
 <body>
 
@@ -35,7 +81,7 @@
         <!-- 1/4 Esquerda: Logo Fixo no Topo -->
         <aside class="left-panel">
           <div class="links" style="margin-bottom: 0.5rem;">
-            <a href="./quem-somos.html" class="l1"><i class="fa-solid fa-circle-info"></i> Quem Somos</a>
+            <a href="./quem-somos.html" class="l1"><i class="fa-solid fa-circle-info"></i> Sobre Nós</a>
           </div>
 
           <div class="logo-wrap" style="margin-top: 0.25rem;">
@@ -43,50 +89,134 @@
           </div>
         </aside>
 
-        <!-- 2/4 Centro: Sobre o Projeto & ODS ONU -->
+        <!-- 2/4 Centro: Sobre o Projeto, Missão, Propósito & ODS ONU -->
         <main class="center-panel">
-          <div style="max-width: 660px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
-            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.5rem;">
-              Quem Somos — Reciclagem Solidária
+          <div style="max-width: 680px; width: 100%; margin: 0 auto; padding-bottom: 2.5rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.5rem; margin-top: 0;">
+              Sobre Nós — Reciclagem Solidária
             </h1>
+            <p style="font-size: 0.9rem; color: var(--cinza-texto-aux, #666); text-align: center; margin-bottom: 1.5rem;">
+              Conheça a plataforma e como ela contribui para a reciclagem.
+            </p>
 
-            <!-- Sobre o Projeto -->
-            <div style="background: white; padding: 24px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.06); margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-              <h4 style="color: var(--verde-escuro, #1b6d24); margin-bottom: 10px; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-leaf"></i> Sobre a Plataforma
-              </h4>
-              <p style="font-size: 0.95rem; color: #172b16; line-height: 1.6; margin-bottom: 1rem;">
-                O projeto <strong>Reciclagem Solidária</strong> começou como uma iniciativa acadêmica da <strong>Fatec Franco da Rocha</strong> com o propósito de integrar tecnologia social e sustentabilidade ambiental à gestão de resíduos sólidos recicláveis.
-              </p>
-              <p style="font-size: 0.95rem; color: #172b16; line-height: 1.6;">
-                A plataforma conecta diretamente cidadãos e geradores de materiais a catadores autônomos e parceiros, promovendo a inclusão produtiva, a valorização do trabalho dos profissionais da reciclagem, o descarte consciente e a economia circular.
+            <!-- Card 1: Sobre a Reciclagem Solidária -->
+            <div class="card-institucional">
+              <h3 style="color: var(--verde-escuro, #1b6d24); margin: 0 0 12px 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-recycle" style="color: #2e7d32;"></i> Sobre a Reciclagem Solidária
+              </h3>
+              <p style="font-size: 0.93rem; color: #2d3748; line-height: 1.65; margin: 0;">
+                A Reciclagem Solidária aproxima geradores de resíduos e catadores, facilitando a destinação de materiais recicláveis. A plataforma organiza a disponibilização dos materiais e o agendamento das coletas, contribuindo para a reciclagem e a geração de renda dos catadores.
               </p>
             </div>
 
-            <!-- ODS ONU -->
-            <div style="background: white; padding: 24px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-              <h4 style="color: var(--verde-escuro, #1b6d24); margin-bottom: 14px; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-earth-americas"></i> Objetivos de Desenvolvimento Sustentável (ONU)
-              </h4>
-              
-              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
-                <div style="background: #ffebee; border-radius: 12px; padding: 14px 10px; border: 1px solid #ffcdd2;">
-                  <span style="display: inline-block; background: #e53935; color: white; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;">ODS 1</span>
-                  <strong style="color: #b71c1c; font-size: 13px; display: block;">Erradicação da Pobreza</strong>
-                  <span style="font-size: 11px; color: #555; display: block; margin-top: 4px;">Geração de renda para catadores autônomos</span>
+            <!-- Card 2: Propósito, Missão e Valores (Tripé Institucional) -->
+            <div class="grid-tripe">
+              <!-- Propósito -->
+              <div style="background: white; border: 1.5px solid #c8e6c9; border-radius: 14px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                  <div style="width: 36px; height: 36px; border-radius: 10px; background: #e8f5e9; color: #1b6d24; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                    <i class="fa-solid fa-bullseye"></i>
+                  </div>
+                  <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--verde-escuro, #1b6d24);">Propósito</h4>
                 </div>
-                <div style="background: #e8f5e9; border-radius: 12px; padding: 14px 10px; border: 1px solid #c8e6c9;">
-                  <span style="display: inline-block; background: #2e7d32; color: white; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;">ODS 8</span>
-                  <strong style="color: #1b5e20; font-size: 13px; display: block;">Trabalho Decente</strong>
-                  <span style="font-size: 11px; color: #555; display: block; margin-top: 4px;">Inclusão e segurança operacional</span>
+                <p style="font-size: 0.86rem; color: #4a5568; line-height: 1.55; margin: 0;">
+                  Facilitar a destinação de materiais recicláveis e aproximar quem gera resíduos de quem realiza a coleta.
+                </p>
+              </div>
+
+              <!-- Missão -->
+              <div style="background: white; border: 1.5px solid #c8e6c9; border-radius: 14px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                  <div style="width: 36px; height: 36px; border-radius: 10px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                    <i class="fa-solid fa-handshake"></i>
+                  </div>
+                  <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--verde-escuro, #1b6d24);">Missão</h4>
                 </div>
-                <div style="background: #fff8e1; border-radius: 12px; padding: 14px 10px; border: 1px solid #ffecb3;">
-                  <span style="display: inline-block; background: #f57f17; color: white; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 6px; margin-bottom: 6px;">ODS 12</span>
-                  <strong style="color: #e65100; font-size: 13px; display: block;">Consumo Sustentável</strong>
-                  <span style="font-size: 11px; color: #555; display: block; margin-top: 4px;">Destinação correta de recicláveis</span>
+                <p style="font-size: 0.86rem; color: #4a5568; line-height: 1.55; margin: 0;">
+                  Conectar geradores de resíduos e catadores por meio de uma plataforma simples e acessível.
+                </p>
+              </div>
+
+              <!-- Valores -->
+              <div style="background: white; border: 1.5px solid #c8e6c9; border-radius: 14px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                  <div style="width: 36px; height: 36px; border-radius: 10px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                    <i class="fa-solid fa-seedling"></i>
+                  </div>
+                  <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--verde-escuro, #1b6d24);">Valores</h4>
                 </div>
+                <p style="font-size: 0.86rem; color: #4a5568; line-height: 1.55; margin: 0;">
+                  Solidariedade, sustentabilidade, respeito, valorização do trabalho dos catadores e responsabilidade ambiental.
+                </p>
               </div>
             </div>
+
+            <!-- Card 3: Objetivos de Desenvolvimento Sustentável (ODS ONU) -->
+            <div class="card-institucional">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <h3 style="color: var(--verde-escuro, #1b6d24); margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                  <i class="fa-solid fa-earth-americas" style="color: #0284c7;"></i> Objetivos de Desenvolvimento Sustentável (ONU)
+                </h3>
+              </div>
+
+              <p style="font-size: 0.92rem; color: #4a5568; line-height: 1.6; margin: 0 0 16px 0;">
+                A Reciclagem Solidária contribui para três Objetivos de Desenvolvimento Sustentável da ONU:
+              </p>
+
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                
+                <!-- ODS 1 -->
+                <div class="ods-card" style="border-left: 5px solid #e5243b;">
+                  <div class="ods-badge" style="background: #e5243b;">ODS 1</div>
+                  <div>
+                    <strong style="color: #b71c1c; font-size: 0.95rem; display: block; margin-bottom: 3px;">ODS 1 • Erradicação da Pobreza</strong>
+                    <p style="margin: 0; font-size: 0.86rem; color: #4a5568; line-height: 1.5;">
+                      Contribui para a geração de renda dos catadores e para a valorização do seu trabalho.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- ODS 8 -->
+                <div class="ods-card" style="border-left: 5px solid #a21942;">
+                  <div class="ods-badge" style="background: #a21942;">ODS 8</div>
+                  <div>
+                    <strong style="color: #880e4f; font-size: 0.95rem; display: block; margin-bottom: 3px;">ODS 8 • Trabalho Decente e Crescimento Econômico</strong>
+                    <p style="margin: 0; font-size: 0.86rem; color: #4a5568; line-height: 1.5;">
+                      Valoriza o trabalho dos catadores e facilita novas oportunidades de coleta.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- ODS 12 -->
+                <div class="ods-card" style="border-left: 5px solid #cf8d2a;">
+                  <div class="ods-badge" style="background: #cf8d2a;">ODS 12</div>
+                  <div>
+                    <strong style="color: #bf360c; font-size: 0.95rem; display: block; margin-bottom: 3px;">ODS 12 • Consumo e Produção Responsáveis</strong>
+                    <p style="margin: 0; font-size: 0.86rem; color: #4a5568; line-height: 1.5;">
+                      Incentiva a separação e a destinação adequada dos materiais recicláveis.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Card 4: Faça Parte da Reciclagem -->
+            <div style="background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); border: 1.5px solid #a5d6a7; border-radius: 16px; padding: 22px 20px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+              <div style="width: 46px; height: 46px; border-radius: 50%; background: #ffffff; color: #1b6d24; display: inline-flex; align-items: center; justify-content: center; font-size: 1.35rem; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <i class="fa-solid fa-recycle"></i>
+              </div>
+              <h4 style="margin: 0 0 8px 0; color: #1b6d24; font-size: 1.15rem; font-weight: 800;">
+                Faça Parte da Reciclagem
+              </h4>
+              <p style="font-size: 0.92rem; color: #2e5b32; margin: 0 0 6px 0; max-width: 540px; margin-left: auto; margin-right: auto; line-height: 1.55;">
+                Cada material destinado corretamente contribui para a reciclagem e para o trabalho dos catadores.
+              </p>
+              <p style="font-size: 0.92rem; color: #2e5b32; font-weight: 600; margin: 0; max-width: 540px; margin-left: auto; margin-right: auto; line-height: 1.55;">
+                Gere, disponibilize ou colete materiais recicláveis e faça parte dessa rede.
+              </p>
+            </div>
+
           </div>
         </main>
 

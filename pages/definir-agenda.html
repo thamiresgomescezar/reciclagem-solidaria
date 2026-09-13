@@ -20,8 +20,8 @@
     <!-- Top Header -->
     <div class="top-bar">
       <div></div>
-      <a href="./dashboard-admin.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
-        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      <a href="./configuracoes.html" id="btn-voltar-top" style="color: #ffffff !important; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar a Configurações
       </a>
     </div>
 
@@ -46,17 +46,34 @@
         <!-- 2/4 Centro: Configuração de Agenda e Calendário Visual de Dias Cadastrados -->
         <main class="center-panel" style="align-items: stretch; justify-content: flex-start;">
           <div style="width: 100%; padding-bottom: 2rem;">
-            <h1 id="titulo_pagina_agenda" style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1.25rem;">
+            <h1 id="titulo_pagina_agenda" style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.5rem; margin-top: 0;">
               Agenda & Horários de Atendimento
             </h1>
+            <p style="font-size: 0.9rem; color: var(--cinza-texto-aux, #666); text-align: center; margin-bottom: 1.25rem;">
+              Configure dias de funcionamento, horários de atendimento, intervalos e gerencie o calendário anual da unidade.
+            </p>
 
-            <!-- Configuração Recorrente Mensal (Visível Apenas para Administradores) -->
-            <div id="box_config_admin" style="background: white; padding: 20px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 1.5rem; display: none;">
-              <h4 style="color: var(--verde-escuro, #1b6d24); margin-bottom: 12px; font-size: 1.1rem; font-weight: 800;">
-                <i class="fa-regular fa-clock"></i> Gerar Agenda Automática Mensal
-              </h4>
+            <!-- Configuração Anual da Agenda (Visível Apenas para Administradores) -->
+            <div id="box_config_admin" style="background: white; padding: 22px; border-radius: 16px; border: 1.5px solid #a5d6a7; box-shadow: 0 4px 14px rgba(0,0,0,0.04); margin-bottom: 1.5rem; display: none;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+                <h4 style="color: var(--verde-escuro, #1b6d24); margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-calendar-days"></i> Configuração da Agenda
+                </h4>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700; color: #1b6d24;">
+                  <span>Ano:</span>
+                  <select id="sel_ano_agenda" style="border: 1.5px solid #a5d6a7; border-radius: 8px; padding: 4px 10px; font-weight: 700; font-family: inherit; color: var(--verde-escuro, #1b6d24); background: white; cursor: pointer;"></select>
+                </div>
+              </div>
 
-              <div id="weekdays-group">
+              <p style="font-size: 0.85rem; color: #555; margin-top: 0; margin-bottom: 14px; line-height: 1.4;">
+                Defina o padrão semanal de funcionamento da unidade. Exceções, feriados e recessos podem ser customizados diretamente no calendário.
+              </p>
+
+              <!-- Dias da Semana de Funcionamento -->
+              <span style="font-size: 0.85rem; font-weight: 700; color: #2e532b; display: block; margin-bottom: 6px;">
+                Dias de Atendimento na Semana:
+              </span>
+              <div id="weekdays-group" style="margin-bottom: 12px;">
                 <button type="button" class="btn-tab active" data-day="1">Segunda</button>
                 <button type="button" class="btn-tab active" data-day="2">Terça</button>
                 <button type="button" class="btn-tab active" data-day="3">Quarta</button>
@@ -68,47 +85,58 @@
 
               <div style="margin-bottom: 1rem; background: #f9fbf9; padding: 14px; border-radius: 12px; border: 1px solid #e8f5e9;">
                 <span style="font-size: 0.88rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-                  <i class="fa-regular fa-clock"></i> Horário de Funcionamento:
+                  <i class="fa-regular fa-clock"></i> Horário de Atendimento Padrão:
                 </span>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                   <div class="campo">
-                    <label for="horario_abertura">Abertura:</label>
-                    <input type="time" id="horario_abertura" class="input-underline" value="08:00">
+                    <label for="horario_abertura" style="font-size: 0.85rem; font-weight: 700; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                      <i class="fa-regular fa-clock"></i> Abertura:
+                    </label>
+                    <select id="horario_abertura" class="input-pill" style="width: 100%; box-sizing: border-box; font-size: 0.9rem; padding: 9px 12px; border: 1.5px solid #a5d6a7; border-radius: 8px; font-family: inherit; font-weight: 700; cursor: pointer; background: #ffffff;">
+                      <option value="">Selecione o horário...</option>
+                    </select>
                   </div>
                   <div class="campo">
-                    <label for="horario_fechamento">Fechamento:</label>
-                    <input type="time" id="horario_fechamento" class="input-underline" value="17:00">
+                    <label for="horario_fechamento" style="font-size: 0.85rem; font-weight: 700; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                      <i class="fa-regular fa-clock"></i> Fechamento:
+                    </label>
+                    <select id="horario_fechamento" class="input-pill" style="width: 100%; box-sizing: border-box; font-size: 0.9rem; padding: 9px 12px; border: 1.5px solid #a5d6a7; border-radius: 8px; font-family: inherit; font-weight: 700; cursor: pointer; background: #ffffff;">
+                      <option value="">Selecione o horário...</option>
+                    </select>
                   </div>
                 </div>
 
                 <div style="border-top: 1px dashed #c8e6c9; padding-top: 10px;">
                   <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <input type="checkbox" id="chk_pausa_recorrente" style="width: 17px; height: 17px; accent-color: var(--verde-escuro, #1b6d24); cursor: pointer;">
-                    <label for="chk_pausa_recorrente" style="font-weight: 700; color: var(--verde-escuro, #1b6d24); font-size: 0.88rem; cursor: pointer;">
-                      <i class="fa-solid fa-utensils"></i> Incluir Pausa para Almoço / Intervalo
+                    <label for="chk_pausa_recorrente" style="font-weight: 700; color: var(--verde-escuro, #1b6d24); font-size: 0.86rem; cursor: pointer;">
+                      Incluir Intervalo
                     </label>
                   </div>
                   <div id="box_pausa_recorrente" style="display: none; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
                     <div class="campo">
-                      <label for="horario_pausa_ini">Início da Pausa:</label>
-                      <input type="time" id="horario_pausa_ini" class="input-underline" value="12:00">
+                      <label for="horario_pausa_ini" style="font-size: 0.85rem; font-weight: 700; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                        <i class="fa-regular fa-clock"></i> Início da Pausa:
+                      </label>
+                      <select id="horario_pausa_ini" class="input-pill" style="width: 100%; box-sizing: border-box; font-size: 0.9rem; padding: 9px 12px; border: 1.5px solid #a5d6a7; border-radius: 8px; font-family: inherit; font-weight: 700; cursor: pointer; background: #ffffff;">
+                        <option value="">Selecione o horário...</option>
+                      </select>
                     </div>
                     <div class="campo">
-                      <label for="horario_pausa_fim">Retorno do Atendimento:</label>
-                      <input type="time" id="horario_pausa_fim" class="input-underline" value="14:00">
+                      <label for="horario_pausa_fim" style="font-size: 0.85rem; font-weight: 700; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                        <i class="fa-regular fa-clock"></i> Retorno do Atendimento:
+                      </label>
+                      <select id="horario_pausa_fim" class="input-pill" style="width: 100%; box-sizing: border-box; font-size: 0.9rem; padding: 9px 12px; border: 1.5px solid #a5d6a7; border-radius: 8px; font-family: inherit; font-weight: 700; cursor: pointer; background: #ffffff;">
+                        <option value="">Selecione o horário...</option>
+                      </select>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <button type="button" id="btn-gerar-recorrente" class="btn-avancar" style="font-size: 0.92rem;">
-                <i class="fa-solid fa-bolt"></i> GERAR AGENDA DO MÊS
+              <button type="button" id="btn-gerar-anual" class="btn-avancar" style="font-size: 0.95rem; padding: 12px 20px;">
+                <i class="fa-solid fa-calendar-check"></i> DEFINIR / ATUALIZAR AGENDA
               </button>
-
-              <div style="font-size: 0.83rem; color: #388e3c; background: #e8f5e9; padding: 8px 12px; border-radius: 8px; border: 1px solid #c8e6c9; margin-top: 12px; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-lightbulb" style="color: #fbc02d; font-size: 1rem;"></i>
-                <span><b>Dica:</b> Para personalizar horários ou pausas em dias específicos, basta clicar diretamente sobre a data no calendário.</span>
-              </div>
             </div>
 
             <!-- Calendário Visual de Dias Cadastrados -->
@@ -127,13 +155,14 @@
     import { supabase } from '../js/lib/supabaseClient.js';
     import { getPerfilAtual } from '../js/services/auth.js';
     import { proibirAcessoInvalido } from '../js/lib/routeGuard.js';
-    import { listarAgendaPorLocal, salvarAgendaEmLote } from '../js/services/agenda.js';
+    import { listarAgendaPorLocal, salvarAgendaEmLote, gerarAgendaAnual } from '../js/services/agenda.js';
     import { getLocalRetiradaPadrao } from '../js/services/coletas.js';
-    import { renderCalendarGrid, resetCalendarPendingMap } from '../js/pages/calendarPicker.js';
-    import { showAlertModal } from '../js/lib/modal.js';
+    import { renderCalendarGrid, resetCalendarPendingMap, gerarOpcoesHorarioSelect } from '../js/pages/calendarPicker.js';
+    import { showAlertModal, showConfirmModal } from '../js/lib/modal.js';
 
     const boxAdmin = document.getElementById('box_config_admin');
-    const btnGerar = document.getElementById('btn-gerar-recorrente');
+    const btnGerarAnual = document.getElementById('btn-gerar-anual');
+    const selAnoAgenda = document.getElementById('sel_ano_agenda');
     const inputAbertura = document.getElementById('horario_abertura');
     const inputFechamento = document.getElementById('horario_fechamento');
     const chkPausaRec = document.getElementById('chk_pausa_recorrente');
@@ -147,9 +176,118 @@
     let agendaBanco = [];
     let perfilAtual = null;
 
+    function preencherSelectsHorario() {
+      const opcoesPadrao = gerarOpcoesHorarioSelect('', { incluirVazio: true, labelVazio: 'Selecione o horário...' });
+      [inputAbertura, inputFechamento, inputPausaIni, inputPausaFim].forEach(sel => {
+        if (sel) sel.innerHTML = opcoesPadrao;
+      });
+    }
+
+    function setSelectValueSafely(selectEl, value) {
+      if (!selectEl) return;
+      const v = (value || '').trim().slice(0, 5);
+      if (!v) {
+        selectEl.value = '';
+        return;
+      }
+      let opt = Array.from(selectEl.options).find(o => o.value === v);
+      if (!opt) {
+        opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = `${v} hs`;
+        selectEl.appendChild(opt);
+      }
+      selectEl.value = v;
+    }
+
+    preencherSelectsHorario();
+
+    function restaurarUltimoHorario(agendaData = []) {
+      let ultimo = null;
+
+      // 1. Tenta carregar do localStorage a última configuração informada
+      try {
+        const raw = localStorage.getItem('reciclagem_ultimo_horario_agenda');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && (parsed.abertura || parsed.fechamento)) {
+            ultimo = parsed;
+          }
+        }
+      } catch (e) {}
+
+      // 2. Se não houver no localStorage, analisa o último horário salvo no banco de dados
+      if (!ultimo && Array.isArray(agendaData) && agendaData.length > 0) {
+        const disponiveis = agendaData.filter(d => d.disponivel && d.hora_inicio && d.hora_fim);
+        if (disponiveis.length > 0) {
+          const u = disponiveis[disponiveis.length - 1];
+          const temPausa = Boolean(u.pausa_inicio && u.pausa_fim);
+          ultimo = {
+            abertura: u.hora_inicio ? u.hora_inicio.slice(0, 5) : '',
+            fechamento: u.hora_fim ? u.hora_fim.slice(0, 5) : '',
+            temPausa,
+            pausaIni: temPausa ? u.pausa_inicio.slice(0, 5) : '',
+            pausaFim: temPausa ? u.pausa_fim.slice(0, 5) : ''
+          };
+        }
+      }
+
+      // 3. Se houver último horário informado, preenche os campos; caso contrário, mantém os campos limpos
+      if (ultimo) {
+        if (inputAbertura && ultimo.abertura) setSelectValueSafely(inputAbertura, ultimo.abertura);
+        if (inputFechamento && ultimo.fechamento) setSelectValueSafely(inputFechamento, ultimo.fechamento);
+
+        if (ultimo.temPausa && ultimo.pausaIni && ultimo.pausaFim) {
+          if (chkPausaRec) chkPausaRec.checked = true;
+          if (boxPausaRec) boxPausaRec.style.display = 'grid';
+          if (inputPausaIni) setSelectValueSafely(inputPausaIni, ultimo.pausaIni);
+          if (inputPausaFim) setSelectValueSafely(inputPausaFim, ultimo.pausaFim);
+        } else {
+          if (chkPausaRec) chkPausaRec.checked = false;
+          if (boxPausaRec) boxPausaRec.style.display = 'none';
+        }
+
+        if (Array.isArray(ultimo.diasSemana) && ultimo.diasSemana.length > 0) {
+          diasSelecionados = [...ultimo.diasSemana];
+          document.querySelectorAll('#weekdays-group button').forEach(btn => {
+            const val = parseInt(btn.dataset.day, 10);
+            if (diasSelecionados.includes(val)) {
+              btn.classList.add('active');
+            } else {
+              btn.classList.remove('active');
+            }
+          });
+        }
+      } else {
+        // Se nunca foi informado nenhum horário, mantém os campos em branco
+        if (inputAbertura) inputAbertura.value = '';
+        if (inputFechamento) inputFechamento.value = '';
+        if (chkPausaRec) chkPausaRec.checked = false;
+        if (boxPausaRec) boxPausaRec.style.display = 'none';
+        if (inputPausaIni) inputPausaIni.value = '';
+        if (inputPausaFim) inputPausaFim.value = '';
+      }
+    }
+
     if (chkPausaRec && boxPausaRec) {
       chkPausaRec.addEventListener('change', () => {
         boxPausaRec.style.display = chkPausaRec.checked ? 'grid' : 'none';
+        if (chkPausaRec.checked) {
+          if (!inputPausaIni?.value) setSelectValueSafely(inputPausaIni, '12:00');
+          if (!inputPausaFim?.value) setSelectValueSafely(inputPausaFim, '13:00');
+        }
+      });
+    }
+
+    // Inicializa opções do seletor de ano
+    if (selAnoAgenda) {
+      const anoCorrente = new Date().getFullYear();
+      [anoCorrente - 1, anoCorrente, anoCorrente + 1, anoCorrente + 2].forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a;
+        opt.textContent = a;
+        if (a === anoCorrente) opt.selected = true;
+        selAnoAgenda.appendChild(opt);
       });
     }
 
@@ -157,8 +295,11 @@
       const eAdmin = perfilAtual?.tipo === 'administrador';
 
       try {
-        if (!localPadrao) localPadrao = await getLocalRetiradaPadrao().catch(() => ({ id: '11111111-1111-1111-1111-111111111111' }));
+        if (!localPadrao) localPadrao = (await getLocalRetiradaPadrao()) || { id: '11111111-1111-1111-1111-111111111111' };
         agendaBanco = await listarAgendaPorLocal(localPadrao.id).catch(() => []);
+
+        // Preenche com o último horário informado (ou mantém limpo se não houver)
+        restaurarUltimoHorario(agendaBanco);
 
         if (forceReset) {
           resetCalendarPendingMap(null);
@@ -172,16 +313,31 @@
             if (statusEl) {
               statusEl.className = 'status-message';
               statusEl.style.display = 'block';
-              statusEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando alterações...';
+              statusEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvando alterações da agenda...';
             }
 
             try {
+              const hAbertura = inputAbertura?.value || '08:00';
+              const hFechamento = inputFechamento?.value || '17:00';
+
               await salvarAgendaEmLote({
                 local_retirada_id: localPadrao.id,
                 mapaDatas: pendingMap,
-                hora_inicio: inputAbertura?.value || '08:00',
-                hora_fim: inputFechamento?.value || '17:00'
+                hora_inicio: hAbertura,
+                hora_fim: hFechamento
               });
+
+              // Salva o último horário informado no localStorage
+              try {
+                localStorage.setItem('reciclagem_ultimo_horario_agenda', JSON.stringify({
+                  abertura: hAbertura,
+                  fechamento: hFechamento,
+                  temPausa: chkPausaRec?.checked || false,
+                  pausaIni: inputPausaIni?.value || '',
+                  pausaFim: inputPausaFim?.value || '',
+                  diasSemana: diasSelecionados
+                }));
+              } catch (e) {}
 
               if (statusEl) {
                 statusEl.className = 'status-message success';
@@ -200,7 +356,7 @@
           } : null
         });
       } catch (err) {
-        console.error(err);
+        console.error('Erro ao carregar calendário da agenda:', err);
       }
     }
 
@@ -209,7 +365,7 @@
         e.preventDefault();
         const perfil = perfilAtual || await getPerfilAtual().catch(() => null);
         const tipo = perfil?.tipo || 'cidadao';
-        const dest = tipo === 'administrador' ? './dashboard-admin.html' : (tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
+        const dest = tipo === 'administrador' ? './configuracoes.html' : (tipo === 'catador' ? './dashboard-catador.html' : './dashboard-cidadao.html');
         window.location.href = dest;
       });
     }
@@ -225,7 +381,7 @@
       const linkLeftEl = document.getElementById('link_left_agenda');
 
       if (boxAdmin) boxAdmin.style.display = 'block';
-      if (tituloEl) tituloEl.textContent = 'Definir Agenda de Coletas & Horários';
+      if (tituloEl) tituloEl.textContent = 'Definir Agenda de Atendimento';
       if (linkLeftEl) linkLeftEl.innerHTML = '<i class="fa-solid fa-calendar-days"></i> Definir Agenda';
 
       document.querySelectorAll('#weekdays-group button').forEach(btn => {
@@ -246,85 +402,142 @@
       await carregarEExibirCalendario(true);
     });
 
-    const nomesMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-
-    window.addEventListener('calendar-month-changed', (e) => {
-      if (btnGerar && e.detail && e.detail.mes !== undefined) {
-        const mNome = nomesMeses[e.detail.mes] || '';
-        btnGerar.innerHTML = `<i class="fa-solid fa-bolt"></i> GERAR AGENDA DE ${mNome.toUpperCase()}`;
-      }
-    });
-
-    // Gerador de Agenda Mensal Apenas em Memória
-    if (btnGerar) {
-      btnGerar.addEventListener('click', () => {
+    // Gerador de Agenda Anual Completa (Todos os 12 meses com feriados automáticos)
+    if (btnGerarAnual) {
+      btnGerarAnual.addEventListener('click', () => {
         if (diasSelecionados.length === 0) {
           showAlertModal({ title: 'Seleção Necessária', message: 'Selecione pelo menos um dia da semana para atendimento.' });
           return;
         }
 
-        const hoje = new Date();
-        const ano = window._currentCalendarYear || hoje.getFullYear();
-        const mes = window._currentCalendarMonth !== undefined && window._currentCalendarMonth !== null ? window._currentCalendarMonth : hoje.getMonth();
-        const totalDias = new Date(ano, mes + 1, 0).getDate();
-
-        const newMap = window._calendarPendingMap || {};
-        const ab = inputAbertura?.value ? inputAbertura.value.slice(0, 5) : '08:00';
-        const fe = inputFechamento?.value ? inputFechamento.value.slice(0, 5) : '17:00';
+        const ano = parseInt(selAnoAgenda?.value, 10) || new Date().getFullYear();
+        const ab = inputAbertura?.value ? inputAbertura.value.slice(0, 5) : '';
+        const fe = inputFechamento?.value ? inputFechamento.value.slice(0, 5) : '';
         const temPausa = chkPausaRec?.checked;
-        const pIni = inputPausaIni?.value ? inputPausaIni.value.slice(0, 5) : '12:00';
-        const pFim = inputPausaFim?.value ? inputPausaFim.value.slice(0, 5) : '14:00';
+        const pIni = inputPausaIni?.value ? inputPausaIni.value.slice(0, 5) : '';
+        const pFim = inputPausaFim?.value ? inputPausaFim.value.slice(0, 5) : '';
 
-        let configDia = {
-          disponivel: true,
-          hora_inicio: ab,
-          hora_fim: fe,
-          hora_inicio_2: '',
-          hora_fim_2: ''
-        };
-
-        if (temPausa && pIni > ab && pFim < fe && pFim > pIni) {
-          configDia = {
-            disponivel: true,
-            hora_inicio: ab,
-            hora_fim: pIni,
-            hora_inicio_2: pFim,
-            hora_fim_2: fe
-          };
+        if (!ab || !fe) {
+          showAlertModal({
+            title: 'Horário Necessário',
+            message: 'Por favor, informe os horários de Abertura e Fechamento do atendimento antes de gerar a agenda.',
+            confirmColor: '#1b6d24'
+          });
+          return;
         }
 
-        for (let dia = 1; dia <= totalDias; dia++) {
-          const d = new Date(ano, mes, dia);
-          const dayOfWeek = d.getDay();
-          const monthStr = String(mes + 1).padStart(2, '0');
-          const dayStr = String(dia).padStart(2, '0');
-          const dateFormatted = `${ano}-${monthStr}-${dayStr}`;
+        if (temPausa && (!pIni || !pFim)) {
+          showAlertModal({
+            title: 'Intervalo Incompleto',
+            message: 'A opção "Incluir Intervalo" está marcada. Por favor, informe o início e o retorno da pausa (ou desmarque a opção caso não haja intervalo).',
+            confirmColor: '#1b6d24'
+          });
+          return;
+        }
 
-          if (diasSelecionados.includes(dayOfWeek)) {
-            newMap[dateFormatted] = { ...configDia };
-          } else {
-            // Se o dia não foi selecionado no grupo atual, marca como fechado
-            newMap[dateFormatted] = {
-              disponivel: false,
-              hora_inicio: ab,
-              hora_fim: fe,
-              hora_inicio_2: '',
-              hora_fim_2: ''
-            };
+        if (fe <= ab) {
+          showAlertModal({
+            title: 'Horário Inválido',
+            message: 'O horário de Fechamento deve ser posterior ao horário de Abertura.',
+            confirmColor: '#c62828'
+          });
+          return;
+        }
+
+        if (temPausa && pFim <= pIni) {
+          showAlertModal({
+            title: 'Intervalo Inválido',
+            message: 'O horário de Retorno do Atendimento deve ser posterior ao Início da Pausa.',
+            confirmColor: '#c62828'
+          });
+          return;
+        }
+
+        const nomesDiasMap = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        const diasNomes = diasSelecionados.map(d => nomesDiasMap[d]).join(', ');
+
+        showConfirmModal({
+          title: `Gerar Agenda Anual (${ano})`,
+          message: `Deseja gerar e salvar a agenda de atendimento para o ano todo de ${ano} (todos os 12 meses)?\n\n` +
+            `• Dias na semana: ${diasNomes}\n` +
+            `• Horário: ${ab} às ${fe}${temPausa ? ` (Pausa: ${pIni} às ${pFim})` : ''}\n\n` +
+            `Você poderá ajustar dias individuais ou recessos no calendário a qualquer momento.`,
+          confirmText: 'Sim, Gerar Agenda do Ano Todo',
+          cancelText: 'Cancelar',
+          confirmColor: '#1b6d24',
+          icon: '<i class="fa-solid fa-calendar-check" style="color: #1b6d24; font-size: 1.25rem;"></i>',
+          onConfirm: async () => {
+            btnGerarAnual.disabled = true;
+            btnGerarAnual.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Gerando Agenda Anual...';
+
+            const statusEl = document.getElementById('save-status-msg');
+            if (statusEl) {
+              statusEl.className = 'status-message info';
+              statusEl.style.display = 'block';
+              statusEl.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Gerando grade anual de ${ano} para todos os meses...`;
+            }
+
+            try {
+              if (!localPadrao) localPadrao = (await getLocalRetiradaPadrao()) || { id: '11111111-1111-1111-1111-111111111111' };
+
+              const resultado = await gerarAgendaAnual({
+                local_retirada_id: localPadrao.id,
+                ano,
+                diasSemana: diasSelecionados,
+                hora_inicio: ab,
+                hora_fim: fe,
+                pausa_inicio: temPausa ? pIni : null,
+                pausa_fim: temPausa ? pFim : null
+              });
+
+              // Salva o último horário informado no localStorage
+              try {
+                localStorage.setItem('reciclagem_ultimo_horario_agenda', JSON.stringify({
+                  abertura: ab,
+                  fechamento: fe,
+                  temPausa,
+                  pausaIni: temPausa ? pIni : '',
+                  pausaFim: temPausa ? pFim : '',
+                  diasSemana: diasSelecionados
+                }));
+              } catch (e) {}
+
+              await carregarEExibirCalendario(true);
+
+              if (statusEl) {
+                statusEl.className = 'status-message success';
+                statusEl.style.display = 'block';
+                statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Agenda de ${ano} gerada com sucesso para o ano todo! (${resultado.totalDisponiveis} dias de atendimento configurados nos 12 meses).`;
+              }
+
+              showAlertModal({
+                title: 'Agenda Anual Pronta!',
+                message: `A agenda de atendimento de ${ano} foi aplicada e salva com sucesso!\n\n` +
+                  `• Dias com atendimento ativo configurados: ${resultado.totalDisponiveis}\n\n` +
+                  `O calendário está pronto. Caso a unidade possua feriados ou datas especiais de recesso (como da Fatec), basta clicar diretamente sobre o dia no calendário para ajustar.`,
+                buttonText: 'Entendido',
+                confirmColor: '#1b6d24'
+              });
+
+            } catch (err) {
+              console.error('Erro ao gerar agenda anual:', err);
+              if (statusEl) {
+                statusEl.className = 'status-message error';
+                statusEl.style.display = 'block';
+                statusEl.textContent = 'Erro ao gerar agenda anual: ' + err.message;
+              }
+              showAlertModal({
+                title: 'Erro ao Gerar Agenda',
+                message: err.message || 'Não foi possível gerar a agenda anual.',
+                buttonText: 'Fechar',
+                confirmColor: '#c62828'
+              });
+            } finally {
+              btnGerarAnual.disabled = false;
+              btnGerarAnual.innerHTML = '<i class="fa-solid fa-calendar-check"></i> GERAR / ATUALIZAR AGENDA DO ANO TODO';
+            }
           }
-        }
-
-        window._calendarPendingMap = newMap;
-
-        // Re-renderiza a grade para o usuário visualizar o resultado antes de salvar no banco
-        carregarEExibirCalendario(false);
-
-        const statusEl = document.getElementById('save-status-msg');
-        if (statusEl) {
-          statusEl.className = 'status-message info';
-          statusEl.style.display = 'block';
-          statusEl.innerHTML = '<i class="fa-solid fa-circle-info"></i> Horários gerados na grade! Clique em <b>SALVAR ALTERAÇÕES DA AGENDA</b> abaixo para confirmar.';
-        }
+        });
       });
     }
   </script>

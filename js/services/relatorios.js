@@ -42,7 +42,7 @@ export async function relatorioRanking() {
     const { data: statusRetirado } = await supabase
       .from('status')
       .select('cod_status')
-      .eq('status', 'retirado')
+      .or('status.eq.retirada,status.eq.retirado')
       .maybeSingle();
 
     const { data: coletas, error } = await supabase

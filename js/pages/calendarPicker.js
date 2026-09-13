@@ -1,28 +1,71 @@
 import { showAlertModal } from '../lib/modal.js';
 
+export function gerarOpcoesHorarioSelect(valorSelecionado = '', { incluirVazio = false, labelVazio = 'Selecione o horário...', stepMinutos = 30 } = {}) {
+  let html = incluirVazio ? `<option value="">${labelVazio}</option>` : '';
+  const slots = [];
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += stepMinutos) {
+      const hh = String(h).padStart(2, '0');
+      const mm = String(m).padStart(2, '0');
+      slots.push(`${hh}:${mm}`);
+    }
+  }
+
+  const valLimpo = valorSelecionado ? valorSelecionado.slice(0, 5) : '';
+  if (valLimpo && !slots.includes(valLimpo)) {
+    slots.push(valLimpo);
+    slots.sort();
+  }
+
+  slots.forEach(slot => {
+    const isSel = (valLimpo === slot) ? ' selected' : '';
+    html += `<option value="${slot}"${isSel}>${slot} hs</option>`;
+  });
+  return html;
+}
+
 export function resetCalendarPendingMap(newMap = null) {
   window._calendarPendingMap = newMap;
 }
 
 export function extrairPadraoSemanal(agendaData) {
-  const padrao = {
-    0: { disponivel: false, hora_inicio: '08:00', hora_fim: '12:00', hora_inicio_2: '', hora_fim_2: '' }, // Dom
-    1: { disponivel: true, hora_inicio: '08:00', hora_fim: '17:00', hora_inicio_2: '', hora_fim_2: '' },  // Seg
-    2: { disponivel: true, hora_inicio: '08:00', hora_fim: '17:00', hora_inicio_2: '', hora_fim_2: '' },  // Ter
-    3: { disponivel: true, hora_inicio: '08:00', hora_fim: '17:00', hora_inicio_2: '', hora_fim_2: '' },  // Qua
-    4: { disponivel: true, hora_inicio: '08:00', hora_fim: '17:00', hora_inicio_2: '', hora_fim_2: '' },  // Qui
-    5: { disponivel: true, hora_inicio: '08:00', hora_fim: '17:00', hora_inicio_2: '', hora_fim_2: '' },  // Sex
-    6: { disponivel: false, hora_inicio: '08:00', hora_fim: '12:00', hora_inicio_2: '', hora_fim_2: '' }  // Sáb
-  };
+  // 1. Tenta carregar a configuração da agenda definida pelo Administrador em localStorage
+  let configSalva = null;
+  try {
+    const raw = localStorage.getItem('reciclagem_ultimo_horario_agenda');
+    if (raw) configSalva = JSON.parse(raw);
+  } catch (e) {}
+
+  const hIniPadrao = configSalva?.abertura || '08:00';
+  const hFimPadrao = configSalva?.fechamento || '17:00';
+  const temPausaPadrao = Boolean(configSalva?.temPausa && configSalva?.pausaIni && configSalva?.pausaFim);
+  const pIniPadrao = temPausaPadrao ? configSalva.pausaIni : null;
+  const pFimPadrao = temPausaPadrao ? configSalva.pausaFim : null;
+  const diasPermitidos = Array.isArray(configSalva?.diasSemana) ? configSalva.diasSemana : [1, 2, 3, 4, 5];
+
+  const padrao = {};
+  for (let d = 0; d <= 6; d++) {
+    const isDisp = diasPermitidos.includes(d);
+    padrao[d] = {
+      disponivel: isDisp,
+      hora_inicio: hIniPadrao,
+      hora_fim: temPausaPadrao ? pIniPadrao : hFimPadrao,
+      hora_inicio_2: temPausaPadrao ? pFimPadrao : '',
+      hora_fim_2: temPausaPadrao ? hFimPadrao : '',
+      pausa_inicio: pIniPadrao,
+      pausa_fim: pFimPadrao
+    };
+  }
 
   if (!Array.isArray(agendaData) || agendaData.length === 0) return padrao;
 
-  // Agrupa slots por data
+  // 2. Refina o padrão semanal com dados reais cadastrados no banco
   const slotsPorData = {};
   agendaData.forEach(item => {
     if (item && item.data) {
-      if (!slotsPorData[item.data]) slotsPorData[item.data] = [];
-      slotsPorData[item.data].push({
+      const dtKey = String(item.data).slice(0, 10);
+      if (!slotsPorData[dtKey]) slotsPorData[dtKey] = [];
+      slotsPorData[dtKey].push({
         hora_inicio: item.hora_inicio,
         hora_fim: item.hora_fim,
         pausa_inicio: item.pausa_inicio || null,
@@ -47,12 +90,12 @@ export function extrairPadraoSemanal(agendaData) {
 
       padrao[dayOfWeek] = {
         disponivel: isDisp,
-        hora_inicio: consolidados[0]?.hora_inicio || '08:00',
-        hora_fim: consolidados[0]?.hora_fim || '17:00',
-        hora_inicio_2: consolidados[1]?.hora_inicio || '',
-        hora_fim_2: consolidados[1]?.hora_fim || '',
-        pausa_inicio: slots[0]?.pausa_inicio || null,
-        pausa_fim: slots[0]?.pausa_fim || null
+        hora_inicio: consolidados[0]?.hora_inicio || hIniPadrao,
+        hora_fim: consolidados[0]?.hora_fim || (temPausaPadrao ? pIniPadrao : hFimPadrao),
+        hora_inicio_2: consolidados[1]?.hora_inicio || (temPausaPadrao ? pFimPadrao : ''),
+        hora_fim_2: consolidados[1]?.hora_fim || (temPausaPadrao ? hFimPadrao : ''),
+        pausa_inicio: slots[0]?.pausa_inicio || pIniPadrao,
+        pausa_fim: slots[0]?.pausa_fim || pFimPadrao
       };
     }
   });
@@ -84,7 +127,7 @@ export function renderCalendarGrid(containerId, { agendaData = [], isAdmin = fal
   const nomesMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
   const diasSemanaNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-  // Extrai o padrão de dias úteis e horários do histórico recente/mês anterior
+  // Extrai o padrão de dias úteis e horários do banco e localStorage
   const padraoSemanal = extrairPadraoSemanal(agendaData);
 
   if (!window._calendarPendingMap) {
@@ -93,9 +136,10 @@ export function renderCalendarGrid(containerId, { agendaData = [], isAdmin = fal
       const slotsPorData = {};
       agendaData.forEach(item => {
         if (item && item.data) {
-          if (!slotsPorData[item.data]) slotsPorData[item.data] = [];
+          const dtKey = String(item.data).slice(0, 10);
+          if (!slotsPorData[dtKey]) slotsPorData[dtKey] = [];
           if (item.hora_inicio && item.hora_fim) {
-            slotsPorData[item.data].push({
+            slotsPorData[dtKey].push({
               hora_inicio: item.hora_inicio,
               hora_fim: item.hora_fim,
               pausa_inicio: item.pausa_inicio || null,
@@ -117,7 +161,9 @@ export function renderCalendarGrid(containerId, { agendaData = [], isAdmin = fal
             hora_inicio: consolidados[0].hora_inicio,
             hora_fim: consolidados[0].hora_fim,
             hora_inicio_2: consolidados[1] ? consolidados[1].hora_inicio : '',
-            hora_fim_2: consolidados[1] ? consolidados[1].hora_fim : ''
+            hora_fim_2: consolidados[1] ? consolidados[1].hora_fim : '',
+            pausa_inicio: slots[0]?.pausa_inicio || null,
+            pausa_fim: slots[0]?.pausa_fim || null
           };
         }
       });
@@ -138,14 +184,14 @@ export function renderCalendarGrid(containerId, { agendaData = [], isAdmin = fal
     <div style="background: white; border-radius: 16px; padding: 18px 14px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.04); width: 100%; box-sizing: border-box; overflow: hidden;">
       
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <button type="button" id="btn_cal_prev_month" class="btn-secondary-pill" style="padding: 5px 11px; font-size: 0.8rem; border-radius: 8px; cursor: pointer; background: #e8f5e9; border: 1px solid #c8e6c9; color: var(--verde-escuro, #1b6d24);" title="Mês Anterior">
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 280px; max-width: 100%; box-sizing: border-box;">
+          <button type="button" id="btn_cal_prev_month" class="btn-secondary-pill" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; border-radius: 8px; cursor: pointer; background: #e8f5e9; border: 1px solid #c8e6c9; color: var(--verde-escuro, #1b6d24); flex-shrink: 0;" title="Mês Anterior">
             <i class="fa-solid fa-chevron-left"></i>
           </button>
-          <h4 style="color: var(--verde-escuro, #1b6d24); margin: 0; font-size: 1.15rem; font-weight: 800; display: inline-flex; align-items: center; gap: 6px;">
+          <h4 style="color: var(--verde-escuro, #1b6d24); margin: 0; font-size: 1.12rem; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1; text-align: center; white-space: nowrap;">
             <i class="fa-solid fa-calendar-days"></i> ${nomesMeses[mesAtual]} ${anoAtual}
           </h4>
-          <button type="button" id="btn_cal_next_month" class="btn-secondary-pill" style="padding: 5px 11px; font-size: 0.8rem; border-radius: 8px; cursor: pointer; background: #e8f5e9; border: 1px solid #c8e6c9; color: var(--verde-escuro, #1b6d24);" title="Próximo Mês">
+          <button type="button" id="btn_cal_next_month" class="btn-secondary-pill" style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; border-radius: 8px; cursor: pointer; background: #e8f5e9; border: 1px solid #c8e6c9; color: var(--verde-escuro, #1b6d24); flex-shrink: 0;" title="Próximo Mês">
             <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
@@ -235,7 +281,8 @@ export function renderCalendarGrid(containerId, { agendaData = [], isAdmin = fal
            data-date="${dateFormatted}" 
            id="cell_${dateFormatted}"
            style="
-             height: 52px;
+             min-height: 52px;
+             height: auto;
              border-radius: 8px;
              background-color: ${bgColor};
              border: 1.5px solid ${borderColor};
@@ -246,7 +293,7 @@ export function renderCalendarGrid(containerId, { agendaData = [], isAdmin = fal
              justify-content: center;
              font-weight: 800;
              font-size: 13px;
-             padding: 2px 1px;
+             padding: 3px 1px;
              min-width: 0;
              box-sizing: border-box;
              overflow: hidden;
@@ -257,17 +304,19 @@ export function renderCalendarGrid(containerId, { agendaData = [], isAdmin = fal
            "
            title="${isDisponivel ? `Atendimento: ${labelInfo.texto}` : 'Fechado / Sem Atendimento'}">
         <span style="line-height: 1; margin-bottom: 2px;">${dia}</span>
-        <span class="day-status-label" style="
-          font-size: 8.5px; 
+        <div class="day-status-label" style="
+          font-size: 7.8px; 
           font-weight: 700; 
           text-align: center;
-          white-space: nowrap; 
-          overflow: hidden; 
-          text-overflow: ellipsis; 
-          max-width: 100%;
-          display: block;
+          line-height: 1.15;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
           opacity: 0.95;
-        ">${labelInfo.html}</span>
+          pointer-events: none;
+        ">${labelInfo.html}</div>
       </div>
     `;
   }
@@ -394,7 +443,7 @@ export function renderCalendarGrid(containerId, { agendaData = [], isAdmin = fal
     container.querySelectorAll('.calendar-day-cell').forEach(cell => {
       cell.addEventListener('click', (e) => {
         const dateStr = e.currentTarget.getAttribute('data-date');
-        abrirModalConfigurarDia(dateStr, anoAtual, mesAtual, pendingMap, () => {
+        abrirModalConfigurarDia(dateStr, anoAtual, mesAtual, pendingMap, padraoSemanal, () => {
           renderCalendarGrid(containerId, { agendaData, isAdmin, onSaveAgenda, onSelectDay, ano: anoAtual, mes: mesAtual });
           const saveStatusMsg = document.getElementById('save-status-msg');
           if (saveStatusMsg) {
@@ -435,22 +484,22 @@ function formatarLabelHorario(disponivel, horaIni, horaFim, horaIni2 = '', horaF
     const p2 = fmt(horaIni2, horaFim2);
     if (p2 && p2 !== p1) {
       return {
-        html: `<span class="t-p1">${p1}</span><span class="t-sep"> e </span><span class="t-p2">${p2}</span>`,
+        html: `<span class="t-p1" style="display: block; line-height: 1.15; white-space: nowrap;">${p1}</span><span class="t-p2" style="display: block; line-height: 1.15; white-space: nowrap;">${p2}</span>`,
         texto: `${p1} e ${p2}`
       };
     }
   }
-  return { html: p1, texto: p1 };
+  return { html: `<span class="t-p1" style="display: block; line-height: 1.15; white-space: nowrap;">${p1}</span>`, texto: p1 };
 }
 
-function abrirModalConfigurarDia(dateStr, ano, mes, pendingMap, onUpdate) {
+function abrirModalConfigurarDia(dateStr, ano, mes, pendingMap, padraoSemanal = {}, onUpdate) {
   const [yyyy, mm, dd] = dateStr.split('-');
   const dataObj = new Date(parseInt(yyyy, 10), parseInt(mm, 10) - 1, parseInt(dd, 10));
   const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
   const nomeDia = diasSemana[dataObj.getDay()];
   const diaDaSemanaIdx = dataObj.getDay();
 
-  const entry = pendingMap[dateStr] || { disponivel: diaDaSemanaIdx >= 1 && diaDaSemanaIdx <= 5, hora_inicio: '08:00', hora_fim: '17:00', hora_inicio_2: '', hora_fim_2: '' };
+  const entry = pendingMap[dateStr] || padraoSemanal[diaDaSemanaIdx] || { disponivel: diaDaSemanaIdx >= 1 && diaDaSemanaIdx <= 5, hora_inicio: '08:00', hora_fim: '17:00', hora_inicio_2: '', hora_fim_2: '' };
   const isDisp = typeof entry === 'boolean' ? entry : Boolean(entry.disponivel);
 
   let rawIni = (typeof entry === 'object' && entry.hora_inicio) ? entry.hora_inicio.slice(0, 5) : '08:00';
@@ -463,7 +512,7 @@ function abrirModalConfigurarDia(dateStr, ano, mes, pendingMap, onUpdate) {
   let horaFechamento = (rawIni2 && rawFim2) ? rawFim2 : rawFim;
   let temPausa = Boolean(rawIni2 && rawFim2 && rawFim !== rawFim2);
   let pausaInicio = temPausa ? rawFim : '12:00';
-  let pausaRetorno = temPausa ? rawIni2 : '14:00';
+  let pausaRetorno = temPausa ? rawIni2 : '13:00';
 
   if (!temPausa && rawIni2 && rawFim2 && rawIni2 === rawIni) {
     temPausa = false;
@@ -491,48 +540,51 @@ function abrirModalConfigurarDia(dateStr, ano, mes, pendingMap, onUpdate) {
       </div>
 
       <!-- Toggle Aberto / Fechado -->
-      <div style="display: flex; align-items: center; gap: 10px; background: #f9fbf9; padding: 12px; border-radius: 12px; border: 1.5px solid #a5d6a7;">
-        <input type="checkbox" id="modal_dia_disponivel" ${isDisp ? 'checked' : ''} style="width: 20px; height: 20px; accent-color: var(--verde-escuro, #1b6d24); cursor: pointer;">
-        <label for="modal_dia_disponivel" style="font-weight: 700; color: var(--verde-escuro, #1b6d24); font-size: 0.95rem; cursor: pointer;">
-          Atendimento Aberto / Disponível
+      <div style="display: flex; align-items: center; gap: 8px; background: #f9fbf9; padding: 10px 12px; border-radius: 12px; border: 1px solid #c8e6c9;">
+        <input type="checkbox" id="modal_dia_disponivel" ${isDisp ? 'checked' : ''} style="width: 17px; height: 17px; accent-color: var(--verde-escuro, #1b6d24); cursor: pointer;">
+        <label for="modal_dia_disponivel" style="font-weight: 700; color: var(--verde-escuro, #1b6d24); font-size: 0.86rem; cursor: pointer;">
+          Atendimento Disponível
         </label>
       </div>
 
       <div id="modal_horarios_container" style="display: ${isDisp ? 'flex' : 'none'}; flex-direction: column; gap: 14px;">
-        <!-- Horário de Funcionamento Geral -->
-        <div>
-          <span style="font-size: 0.85rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
-            <i class="fa-regular fa-clock"></i> Horário de Funcionamento:
-          </span>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div class="campo">
-              <label style="font-size: 0.8rem; font-weight: 700; color: #555; display: block; margin-bottom: 3px;">Abertura:</label>
-              <input type="time" id="modal_hora_abertura" value="${horaAbertura}" class="input-underline" style="width: 100%;">
-            </div>
-            <div class="campo">
-              <label style="font-size: 0.8rem; font-weight: 700; color: #555; display: block; margin-bottom: 3px;">Fechamento:</label>
-              <input type="time" id="modal_hora_fechamento" value="${horaFechamento}" class="input-underline" style="width: 100%;">
-            </div>
+        <!-- Horários de Atendimento -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="campo">
+            <label for="modal_hora_abertura" style="font-size: 0.8rem; font-weight: 700; color: #555; display: block; margin-bottom: 3px;">Abertura:</label>
+            <select id="modal_hora_abertura" class="input-pill" style="width: 100%; box-sizing: border-box; font-size: 0.88rem; padding: 8px 10px; border: 1.5px solid #a5d6a7; border-radius: 8px; font-weight: 700; font-family: inherit; color: #111827; background: #ffffff; cursor: pointer;">
+              ${gerarOpcoesHorarioSelect(horaAbertura, { incluirVazio: false })}
+            </select>
+          </div>
+          <div class="campo">
+            <label for="modal_hora_fechamento" style="font-size: 0.8rem; font-weight: 700; color: #555; display: block; margin-bottom: 3px;">Fechamento:</label>
+            <select id="modal_hora_fechamento" class="input-pill" style="width: 100%; box-sizing: border-box; font-size: 0.88rem; padding: 8px 10px; border: 1.5px solid #a5d6a7; border-radius: 8px; font-weight: 700; font-family: inherit; color: #111827; background: #ffffff; cursor: pointer;">
+              ${gerarOpcoesHorarioSelect(horaFechamento, { incluirVazio: false })}
+            </select>
           </div>
         </div>
 
         <!-- Seção de Pausa / Almoço -->
-        <div style="background: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 12px; padding: 12px;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; background: #f9fbf9; padding: 10px 12px; border-radius: 12px; border: 1px solid #c8e6c9;">
             <input type="checkbox" id="modal_chk_pausa" ${temPausa ? 'checked' : ''} style="width: 17px; height: 17px; accent-color: var(--verde-escuro, #1b6d24); cursor: pointer;">
             <label for="modal_chk_pausa" style="font-weight: 700; color: var(--verde-escuro, #1b6d24); font-size: 0.86rem; cursor: pointer;">
-              <i class="fa-solid fa-utensils"></i> Incluir Pausa para Almoço / Intervalo
+              Incluir Intervalo
             </label>
           </div>
 
-          <div id="modal_pausa_box" style="display: ${temPausa ? 'grid' : 'none'}; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #e0e0e0;">
+          <div id="modal_pausa_box" style="display: ${temPausa ? 'grid' : 'none'}; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
             <div class="campo">
-              <label style="font-size: 0.78rem; font-weight: 700; color: #555; display: block; margin-bottom: 2px;">Início da Pausa:</label>
-              <input type="time" id="modal_pausa_inicio" value="${pausaInicio}" class="input-underline" style="width: 100%;">
+              <label for="modal_pausa_inicio" style="font-size: 0.8rem; font-weight: 700; color: #555; display: block; margin-bottom: 3px;">Início da Pausa:</label>
+              <select id="modal_pausa_inicio" class="input-pill" style="width: 100%; box-sizing: border-box; font-size: 0.88rem; padding: 8px 10px; border: 1.5px solid #a5d6a7; border-radius: 8px; font-weight: 700; font-family: inherit; color: #111827; background: #ffffff; cursor: pointer;">
+                ${gerarOpcoesHorarioSelect(pausaInicio, { incluirVazio: false })}
+              </select>
             </div>
             <div class="campo">
-              <label style="font-size: 0.78rem; font-weight: 700; color: #555; display: block; margin-bottom: 2px;">Retorno do Atendimento:</label>
-              <input type="time" id="modal_pausa_fim" value="${pausaRetorno}" class="input-underline" style="width: 100%;">
+              <label for="modal_pausa_fim" style="font-size: 0.8rem; font-weight: 700; color: #555; display: block; margin-bottom: 3px;">Retorno do Atendimento:</label>
+              <select id="modal_pausa_fim" class="input-pill" style="width: 100%; box-sizing: border-box; font-size: 0.88rem; padding: 8px 10px; border: 1.5px solid #a5d6a7; border-radius: 8px; font-weight: 700; font-family: inherit; color: #111827; background: #ffffff; cursor: pointer;">
+                ${gerarOpcoesHorarioSelect(pausaRetorno, { incluirVazio: false })}
+              </select>
             </div>
           </div>
         </div>
@@ -544,10 +596,10 @@ function abrirModalConfigurarDia(dateStr, ano, mes, pendingMap, onUpdate) {
 
       <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
         <button type="button" id="btn_aplicar_dia" class="btn-avancar" style="width: 100%; padding: 10px;">
-          <i class="fa-solid fa-check"></i> Aplicar a este Dia (${dd}/${mm})
+          <i class="fa-solid fa-check"></i> Aplicar a este Dia Específico (${dd}/${mm})
         </button>
         <button type="button" id="btn_aplicar_todos_dias_semana" class="btn-secondary-pill" style="width: 100%; padding: 8px; font-size: 0.85rem; justify-content: center;">
-          <i class="fa-solid fa-repeat"></i> Aplicar a todos os(as) ${nomeDia}s do Mês
+          <i class="fa-solid fa-repeat"></i> Aplicar a todos os(as) ${nomeDia}s do Ano (${ano})
         </button>
       </div>
     </div>
@@ -574,7 +626,7 @@ function abrirModalConfigurarDia(dateStr, ano, mes, pendingMap, onUpdate) {
     const fe = inputFechamento.value || '17:00';
     if (chkPausa.checked) {
       const pIni = inputPausaIni.value || '12:00';
-      const pFim = inputPausaFim.value || '14:00';
+      const pFim = inputPausaFim.value || '13:00';
       if (resumoEl) {
         resumoEl.innerHTML = `<i class="fa-solid fa-clock"></i> <b>Atendimento:</b> ${ab} às ${pIni} e ${pFim} às ${fe} <br><span style="color: #666; font-size: 0.76rem;">(Fechado para almoço das ${pIni} às ${pFim})</span>`;
       }
@@ -592,17 +644,25 @@ function abrirModalConfigurarDia(dateStr, ano, mes, pendingMap, onUpdate) {
 
   chkPausa.addEventListener('change', () => {
     pausaBox.style.display = chkPausa.checked ? 'grid' : 'none';
+    if (chkPausa.checked) {
+      if (!inputPausaIni.value) inputPausaIni.value = '12:00';
+      if (!inputPausaFim.value || inputPausaFim.value === '14:00') inputPausaFim.value = '13:00';
+    }
     atualizarResumoModal();
   });
 
-  inputAbertura.addEventListener('input', atualizarResumoModal);
-  inputFechamento.addEventListener('input', atualizarResumoModal);
-  inputPausaIni.addEventListener('input', atualizarResumoModal);
-  inputPausaFim.addEventListener('input', atualizarResumoModal);
+  ['change', 'input'].forEach(evt => {
+    inputAbertura.addEventListener(evt, atualizarResumoModal);
+    inputFechamento.addEventListener(evt, atualizarResumoModal);
+    inputPausaIni.addEventListener(evt, atualizarResumoModal);
+    inputPausaFim.addEventListener(evt, atualizarResumoModal);
+  });
 
   atualizarResumoModal();
 
-  const fechar = () => { modal.style.display = 'none'; };
+  const fechar = () => {
+    modal.style.display = 'none';
+  };
   modal.querySelector('#btn-close-dia-modal').addEventListener('click', fechar);
 
   function calcularPeriodosFinais() {
@@ -615,13 +675,13 @@ function abrirModalConfigurarDia(dateStr, ano, mes, pendingMap, onUpdate) {
     const fe = inputFechamento.value ? inputFechamento.value.slice(0, 5) : '17:00';
     const temP = chkPausa.checked;
     const pIni = inputPausaIni.value ? inputPausaIni.value.slice(0, 5) : '12:00';
-    const pFim = inputPausaFim.value ? inputPausaFim.value.slice(0, 5) : '14:00';
+    const pFim = inputPausaFim.value ? inputPausaFim.value.slice(0, 5) : '13:00';
 
     if (temP && pIni > ab && pFim < fe && pFim > pIni) {
       return {
         disponivel: true,
         hora_inicio: ab,
-        hora_fim: fe,
+        hora_fim: pIni,
         pausa_inicio: pIni,
         pausa_fim: pFim,
         hora_inicio_2: pFim,
@@ -648,15 +708,17 @@ function abrirModalConfigurarDia(dateStr, ano, mes, pendingMap, onUpdate) {
 
   modal.querySelector('#btn_aplicar_todos_dias_semana').addEventListener('click', () => {
     const configCalculada = calcularPeriodosFinais();
-    const totalDias = new Date(ano, mes + 1, 0).getDate();
 
-    for (let d = 1; d <= totalDias; d++) {
-      const dt = new Date(ano, mes, d);
-      if (dt.getDay() === diaDaSemanaIdx) {
-        const mStr = String(mes + 1).padStart(2, '0');
-        const dStr = String(d).padStart(2, '0');
-        const formatted = `${ano}-${mStr}-${dStr}`;
-        pendingMap[formatted] = { ...configCalculada };
+    for (let m = 0; m < 12; m++) {
+      const totalDiasMes = new Date(ano, m + 1, 0).getDate();
+      for (let d = 1; d <= totalDiasMes; d++) {
+        const dt = new Date(ano, m, d);
+        if (dt.getDay() === diaDaSemanaIdx) {
+          const mStr = String(m + 1).padStart(2, '0');
+          const dStr = String(d).padStart(2, '0');
+          const formatted = `${ano}-${mStr}-${dStr}`;
+          pendingMap[formatted] = { ...configCalculada };
+        }
       }
     }
 

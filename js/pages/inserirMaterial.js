@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <span style="color: #2e532b; font-weight: 600;">
           <i class="fa-solid fa-calendar-check" style="color: #1b6d24;"></i> Como administrador, você pode ajustar os horários e dias de atendimento da unidade:
         </span>
-        <a href="./definir-agenda.html" class="btn-secondary-pill" style="font-size: 0.78rem; padding: 4px 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; border-radius: 999px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <a href="./definir-agenda.html" class="btn-acao-secundaria" style="font-size: 0.78rem; padding: 5px 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;" title="Ajustar grade de dias e horários">
           <i class="fa-solid fa-calendar-days"></i> Editar Agenda
         </a>
       </div>
@@ -82,11 +82,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const mapaDatas = {};
       (datas || []).forEach(d => {
         if (!d.data) return;
-        if (!mapaDatas[d.data]) {
-          mapaDatas[d.data] = [];
+        const dtStr = String(d.data).slice(0, 10);
+        if (!mapaDatas[dtStr]) {
+          mapaDatas[dtStr] = [];
         }
         if (d.hora_inicio && d.hora_fim) {
-          mapaDatas[d.data].push({
+          mapaDatas[dtStr].push({
             hora_inicio: d.hora_inicio,
             hora_fim: d.hora_fim,
             pausa_inicio: d.pausa_inicio || null,
@@ -345,12 +346,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       showConfirmModal({
         title: 'Material Cadastrado com Sucesso!',
         message: `Sua oferta de ${quantidadeFormatada} foi registrada no sistema e já está disponível para os catadores.\n\nDeseja ir para a tela de ${isAdm ? 'Gestão de Coletas' : 'Minhas Ofertas'} para acompanhar o status ou prefere continuar cadastrando outros materiais?`,
-        confirmText: isAdm ? 'Ver Gestão de Coletas' : 'Ver Minhas Ofertas',
-        cancelText: 'Cadastrar Outro Material',
+        confirmText: isAdm ? '<i class="fa-solid fa-layer-group"></i> Ver Gestão de Coletas' : '<i class="fa-solid fa-box-open"></i> Ver Minhas Ofertas',
+        confirmClass: 'btn-acao-secundaria', // Atalho para outra tela -> Branco com borda verde
+        cancelText: '<i class="fa-solid fa-plus"></i> Cadastrar Outro Material',
+        cancelClass: 'btn-acao-primaria',    // Ação de novo cadastro (+) -> Verde institucional
         confirmColor: '#1b6d24',
         icon: '<i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.25rem;"></i>',
         onConfirm: () => {
-          window.location.href = isAdm ? './gestao-coletas.html' : './minhas-ofertas.html';
+          window.location.href = isAdm ? './gestao-coletas.html?status=disponivel' : './minhas-ofertas.html?status=disponivel';
         },
         onCancel: () => {
           showSuccess('Material cadastrado com sucesso! O formulário foi limpo para novos cadastros.');

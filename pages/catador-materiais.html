@@ -43,16 +43,19 @@
         <!-- 2/4 Centro: Coletas Disponíveis em Tempo Real -->
         <main class="center-panel" style="align-items: stretch; justify-content: flex-start;">
           <div style="max-width: 680px; width: 100%; margin: 0 auto; padding-bottom: 2rem;">
-            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 1rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--verde-escuro, #1b6d24); text-align: center; margin-bottom: 0.5rem; margin-top: 0;">
               Materiais Disponíveis para Coleta
             </h1>
+            <p style="font-size: 0.9rem; color: var(--cinza-texto-aux, #666); text-align: center; margin-bottom: 1.25rem;">
+              Encontre ofertas de recicláveis em aberto para retirada imediata ou agendamento.
+            </p>
 
             <div id="feedback-msg" class="status-message"></div>
 
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
               <span style="font-size: 14px; font-weight: 700; color: var(--verde-escuro, #1b6d24);">Ofertas em Aberto</span>
-              <span id="realtime-badge" style="font-size: 11px; background: #e8f5e9; color: #2e7d32; padding: 4px 12px; border-radius: 12px; border: 1px solid #c8e6c9; font-weight: 700;">
-                <i class="fa-solid fa-signal"></i> Realtime Ativo
+              <span id="realtime-badge" style="font-size: 11px; background: #e8f5e9; color: #2e7d32; padding: 4px 12px; border-radius: 12px; border: 1px solid #c8e6c9; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-arrows-rotate"></i> Atualizado em tempo real
               </span>
             </div>
 
