@@ -365,13 +365,13 @@
         });
 
         container.querySelectorAll('.btn-excluir-local').forEach(b => {
-          b.addEventListener('click', () => {
+          b.addEventListener('click', async () => {
             const locId = b.dataset.id;
             const nome = b.dataset.nome;
             const targetLoc = locaisCarregados.find(l => l.id === locId);
             const isAtivo = targetLoc?.ativo !== false;
 
-            // Validação: não permitir excluir se for o único ponto ativo
+            // 1. Validação: não permitir excluir se for o único ponto ativo
             if (isAtivo) {
               const outrosAtivos = locaisCarregados.filter(l => l.ativo !== false && l.id !== locId);
               if (outrosAtivos.length === 0) {
@@ -384,9 +384,57 @@
               }
             }
 
+            // 2. Pré-validação: verificar se existem coletas vinculadas a este ponto
+            try {
+              const { count, error: countErr } = await supabase
+                .from('coleta')
+                .select('cod_coleta', { count: 'exact', head: true })
+                .eq('local_retirada_id', locId);
+
+              if (!countErr && typeof count === 'number' && count > 0) {
+                if (isAtivo) {
+                  showConfirmModal({
+                    title: 'Local com Coletas Vinculadas',
+                    message: `O ponto de coleta "${nome}" possui ${count} coleta(s) associada(s) a ele no histórico do sistema e não pode ser excluído diretamente para não corromper os registros.\n\n💡 Deseja desativar este local agora? Ele não receberá novas ofertas de materiais, mas todo o histórico das coletas anteriores continuará preservado com segurança!`,
+                    confirmText: 'Sim, Desativar Local',
+                    cancelText: 'Voltar',
+                    confirmColor: '#f57f17',
+                    icon: '<i class="fa-solid fa-pause" style="color: #f57f17; font-size: 1.5rem;"></i>',
+                    onConfirm: async () => {
+                      try {
+                        const { error: errDesat } = await supabase
+                          .from('local_retirada')
+                          .update({ ativo: false })
+                          .eq('id', locId);
+                        if (errDesat) throw errDesat;
+
+                        statusMsg.className = 'status-message success';
+                        statusMsg.textContent = `Ponto de coleta "${nome}" desativado com sucesso.`;
+                        carregarLocais();
+                      } catch (err) {
+                        statusMsg.className = 'status-message error';
+                        statusMsg.textContent = 'Erro ao desativar ponto de coleta: ' + err.message;
+                      }
+                    }
+                  });
+                } else {
+                  showAlertModal({
+                    title: 'Local com Coletas Vinculadas',
+                    message: `O ponto de coleta "${nome}" possui ${count} coleta(s) vinculada(s) no histórico do sistema e não pode ser excluído.\n\nComo ele já se encontra desativado, ele não receberá novas ofertas e o histórico permanece seguro!`,
+                    buttonText: 'Entendido',
+                    icon: '<i class="fa-solid fa-circle-info" style="color: #2563eb; font-size: 1.5rem;"></i>'
+                  });
+                }
+                return;
+              }
+            } catch (verifErr) {
+              console.warn('Não foi possível pré-verificar coletas do local:', verifErr);
+            }
+
+            // 3. Caso não possua coletas vinculadas, confirma a exclusão definitiva
             showConfirmModal({
               title: 'Excluir Ponto de Coleta',
-              message: `Tem certeza que deseja excluir o local de coleta "${nome}"?`,
+              message: `Tem certeza que deseja excluir o local de coleta "${nome}"?\n\nEsta ação removerá o endereço definitivamente do sistema.`,
               confirmText: 'Sim, Excluir',
               confirmColor: '#c62828',
               onConfirm: async () => {
@@ -398,8 +446,48 @@
                   statusMsg.textContent = 'Ponto de coleta excluído com sucesso.';
                   carregarLocais();
                 } catch (err) {
-                  statusMsg.className = 'status-message error';
-                  statusMsg.textContent = 'Não foi possível excluir o local: ' + err.message;
+                  const isForeignKey = err.code === '23503' || 
+                    (err.message && (err.message.includes('foreign key') || err.message.includes('violates foreign key') || err.message.includes('coleta_local_retirada_id_fkey')));
+
+                  if (isForeignKey) {
+                    if (isAtivo) {
+                      showConfirmModal({
+                        title: 'Local com Coletas Vinculadas',
+                        message: `Não foi possível excluir o ponto de coleta "${nome}" pois existem coletas vinculadas a ele no histórico do sistema.\n\n💡 Deseja desativá-lo agora para que ele não receba novas ofertas?`,
+                        confirmText: 'Sim, Desativar Local',
+                        cancelText: 'Voltar',
+                        confirmColor: '#f57f17',
+                        icon: '<i class="fa-solid fa-pause" style="color: #f57f17; font-size: 1.5rem;"></i>',
+                        onConfirm: async () => {
+                          try {
+                            const { error: errAtivo } = await supabase
+                              .from('local_retirada')
+                              .update({ ativo: false })
+                              .eq('id', locId);
+                            if (errAtivo) throw errAtivo;
+                            statusMsg.className = 'status-message success';
+                            statusMsg.textContent = `Ponto de coleta "${nome}" desativado com sucesso.`;
+                            carregarLocais();
+                          } catch (err2) {
+                            statusMsg.className = 'status-message error';
+                            statusMsg.textContent = 'Erro ao desativar local: ' + err2.message;
+                          }
+                        }
+                      });
+                    } else {
+                      showAlertModal({
+                        title: 'Local com Coletas Vinculadas',
+                        message: `O ponto de coleta "${nome}" possui coletas vinculadas no histórico do sistema e não pode ser excluído.\n\nComo ele já está desativado, ele não receberá novas ofertas e o histórico permanece seguro!`,
+                        buttonText: 'Entendido',
+                        icon: '<i class="fa-solid fa-circle-info" style="color: #2563eb; font-size: 1.5rem;"></i>'
+                      });
+                    }
+                    statusMsg.className = 'status-message error';
+                    statusMsg.textContent = `O local "${nome}" possui coletas vinculadas e não pode ser excluído. Desative-o para tirá-lo de circulação.`;
+                  } else {
+                    statusMsg.className = 'status-message error';
+                    statusMsg.textContent = 'Não foi possível excluir o local: ' + err.message;
+                  }
                 }
               }
             });
