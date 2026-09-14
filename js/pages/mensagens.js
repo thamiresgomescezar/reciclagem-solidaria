@@ -112,6 +112,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (error) throw error;
 
+      if (coletaId) {
+        try {
+          await supabase
+            .from('coleta')
+            .update({ atualizado_em: new Date().toISOString() })
+            .eq('cod_coleta', coletaId);
+        } catch (eCol) {
+          console.warn('Erro ao atualizar timestamp da coleta:', eCol);
+        }
+      }
+
       msgInput.value = '';
       await carregarDadosColetaEMensagens();
 

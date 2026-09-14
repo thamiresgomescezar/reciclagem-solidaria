@@ -340,6 +340,20 @@ create trigger trg_prevent_main_admin_delete
   before delete on public.cidadao
   for each row execute function public.prevent_main_admin_delete();
 
+-- Trigger para registrar a interação mais recente na coleta (atualizado_em)
+create or replace function public.set_coleta_atualizado_em()
+returns trigger language plpgsql as $$
+begin
+  new.atualizado_em = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_coleta_atualizado_em on public.coleta;
+create trigger trg_coleta_atualizado_em
+  before update on public.coleta
+  for each row execute function public.set_coleta_atualizado_em();
+
 -- ==========================================================
 -- 6. FUNÇÕES RPC
 -- ==========================================================

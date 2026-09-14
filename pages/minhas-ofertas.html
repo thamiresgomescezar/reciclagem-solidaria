@@ -67,12 +67,12 @@
 
             <!-- Toolbar de Filtros por Status da Coleta Dinâmica Instantânea -->
             <div id="filtros_status_coletas" class="filtros-coletas-grid">
-              <button type="button" class="btn-tab active" data-filtro="todos"><i class="fa-solid fa-layer-group"></i> Todas</button>
-              <button type="button" class="btn-tab" data-filtro="disponível" data-cor="verde"><i class="fa-solid fa-clock"></i> Disponíveis</button>
-              <button type="button" class="btn-tab" data-filtro="agendada" data-cor="amarelo"><i class="fa-solid fa-calendar-check"></i> Agendadas</button>
-              <button type="button" class="btn-tab" data-filtro="reagendada" data-cor="amarelo"><i class="fa-solid fa-calendar-days"></i> Reagendadas</button>
-              <button type="button" class="btn-tab" data-filtro="retirada" data-cor="verde"><i class="fa-solid fa-circle-check"></i> Retiradas</button>
-              <button type="button" class="btn-tab" data-filtro="cancelada" data-cor="vermelho"><i class="fa-solid fa-ban"></i> Canceladas</button>
+              <button type="button" class="btn-tab active" data-filtro="todos" title="Todas"><i class="fa-solid fa-layer-group"></i> Todas</button>
+              <button type="button" class="btn-tab" data-filtro="disponível" data-cor="verde" title="Disponíveis"><i class="fa-solid fa-clock"></i> Disponíveis</button>
+              <button type="button" class="btn-tab" data-filtro="agendada" data-cor="amarelo" title="Agendadas"><i class="fa-solid fa-calendar-check"></i> Agendadas</button>
+              <button type="button" class="btn-tab" data-filtro="reagendada" data-cor="amarelo" title="Reagendadas"><i class="fa-solid fa-calendar-days"></i> Reagendadas</button>
+              <button type="button" class="btn-tab" data-filtro="retirada" data-cor="verde" title="Retiradas"><i class="fa-solid fa-circle-check"></i> Retiradas</button>
+              <button type="button" class="btn-tab" data-filtro="cancelada" data-cor="vermelho" title="Canceladas"><i class="fa-solid fa-ban"></i> Canceladas</button>
             </div>
             <script>
               (function() {
@@ -84,7 +84,7 @@
                     if (Array.isArray(list) && list.length > 0) {
                       var urlParams = new URLSearchParams(window.location.search);
                       var f = (urlParams.get('status') || urlParams.get('filtro') || 'todos').toLowerCase();
-                      var h = '<button type="button" class="btn-tab ' + (f === 'todos' ? 'active' : '') + '" data-filtro="todos" data-status="todos"><i class="fa-solid fa-layer-group"></i> Todas</button>';
+                      var h = '<button type="button" class="btn-tab ' + (f === 'todos' ? 'active' : '') + '" data-filtro="todos" data-status="todos" title="Todas"><i class="fa-solid fa-layer-group"></i> Todas</button>';
                       list.forEach(function(st) {
                         var cod = st.cod_status;
                         var stNome = (st.status || '').toLowerCase().trim();
@@ -113,7 +113,7 @@
                           (f === 'cancelada' && /cancel/i.test(stNome)) ||
                           (f === 'retirada' && /(retirad|conclu)/i.test(stNome)) ||
                           (f === 'agendada' && /agend/i.test(stNome));
-                        h += '<button type="button" class="btn-tab ' + (active ? 'active' : '') + '" data-filtro="' + cod + '" data-status="' + cod + '" data-cor="' + corId + '" title="' + st.status + '"><i class="fa-solid ' + icon + '"></i> <span>' + disp + '</span></button>';
+                        h += '<button type="button" class="btn-tab ' + (active ? 'active' : '') + '" data-filtro="' + cod + '" data-status="' + cod + '" data-cor="' + corId + '" title="' + disp + '"><i class="fa-solid ' + icon + '"></i> <span>' + disp + '</span></button>';
                       });
                       container.innerHTML = h;
                     }

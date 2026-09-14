@@ -112,6 +112,19 @@ export async function enviarMensagem(destinatarioId, conteudo, coletaId = null) 
       .single();
 
     if (error) return { ok: false, erro: error.message };
+
+    // Registra interação recente na coleta vinculada
+    if (coletaId) {
+      try {
+        await supabase
+          .from('coleta')
+          .update({ atualizado_em: new Date().toISOString() })
+          .eq('cod_coleta', coletaId);
+      } catch (errCol) {
+        console.warn('Erro ao atualizar interação da coleta:', errCol);
+      }
+    }
+
     return { ok: true, data };
   } catch (e) {
     return { ok: false, erro: e.message };

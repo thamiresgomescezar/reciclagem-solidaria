@@ -42,6 +42,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return isDisp && semCatador;
       });
 
+      coletas.sort((a, b) => {
+        const tA = a.interacao_timestamp || Math.max(new Date(a.atualizado_em || 0).getTime(), new Date(a.criado_em || 0).getTime());
+        const tB = b.interacao_timestamp || Math.max(new Date(b.atualizado_em || 0).getTime(), new Date(b.criado_em || 0).getTime());
+        return tB - tA;
+      });
+
       if (!coletas || coletas.length === 0) {
         listaContainer.innerHTML = `
           <div style="text-align: center; padding: 40px 20px; background: white; border-radius: 16px; border: 1.5px dashed #a5d6a7;">
@@ -114,6 +120,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>`
           : '';
 
+        const formatarDataHoraPtBr = (dataVal) => {
+          if (!dataVal) return '';
+          const dt = new Date(dataVal);
+          if (isNaN(dt.getTime())) return '';
+          const dia = String(dt.getDate()).padStart(2, '0');
+          const mes = String(dt.getMonth() + 1).padStart(2, '0');
+          const ano = dt.getFullYear();
+          const hora = String(dt.getHours()).padStart(2, '0');
+          const min = String(dt.getMinutes()).padStart(2, '0');
+          return `${dia}/${mes}/${ano} às ${hora}:${min}`;
+        };
+        const dataCriacaoFormatada = formatarDataHoraPtBr(coleta.criado_em) || (coleta.criado_em ? new Date(coleta.criado_em).toLocaleDateString('pt-BR') : '');
+
         card.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
             <div>
@@ -123,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <h3 style="color: var(--verde-escuro, #1b6d24); margin: 6px 0 0; font-size: 1.1rem; font-weight: 700;">${coleta.quantidade || 'Quantidade aproximada'}</h3>
             </div>
             <span style="font-size: 0.76rem; color: #6b7280; font-weight: 500; display: flex; align-items: center; gap: 5px;">
-              <i class="fa-regular fa-calendar" style="color: #9ca3af;"></i> Criada em ${new Date(coleta.criado_em).toLocaleDateString('pt-BR')}
+              <i class="fa-regular fa-calendar" style="color: #9ca3af;"></i> Criada em ${dataCriacaoFormatada}
             </span>
           </div>
 
@@ -155,7 +174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <i class="fa-solid fa-map-location-dot"></i> Ver no Mapa
             </button>
             ${coleta.cidadao_id ? `
-              <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-coleta-secondary" style="flex: 1;">
+              <a href="./mensagens.html?destinatario=${coleta.cidadao_id}&coleta=${coleta.cod_coleta}" class="btn-coleta-secondary" style="flex: 1;">
                 <i class="fa-solid fa-comments"></i> Conversar
               </a>
             ` : ''}

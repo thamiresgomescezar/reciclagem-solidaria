@@ -65,6 +65,13 @@
       async function carregarColetas() {
         try {
           const coletas = await listarMinhasColetasCatador();
+          if (Array.isArray(coletas)) {
+            coletas.sort((a, b) => {
+              const tA = a.interacao_timestamp || Math.max(new Date(a.atualizado_em || 0).getTime(), new Date(a.criado_em || 0).getTime());
+              const tB = b.interacao_timestamp || Math.max(new Date(b.atualizado_em || 0).getTime(), new Date(b.criado_em || 0).getTime());
+              return tB - tA;
+            });
+          }
 
           if (!coletas || coletas.length === 0) {
             listaContainer.innerHTML = `
@@ -143,13 +150,44 @@
               badgeCor = '#c62828';
             }
 
-            const dataCriacaoCat = coleta.criado_em ? new Date(coleta.criado_em).toLocaleDateString('pt-BR') : '';
+            const formatarDataHoraPtBr = (dataVal) => {
+              if (!dataVal) return '';
+              const dt = new Date(dataVal);
+              if (isNaN(dt.getTime())) return '';
+              const dia = String(dt.getDate()).padStart(2, '0');
+              const mes = String(dt.getMonth() + 1).padStart(2, '0');
+              const ano = dt.getFullYear();
+              const hora = String(dt.getHours()).padStart(2, '0');
+              const min = String(dt.getMinutes()).padStart(2, '0');
+              return `${dia}/${mes}/${ano} às ${hora}:${min}`;
+            };
+
+            const tCriado = coleta.criado_em ? new Date(coleta.criado_em).getTime() : 0;
+            const tAtualizado = coleta.atualizado_em ? new Date(coleta.atualizado_em).getTime() : 0;
+            const houveAtualizacao = tAtualizado > 0 && Math.abs(tAtualizado - tCriado) > 2000;
+
+            const criacaoFormatadaComHora = formatarDataHoraPtBr(coleta.criado_em);
+            const dataCriacaoCat = criacaoFormatadaComHora || (coleta.criado_em ? new Date(coleta.criado_em).toLocaleDateString('pt-BR') : '');
+
+            let tagInteracaoHtml = '';
+            if (ehAgendada && houveAtualizacao) {
+              tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-regular fa-calendar-check" style="color: #9ca3af;"></i> Agendada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
+            } else if (ehRetirada && houveAtualizacao) {
+              tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-box-archive" style="color: #9ca3af;"></i> Retirada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
+            } else if (ehCancelada && houveAtualizacao) {
+              tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-ban" style="color: #9ca3af;"></i> Cancelada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
+            } else if (houveAtualizacao) {
+              tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-rotate" style="color: #9ca3af;"></i> Atualizada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
+            }
 
             card.innerHTML = `
               <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
-                <div style="display: flex; flex-direction: column; gap: 2px;">
+                <div style="display: flex; flex-direction: column; gap: 3px;">
                   <strong style="color: var(--verde-escuro); font-size: 16px;">${tipoMaterial} (${coleta.quantidade})</strong>
-                  ${dataCriacaoCat ? `<span style="font-size: 0.75rem; color: #666; font-weight: 600;"><i class="fa-regular fa-calendar" style="color: var(--verde-escuro);"></i> Criada em ${dataCriacaoCat}</span>` : ''}
+                  <div style="font-size: 0.75rem; color: #666; font-weight: 500; display: flex; flex-direction: column; gap: 2px;">
+                    <span style="display: flex; align-items: center; gap: 5px;"><i class="fa-regular fa-calendar" style="color: #9ca3af;"></i> Criada em ${dataCriacaoCat || 'Data recente'}</span>
+                    ${tagInteracaoHtml}
+                  </div>
                 </div>
                 <span style="font-size: 11px; font-weight: bold; background: ${badgeBg}; color: ${badgeCor}; padding: 4px 10px; border-radius: 12px; text-transform: uppercase;">
                   ${statusNome}
@@ -162,12 +200,12 @@
                 ${ehRetirada ? `
                   <div style="background: #e8f5e9; border: 1.5px solid #a5d6a7; border-radius: 8px; padding: 6px 10px; margin-top: 4px; display: flex; align-items: center; gap: 8px; color: #1b5e20; font-size: 0.85rem; font-weight: 700;">
                     <i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.1rem;"></i>
-                    <span><strong>Retirada em:</strong> <span style="color: #1b5e20; font-weight: 800;">${dataHoraRetiradaFormatada || 'Data registrada'}</span></span>
+                    <span><strong>Retirada confirmada</strong></span>
                   </div>
                 ` : ehCancelada ? `
                   <div style="background: #fff5f5; border: 1.5px solid #ef9a9a; border-radius: 8px; padding: 6px 10px; margin-top: 4px; display: flex; align-items: center; gap: 8px; color: #c62828; font-size: 0.85rem; font-weight: 700;">
                     <i class="fa-solid fa-ban" style="color: #c62828; font-size: 1.1rem;"></i>
-                    <span><strong>Cancelada em:</strong> <span style="color: #c62828; font-weight: 800;">${dataHoraCanceladaFormatada || 'Data arquivada'}</span></span>
+                    <span><strong>Coleta cancelada</strong></span>
                   </div>
                 ` : `
                   <div style="background: #fff8e1; border: 1.5px solid #ffe082; border-radius: 8px; padding: 6px 10px; margin-top: 4px; display: flex; align-items: center; gap: 8px; color: #856404; font-size: 0.85rem; font-weight: 700;">

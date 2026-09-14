@@ -205,12 +205,12 @@
                         <i class="fa-solid fa-circle-question"></i>
                       </button>
                     </div>
-                    <span id="char_counter_status" style="font-size: 0.76rem; color: #666; font-weight: 700; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 999px;">0/25</span>
+                    <span id="char_counter_status" style="font-size: 0.76rem; color: #666; font-weight: 700; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 999px;">0/15</span>
                   </div>
                   <div id="dica_nome" class="box-dica-campo">
-                    Digite um título curto e objetivo para identificar o status na plataforma (máx. 25 caracteres). Ex.: <em>em análise</em>, <em>reagendada</em>, <em>triagem</em>.
+                    Digite um título curto e objetivo para identificar o status na plataforma (máx. 15 caracteres). Ex.: <em>em análise</em>, <em>reagendada</em>, <em>triagem</em>.
                   </div>
-                  <input type="text" id="input_nome_status" class="input-underline" maxlength="25" placeholder="Ex.: em análise, reagendada..." required style="width: 100%; box-sizing: border-box;">
+                  <input type="text" id="input_nome_status" class="input-underline" maxlength="15" placeholder="Ex.: em análise, reagendada..." required style="width: 100%; box-sizing: border-box;">
                 </div>
 
                 <!-- 2. Regra de Vínculo de Catador -->
@@ -709,8 +709,8 @@
     function atualizarContadorCaracteres() {
       const len = inputNomeStatus.value.length;
       if (charCounter) {
-        charCounter.textContent = `${len}/25`;
-        if (len >= 25) {
+        charCounter.textContent = `${len}/15`;
+        if (len >= 15) {
           charCounter.style.color = '#c62828';
           charCounter.style.background = '#ffebee';
           charCounter.style.borderColor = '#ffcdd2';
@@ -960,6 +960,11 @@
 
           if (!nomeStatus) {
             mostrarMsg('Por favor, informe o nome do status.', 'error');
+            return;
+          }
+
+          if (nomeStatus.length > 15) {
+            mostrarMsg('O nome do status deve ter no máximo 15 caracteres para não comprometer os botões de filtro.', 'error');
             return;
           }
 

@@ -98,10 +98,22 @@ export function abrirModalEdicaoColeta({ coleta, catadores = [], listaStatus = [
   const agora = new Date();
   const hojeMin = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
 
+  const formatarDataHoraPtBr = (dataVal) => {
+    if (!dataVal) return '';
+    const dt = new Date(dataVal);
+    if (isNaN(dt.getTime())) return '';
+    const dia = String(dt.getDate()).padStart(2, '0');
+    const mes = String(dt.getMonth() + 1).padStart(2, '0');
+    const ano = dt.getFullYear();
+    const hora = String(dt.getHours()).padStart(2, '0');
+    const min = String(dt.getMinutes()).padStart(2, '0');
+    return `${dia}/${mes}/${ano} às ${hora}:${min}`;
+  };
+
   const dataCriacaoObj = coleta.criado_em ? new Date(coleta.criado_em) : null;
-  const dataCriacaoFormatada = (dataCriacaoObj && !isNaN(dataCriacaoObj.getTime()))
+  const dataCriacaoFormatada = formatarDataHoraPtBr(coleta.criado_em) || ((dataCriacaoObj && !isNaN(dataCriacaoObj.getTime()))
     ? dataCriacaoObj.toLocaleDateString('pt-BR')
-    : '';
+    : '');
 
   let dataValor = statusInfo.ehDisponivel ? '' : (coleta.data ? coleta.data.slice(0, 10) : '');
   let horaValor = statusInfo.ehDisponivel ? '' : (coleta.hora ? coleta.hora.slice(0, 5) : '');
@@ -1079,10 +1091,22 @@ export function abrirModalAtribuirCatador({ coleta, catadores = [], onSalvar }) 
   const agora = new Date();
   const hojeMin = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
 
+  const formatarDataHoraPtBr = (dataVal) => {
+    if (!dataVal) return '';
+    const dt = new Date(dataVal);
+    if (isNaN(dt.getTime())) return '';
+    const dia = String(dt.getDate()).padStart(2, '0');
+    const mes = String(dt.getMonth() + 1).padStart(2, '0');
+    const ano = dt.getFullYear();
+    const hora = String(dt.getHours()).padStart(2, '0');
+    const min = String(dt.getMinutes()).padStart(2, '0');
+    return `${dia}/${mes}/${ano} às ${hora}:${min}`;
+  };
+
   const dataCriacaoObj = coleta.criado_em ? new Date(coleta.criado_em) : null;
-  const dataCriacaoFormatada = (dataCriacaoObj && !isNaN(dataCriacaoObj.getTime()))
+  const dataCriacaoFormatada = formatarDataHoraPtBr(coleta.criado_em) || ((dataCriacaoObj && !isNaN(dataCriacaoObj.getTime()))
     ? dataCriacaoObj.toLocaleDateString('pt-BR')
-    : '';
+    : '');
 
   let catadoresOptions = '<option value="">-- Selecione o Catador Parceiro --</option>';
   catadores.forEach(c => {

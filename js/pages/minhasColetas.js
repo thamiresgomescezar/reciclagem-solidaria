@@ -236,7 +236,7 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
         const corId = (regras && regras.cor) ? regras.cor : (temaCor ? temaCor.id : 'verde');
 
         tabsHtml += `
-          <button type="button" class="btn-tab ${ehAtivo ? 'active' : ''}" data-filtro="${cod}" data-status="${cod}" data-nome="${stNomeLower}" data-cor="${corId}" style="--cor-bg: ${temaCor.bg}; --cor-texto: ${temaCor.cor}; --cor-borda: ${temaCor.borda}; --cor-dot: ${temaCor.dot};" title="${st.status}">
+          <button type="button" class="btn-tab ${ehAtivo ? 'active' : ''}" data-filtro="${cod}" data-status="${cod}" data-nome="${stNomeLower}" data-cor="${corId}" style="--cor-bg: ${temaCor.bg}; --cor-texto: ${temaCor.cor}; --cor-borda: ${temaCor.borda}; --cor-dot: ${temaCor.dot};" title="${nomeDisplay}">
             ${icon} <span>${nomeDisplay} (${count})</span>
           </button>
         `;
@@ -289,6 +289,13 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
           return st.nome.toLowerCase() === f || String(st.codigo) === f;
         });
       }
+
+      // Ordena rigorosamente com a interação mais recente no topo
+      coletasFiltradas.sort((a, b) => {
+        const tA = a.interacao_timestamp || Math.max(new Date(a.atualizado_em || 0).getTime(), new Date(a.criado_em || 0).getTime());
+        const tB = b.interacao_timestamp || Math.max(new Date(b.atualizado_em || 0).getTime(), new Date(b.criado_em || 0).getTime());
+        return tB - tA;
+      });
 
       if (coletasFiltradas.length === 0) {
         let msgVaziaTitle = '';
@@ -365,10 +372,31 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
           doadorNome = 'Cidadão Doador';
         }
 
+        const formatarDataHoraPtBr = (dataVal) => {
+          if (!dataVal) return '';
+          const dt = new Date(dataVal);
+          if (isNaN(dt.getTime())) return '';
+          const dia = String(dt.getDate()).padStart(2, '0');
+          const mes = String(dt.getMonth() + 1).padStart(2, '0');
+          const ano = dt.getFullYear();
+          const hora = String(dt.getHours()).padStart(2, '0');
+          const min = String(dt.getMinutes()).padStart(2, '0');
+          return `${dia}/${mes}/${ano} às ${hora}:${min}`;
+        };
+
         const dataCriacao = coleta.criado_em ? new Date(coleta.criado_em) : null;
         const dataFormatada = dataCriacao && !isNaN(dataCriacao.getTime())
           ? dataCriacao.toLocaleDateString('pt-BR')
           : '';
+        const criacaoFormatadaComHora = formatarDataHoraPtBr(coleta.criado_em);
+
+        const tCriado = coleta.criado_em ? new Date(coleta.criado_em).getTime() : 0;
+        const tAtualizado = coleta.atualizado_em ? new Date(coleta.atualizado_em).getTime() : 0;
+        const tMsg = coleta.ultima_mensagem_em ? new Date(coleta.ultima_mensagem_em).getTime() : 0;
+
+        const houveAtualizacao = tAtualizado > 0 && Math.abs(tAtualizado - tCriado) > 2000;
+        const houveMensagemRecente = tMsg > 0 && (tMsg >= tAtualizado);
+
         // 1. Data e Horário para Agendada (Previsão combinada)
         let dataHoraAgendadaFormatada = '';
         if (coleta.data) {
@@ -386,37 +414,17 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
           const horaPtBr = coleta.hora ? coleta.hora.slice(0, 5) : '';
           dataHoraRetiradaFormatada = horaPtBr ? `${dataPtBr} às ${horaPtBr}` : dataPtBr;
         } else if (coleta.atualizado_em) {
-          const dt = new Date(coleta.atualizado_em);
-          if (!isNaN(dt.getTime())) {
-            const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
-            const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-            dataHoraRetiradaFormatada = `${dStr} às ${hStr}`;
-          }
+          dataHoraRetiradaFormatada = formatarDataHoraPtBr(coleta.atualizado_em);
         } else if (coleta.criado_em) {
-          const dt = new Date(coleta.criado_em);
-          if (!isNaN(dt.getTime())) {
-            const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
-            const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-            dataHoraRetiradaFormatada = `${dStr} às ${hStr}`;
-          }
+          dataHoraRetiradaFormatada = formatarDataHoraPtBr(coleta.criado_em);
         }
 
         // 3. Data e Horário para Cancelamento (Momento em que foi cancelada)
         let dataHoraCanceladaFormatada = '';
         if (coleta.atualizado_em) {
-          const dt = new Date(coleta.atualizado_em);
-          if (!isNaN(dt.getTime())) {
-            const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
-            const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-            dataHoraCanceladaFormatada = `${dStr} às ${hStr}`;
-          }
+          dataHoraCanceladaFormatada = formatarDataHoraPtBr(coleta.atualizado_em);
         } else if (coleta.criado_em) {
-          const dt = new Date(coleta.criado_em);
-          if (!isNaN(dt.getTime())) {
-            const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
-            const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-            dataHoraCanceladaFormatada = `${dStr} às ${hStr}`;
-          }
+          dataHoraCanceladaFormatada = formatarDataHoraPtBr(coleta.criado_em);
         }
 
         const localNome = coleta.local_retirada?.nome || 'Fatec Franco da Rocha';
@@ -463,7 +471,7 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
                     <i class="fa-solid fa-map-location-dot"></i> Ver no Mapa
                   </button>
                   ${coleta.cidadao_id ? `
-                    <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-coleta-secondary">
+                    <a href="./mensagens.html?destinatario=${coleta.cidadao_id}&coleta=${coleta.cod_coleta}" class="btn-coleta-secondary">
                       <i class="fa-solid fa-comments"></i> Conversar
                     </a>
                   ` : ''}
@@ -481,7 +489,7 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
                     <i class="fa-solid fa-eye"></i> Detalhes
                   </button>
                   ${coleta.cidadao_id ? `
-                    <a href="./mensagens.html?destinatario=${coleta.cidadao_id}" class="btn-coleta-secondary">
+                    <a href="./mensagens.html?destinatario=${coleta.cidadao_id}&coleta=${coleta.cod_coleta}" class="btn-coleta-secondary">
                       <i class="fa-solid fa-comments"></i> Mensagens
                     </a>
                   ` : ''}
@@ -517,7 +525,7 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
                       <i class="fa-solid fa-pen-to-square"></i> Editar Dados
                     </button>
                     ${catadorAuthId ? `
-                      <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-coleta-secondary">
+                      <a href="./mensagens.html?destinatario=${catadorAuthId}&coleta=${coleta.cod_coleta}" class="btn-coleta-secondary">
                         <i class="fa-solid fa-comments"></i> Conversar
                       </a>
                     ` : ''}
@@ -531,7 +539,7 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
                     <i class="fa-solid fa-eye"></i> Ver Detalhes
                   </button>
                   ${catadorAuthId ? `
-                    <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-coleta-secondary">
+                    <a href="./mensagens.html?destinatario=${catadorAuthId}&coleta=${coleta.cod_coleta}" class="btn-coleta-secondary">
                       <i class="fa-solid fa-comments"></i> Conversar
                     </a>
                   ` : ''}
@@ -557,7 +565,7 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
                       <i class="fa-solid fa-pen-to-square"></i> Editar Dados
                     </button>
                     ${catadorAuthId ? `
-                      <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-coleta-secondary">
+                      <a href="./mensagens.html?destinatario=${catadorAuthId}&coleta=${coleta.cod_coleta}" class="btn-coleta-secondary">
                         <i class="fa-solid fa-comments"></i> Conversar
                       </a>
                     ` : ''}
@@ -591,6 +599,19 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
           }
         }
 
+        let tagInteracaoHtml = '';
+        if (houveMensagemRecente) {
+          tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-regular fa-comment-dots" style="color: #9ca3af;"></i> Mensagem em ${formatarDataHoraPtBr(coleta.ultima_mensagem_em)}</span>`;
+        } else if (ehAgendada && houveAtualizacao) {
+          tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-regular fa-calendar-check" style="color: #9ca3af;"></i> Agendada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
+        } else if (ehRetirada && houveAtualizacao) {
+          tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-box-archive" style="color: #9ca3af;"></i> Retirada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
+        } else if (ehCancelada && houveAtualizacao) {
+          tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-ban" style="color: #9ca3af;"></i> Cancelada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
+        } else if (houveAtualizacao) {
+          tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-rotate" style="color: #9ca3af;"></i> Atualizada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
+        }
+
         let bannerDataHoraHtml = '';
         if (ehRetirada || /retirad/i.test(statusInfo.nome)) {
           bannerDataHoraHtml = `
@@ -598,7 +619,7 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
               <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
               <div style="display: flex; flex-direction: column; gap: 1px;">
                 <span style="font-size: 0.82rem; font-weight: 700; color: ${temaCard.cor};">${tituloBanner}</span>
-                <span style="font-size: 0.8rem; color: #4b5563;">Retirada em: <strong style="color: #111827; font-weight: 600;">${dataHoraRetiradaFormatada || dataFormatada || 'Data registrada'}</strong></span>
+                <span style="font-size: 0.8rem; color: #4b5563;">Retirada confirmada</span>
               </div>
             </div>
           `;
@@ -618,7 +639,7 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
               <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
               <div style="display: flex; flex-direction: column; gap: 1px;">
                 <span style="font-size: 0.82rem; font-weight: 700; color: ${temaCard.cor};">${tituloBanner}</span>
-                <span style="font-size: 0.8rem; color: #4b5563;">Cancelada em: <strong style="color: #111827; font-weight: 600;">${dataHoraCanceladaFormatada || dataFormatada || 'Data arquivada'}</strong></span>
+                <span style="font-size: 0.8rem; color: #4b5563;">Coleta cancelada</span>
               </div>
             </div>
           `;
@@ -638,13 +659,14 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
         card.innerHTML = `
           <!-- Cabeçalho Único: Material + Data de Criação + Status -->
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
-            <div style="display: flex; flex-direction: column; gap: 2px;">
+            <div style="display: flex; flex-direction: column; gap: 3px;">
               <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
                 <i class="fa-solid fa-recycle" style="color: var(--verde-escuro, #1b6d24);"></i> ${tipoMaterial} — ${coleta.quantidade || 'Qtd aproximada'}
               </strong>
-              <span style="font-size: 0.76rem; color: #6b7280; font-weight: 500; display: flex; align-items: center; gap: 5px;">
-                <i class="fa-regular fa-calendar" style="color: #9ca3af;"></i> Criada em ${dataFormatada || 'Data recente'}
-              </span>
+              <div style="font-size: 0.76rem; color: #6b7280; font-weight: 500; display: flex; flex-direction: column; gap: 2px;">
+                <span style="display: flex; align-items: center; gap: 5px;"><i class="fa-regular fa-calendar" style="color: #9ca3af;"></i> Criada em ${criacaoFormatadaComHora || 'Data recente'}</span>
+                ${tagInteracaoHtml}
+              </div>
             </div>
             <span style="font-size: 0.72rem; font-weight: 700; background: ${badgeBg}; color: ${badgeTexto}; border: 1px solid ${badgeBorda}; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;">
               ${stFormatado}
