@@ -514,7 +514,7 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
 .btn-tab[data-cor="cinza"]:not(.active) i { color: #64748b !important; }
 .btn-tab[data-cor="cinza"].active { background-color: #475569 !important; color: #ffffff !important; border-color: #475569 !important; box-shadow: 0 4px 12px rgba(71, 85, 105, 0.3) !important; }
 
-/* Grupos de Abas/Filtros no Desktop: Distribuição Uniforme em 100% da Largura (Aproveitamento Total do Espaço) */
+/* Grupos de Abas/Filtros no Desktop: Distribuição Responsiva em 100% da Largura */
 #filtros_coletas, 
 #filtros_status_coletas, 
 .filtros-coletas-grid,
@@ -523,12 +523,13 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
 #tabs_relatorios_catador,
 .tabs-relatorios-catador {
   display: flex !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;
   gap: 8px !important;
   width: 100% !important;
   margin-bottom: 16px !important;
   box-sizing: border-box !important;
   align-items: center !important;
+  justify-content: flex-start !important;
 }
 
 #filtros_coletas .btn-tab, 
@@ -538,22 +539,27 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
 #filtros_catadores .btn-tab,
 #tabs_relatorios_catador .btn-tab,
 .tabs-relatorios-catador .btn-tab {
-  flex: 1 1 0 !important;
-  min-width: 0 !important;
-  width: 100% !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: unset !important;
   max-width: none !important;
   display: inline-flex !important;
   justify-content: center !important;
+  align-items: center !important;
   text-align: center !important;
   box-sizing: border-box !important;
-  padding: 8px 6px !important;
-  font-size: 0.84rem !important;
+  padding: 7px 16px !important;
+  font-size: 0.83rem !important;
+  font-weight: 600 !important;
   height: 38px !important;
   min-height: 38px !important;
+  border-radius: 999px !important;
   margin: 0 !important;
   white-space: nowrap !important;
   overflow: visible !important;
-  text-overflow: clip !important;
+  gap: 7px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
 }
 
 #filtros_coletas .btn-tab span, 
@@ -566,6 +572,8 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
   overflow: visible !important;
   text-overflow: clip !important;
   white-space: nowrap !important;
+  max-width: none !important;
+  display: inline !important;
 }
 
 #tabs_relatorios, .filtros-tabs-equal {

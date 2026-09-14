@@ -67,12 +67,12 @@
 
             <!-- Filtros de Status Padronizados Dinâmicos com Inicialização Instantânea -->
             <div id="filtros_coletas" class="filtros-coletas-grid">
-              <button class="btn-tab active" data-status="todos"><i class="fa-solid fa-layer-group"></i> Todas</button>
-              <button class="btn-tab" data-status="disponível" data-cor="verde"><i class="fa-solid fa-clock"></i> Disponíveis</button>
-              <button class="btn-tab" data-status="agendada" data-cor="amarelo"><i class="fa-solid fa-calendar-check"></i> Agendadas</button>
-              <button class="btn-tab" data-status="reagendada" data-cor="amarelo"><i class="fa-solid fa-calendar-days"></i> Reagendadas</button>
-              <button class="btn-tab" data-status="retirada" data-cor="verde"><i class="fa-solid fa-circle-check"></i> Retiradas</button>
-              <button class="btn-tab" data-status="cancelada" data-cor="vermelho"><i class="fa-solid fa-ban"></i> Canceladas</button>
+              <button class="btn-tab active" data-status="todos" title="Todas"><i class="fa-solid fa-layer-group"></i> Todas</button>
+              <button class="btn-tab" data-status="disponível" data-cor="verde" title="Disponíveis"><i class="fa-solid fa-clock"></i> Disponíveis</button>
+              <button class="btn-tab" data-status="agendada" data-cor="amarelo" title="Agendadas"><i class="fa-solid fa-calendar-check"></i> Agendadas</button>
+              <button class="btn-tab" data-status="reagendada" data-cor="amarelo" title="Reagendadas"><i class="fa-solid fa-calendar-days"></i> Reagendadas</button>
+              <button class="btn-tab" data-status="retirada" data-cor="verde" title="Retiradas"><i class="fa-solid fa-circle-check"></i> Retiradas</button>
+              <button class="btn-tab" data-status="cancelada" data-cor="vermelho" title="Canceladas"><i class="fa-solid fa-ban"></i> Canceladas</button>
             </div>
             <script>
               (function() {
@@ -113,7 +113,7 @@
                           (f === 'cancelada' && /cancel/i.test(stNome)) ||
                           (f === 'retirada' && /(retirad|conclu)/i.test(stNome)) ||
                           (f === 'agendada' && /agend/i.test(stNome));
-                        h += '<button class="btn-tab ' + (active ? 'active' : '') + '" data-status="' + cod + '" data-cor="' + corId + '" title="' + st.status + '"><i class="fa-solid ' + icon + '"></i> <span>' + disp + '</span></button>';
+                        h += '<button class="btn-tab ' + (active ? 'active' : '') + '" data-status="' + cod + '" data-cor="' + corId + '" title="' + disp + '"><i class="fa-solid ' + icon + '"></i> <span>' + disp + '</span></button>';
                       });
                       container.innerHTML = h;
                     }
@@ -220,7 +220,7 @@
         const corId = (regras && regras.cor) ? regras.cor : (temaCor ? temaCor.id : 'verde');
 
         buttonsHtml += `
-          <button class="btn-tab ${ehAtivo ? 'active' : ''}" data-status="${cod}" data-nome="${stNomeLower}" data-cor="${corId}" style="--cor-bg: ${temaCor.bg}; --cor-texto: ${temaCor.cor}; --cor-borda: ${temaCor.borda}; --cor-dot: ${temaCor.dot};" title="${st.status}">
+          <button class="btn-tab ${ehAtivo ? 'active' : ''}" data-status="${cod}" data-nome="${stNomeLower}" data-cor="${corId}" style="--cor-bg: ${temaCor.bg}; --cor-texto: ${temaCor.cor}; --cor-borda: ${temaCor.borda}; --cor-dot: ${temaCor.dot};" title="${nomeDisplay}">
             ${icon} <span>${nomeDisplay}</span>
           </button>
         `;
@@ -239,6 +239,12 @@
 
     async function carregarColetas(filtroStatus = 'todos') {
       try {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 30px; color: var(--cinza-texto-aux);">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Carregando coletas...
+          </div>
+        `;
+
         const [coletas, catadores, listaStatus, locaisRetirada] = await Promise.all([
           listarTodasColetasAdmin(filtroStatus).catch(() => []),
           listarCatadoresParaVincular().catch(() => []),
@@ -247,6 +253,13 @@
         ]);
 
         todasColetasCarregadas = coletas || [];
+        if (Array.isArray(coletas)) {
+          coletas.sort((a, b) => {
+            const tA = a.interacao_timestamp || Math.max(new Date(a.atualizado_em || 0).getTime(), new Date(a.criado_em || 0).getTime());
+            const tB = b.interacao_timestamp || Math.max(new Date(b.atualizado_em || 0).getTime(), new Date(b.criado_em || 0).getTime());
+            return tB - tA;
+          });
+        }
 
         // Renderiza e sincroniza dinamicamente os botões da toolbar de filtros conforme os status cadastrados
         if (listaStatus && listaStatus.length > 0) {
@@ -269,6 +282,18 @@
           return;
         }
 
+        const formatarDataHoraPtBr = (dataVal) => {
+          if (!dataVal) return '';
+          const dt = new Date(dataVal);
+          if (isNaN(dt.getTime())) return '';
+          const dia = String(dt.getDate()).padStart(2, '0');
+          const mes = String(dt.getMonth() + 1).padStart(2, '0');
+          const ano = dt.getFullYear();
+          const hora = String(dt.getHours()).padStart(2, '0');
+          const min = String(dt.getMinutes()).padStart(2, '0');
+          return `${dia}/${mes}/${ano} às ${hora}:${min}`;
+        };
+
         container.innerHTML = '';
         coletas.forEach(item => {
           const card = document.createElement('div');
@@ -284,6 +309,14 @@
           const dataFormatada = dataCriacao && !isNaN(dataCriacao.getTime())
             ? dataCriacao.toLocaleDateString('pt-BR')
             : '';
+          const criacaoFormatadaComHora = formatarDataHoraPtBr(item.criado_em);
+
+          const tCriado = item.criado_em ? new Date(item.criado_em).getTime() : 0;
+          const tAtualizado = item.atualizado_em ? new Date(item.atualizado_em).getTime() : 0;
+          const tMsg = item.ultima_mensagem_em ? new Date(item.ultima_mensagem_em).getTime() : 0;
+
+          const houveAtualizacao = tAtualizado > 0 && Math.abs(tAtualizado - tCriado) > 2000;
+          const houveMensagemRecente = tMsg > 0 && (tMsg >= tAtualizado);
 
           // 1. Data e Horário para Agendada (Previsão combinada)
           let dataHoraAgendadaFormatada = '';
@@ -302,37 +335,17 @@
             const horaPtBr = item.hora ? item.hora.slice(0, 5) : '';
             dataHoraRetiradaFormatada = horaPtBr ? `${dataPtBr} às ${horaPtBr}` : dataPtBr;
           } else if (item.atualizado_em) {
-            const dt = new Date(item.atualizado_em);
-            if (!isNaN(dt.getTime())) {
-              const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
-              const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-              dataHoraRetiradaFormatada = `${dStr} às ${hStr}`;
-            }
+            dataHoraRetiradaFormatada = formatarDataHoraPtBr(item.atualizado_em);
           } else if (item.criado_em) {
-            const dt = new Date(item.criado_em);
-            if (!isNaN(dt.getTime())) {
-              const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
-              const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-              dataHoraRetiradaFormatada = `${dStr} às ${hStr}`;
-            }
+            dataHoraRetiradaFormatada = formatarDataHoraPtBr(item.criado_em);
           }
 
           // 3. Data e Horário para Cancelamento (Momento em que foi cancelada)
           let dataHoraCanceladaFormatada = '';
           if (item.atualizado_em) {
-            const dt = new Date(item.atualizado_em);
-            if (!isNaN(dt.getTime())) {
-              const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
-              const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-              dataHoraCanceladaFormatada = `${dStr} às ${hStr}`;
-            }
+            dataHoraCanceladaFormatada = formatarDataHoraPtBr(item.atualizado_em);
           } else if (item.criado_em) {
-            const dt = new Date(item.criado_em);
-            if (!isNaN(dt.getTime())) {
-              const dStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
-              const hStr = String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
-              dataHoraCanceladaFormatada = `${dStr} às ${hStr}`;
-            }
+            dataHoraCanceladaFormatada = formatarDataHoraPtBr(item.criado_em);
           }
 
           const catadorObj = catadores.find(c => c.id === item.catador_id);
@@ -382,6 +395,19 @@
             }
           }
 
+          let tagInteracaoHtml = '';
+          if (houveMensagemRecente) {
+            tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-regular fa-comment-dots" style="color: #9ca3af;"></i> Mensagem em ${formatarDataHoraPtBr(item.ultima_mensagem_em)}</span>`;
+          } else if (ehAgendada && houveAtualizacao) {
+            tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-regular fa-calendar-check" style="color: #9ca3af;"></i> Agendada em ${formatarDataHoraPtBr(item.atualizado_em)}</span>`;
+          } else if (ehRetirada && houveAtualizacao) {
+            tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-box-archive" style="color: #9ca3af;"></i> Retirada em ${formatarDataHoraPtBr(item.atualizado_em)}</span>`;
+          } else if (ehCancelada && houveAtualizacao) {
+            tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-ban" style="color: #9ca3af;"></i> Cancelada em ${formatarDataHoraPtBr(item.atualizado_em)}</span>`;
+          } else if (houveAtualizacao) {
+            tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-rotate" style="color: #9ca3af;"></i> Atualizada em ${formatarDataHoraPtBr(item.atualizado_em)}</span>`;
+          }
+
           let bannerDataHoraHtml = '';
           if (ehRetirada || /retirad/i.test(statusInfo.nome)) {
             bannerDataHoraHtml = `
@@ -389,7 +415,7 @@
                 <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
                 <div style="display: flex; flex-direction: column; gap: 1px;">
                   <span style="font-size: 0.82rem; font-weight: 700; color: ${temaCard.cor};">${tituloBanner}</span>
-                  <span style="font-size: 0.8rem; color: #4b5563;">Retirada em: <strong style="color: #111827; font-weight: 600;">${dataHoraRetiradaFormatada || dataFormatada || 'Data registrada'}</strong></span>
+                  <span style="font-size: 0.8rem; color: #4b5563;">Retirada confirmada</span>
                 </div>
               </div>
             `;
@@ -409,7 +435,7 @@
                 <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
                 <div style="display: flex; flex-direction: column; gap: 1px;">
                   <span style="font-size: 0.82rem; font-weight: 700; color: ${temaCard.cor};">${tituloBanner}</span>
-                  <span style="font-size: 0.8rem; color: #4b5563;">Cancelada em: <strong style="color: #111827; font-weight: 600;">${dataHoraCanceladaFormatada || dataFormatada || 'Data arquivada'}</strong></span>
+                  <span style="font-size: 0.8rem; color: #4b5563;">Coleta cancelada</span>
                 </div>
               </div>
             `;
@@ -434,7 +460,7 @@
                     <i class="fa-solid fa-eye"></i> Ver Detalhes
                   </button>
                   ${catadorAuthId ? `
-                    <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-coleta-secondary">
+                    <a href="./mensagens.html?destinatario=${catadorAuthId}&coleta=${item.cod_coleta || item.id}" class="btn-coleta-secondary">
                       <i class="fa-solid fa-comments"></i> Conversar
                     </a>
                   ` : ''}
@@ -454,7 +480,7 @@
                       <i class="fa-solid fa-pen-to-square"></i> Editar Dados
                     </button>
                     ${catadorAuthId ? `
-                      <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-coleta-secondary">
+                      <a href="./mensagens.html?destinatario=${catadorAuthId}&coleta=${item.cod_coleta || item.id}" class="btn-coleta-secondary">
                         <i class="fa-solid fa-comments"></i> Conversar
                       </a>
                     ` : ''}
@@ -473,7 +499,7 @@
                       <i class="fa-solid fa-pen-to-square"></i> Editar Dados
                     </button>
                     ${catadorAuthId ? `
-                      <a href="./mensagens.html?destinatario=${catadorAuthId}" class="btn-coleta-secondary">
+                      <a href="./mensagens.html?destinatario=${catadorAuthId}&coleta=${item.cod_coleta || item.id}" class="btn-coleta-secondary">
                         <i class="fa-solid fa-comments"></i> Conversar
                       </a>
                     ` : ''}
@@ -485,13 +511,14 @@
 
           card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
-              <div style="display: flex; flex-direction: column; gap: 2px;">
+              <div style="display: flex; flex-direction: column; gap: 3px;">
                 <strong style="color: var(--verde-escuro, #1b6d24); font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
                   <i class="fa-solid fa-recycle" style="color: var(--verde-escuro, #1b6d24);"></i> ${matNome} — ${item.quantidade || 'Qtd não informada'}
                 </strong>
-                <span style="font-size: 0.76rem; color: #6b7280; font-weight: 500; display: flex; align-items: center; gap: 5px;">
-                  <i class="fa-regular fa-calendar" style="color: #9ca3af;"></i> Criada em ${dataFormatada || 'Data recente'}
-                </span>
+                <div style="font-size: 0.76rem; color: #6b7280; font-weight: 500; display: flex; flex-direction: column; gap: 2px;">
+                  <span style="display: flex; align-items: center; gap: 5px;"><i class="fa-regular fa-calendar" style="color: #9ca3af;"></i> Criada em ${criacaoFormatadaComHora || 'Data recente'}</span>
+                  ${tagInteracaoHtml}
+                </div>
               </div>
               <span style="font-size: 0.72rem; font-weight: 700; background: ${badgeBg}; color: ${badgeCor}; border: 1px solid ${badgeBorda}; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em;">
                 ${statusTextoDisplay}

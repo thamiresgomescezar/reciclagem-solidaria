@@ -88,6 +88,7 @@ export async function listarColetasDisponiveis() {
       .from('coleta')
       .select('*')
       .is('catador_id', null)
+      .order('atualizado_em', { ascending: false, nullsFirst: false })
       .order('criado_em', { ascending: false });
 
     if (!error && data) {
@@ -185,6 +186,7 @@ export async function listarTodasColetasAdmin(statusFiltro = 'todos') {
     const { data, error } = await supabase
       .from('coleta')
       .select('*')
+      .order('atualizado_em', { ascending: false, nullsFirst: false })
       .order('criado_em', { ascending: false });
 
     if (!error && data) {
@@ -226,6 +228,7 @@ export async function listarMinhasColetasCidadao() {
       .from('coleta')
       .select('*')
       .eq('cidadao_id', cidadaoId)
+      .order('atualizado_em', { ascending: false, nullsFirst: false })
       .order('criado_em', { ascending: false });
 
     if (error) {
@@ -276,6 +279,7 @@ export async function listarMinhasColetasCatador() {
       .from('coleta')
       .select('*')
       .in('catador_id', idsParaBuscar)
+      .order('atualizado_em', { ascending: false, nullsFirst: false })
       .order('criado_em', { ascending: false });
 
     if (!error && data) {
@@ -768,6 +772,7 @@ async function enriquecerColetas(coletasBrutas) {
   try {
     const cidadaoIds = Array.from(new Set(coletasBrutas.map(c => c.cidadao_id).filter(Boolean)));
     const catadorIds = Array.from(new Set(coletasBrutas.map(c => c.catador_id).filter(Boolean)));
+    const coletaIds = Array.from(new Set(coletasBrutas.map(c => c.cod_coleta).filter(Boolean)));
 
     // Busca dados dos cidadãos ofertantes
     let cidadaosData = [];
@@ -788,11 +793,12 @@ async function enriquecerColetas(coletasBrutas) {
       }
     }
 
-    const [resMats, resSt, resLoc, resCat] = await Promise.allSettled([
+    const [resMats, resSt, resLoc, resCat, resMsgs] = await Promise.allSettled([
       supabase.from('materiais').select('*'),
       supabase.from('status').select('*'),
       supabase.from('local_retirada').select('*'),
-      catadorIds.length > 0 ? supabase.from('catador').select('*').in('id', catadorIds) : Promise.resolve({ data: [] })
+      catadorIds.length > 0 ? supabase.from('catador').select('*').in('id', catadorIds) : Promise.resolve({ data: [] }),
+      coletaIds.length > 0 ? supabase.from('mensagens').select('coleta_id, enviado_em').in('coleta_id', coletaIds).order('enviado_em', { ascending: false }) : Promise.resolve({ data: [] })
     ]);
 
     const matsMap = {};
@@ -815,6 +821,15 @@ async function enriquecerColetas(coletasBrutas) {
       resCat.value.data.forEach(ct => { catMap[ct.id] = ct; });
     }
 
+    const msgsMap = {};
+    if (resMsgs.status === 'fulfilled' && resMsgs.value?.data) {
+      resMsgs.value.data.forEach(m => {
+        if (m.coleta_id && !msgsMap[m.coleta_id]) {
+          msgsMap[m.coleta_id] = m.enviado_em;
+        }
+      });
+    }
+
     const cidMap = {};
     cidadaosData.forEach(cd => { cidMap[cd.id] = cd; });
 
@@ -831,7 +846,7 @@ async function enriquecerColetas(coletasBrutas) {
 
     const localNamesCache = JSON.parse(localStorage.getItem('sys_user_names') || '{}');
 
-    return coletasBrutas.map(c => {
+    const enriquecidas = coletasBrutas.map(c => {
       const matObj = c.materiais || matsMap[c.cod_material] || { tipo: 'Material Reciclável' };
       
       let stObj = c.status || stMap[c.cod_status];
@@ -883,6 +898,16 @@ async function enriquecerColetas(coletasBrutas) {
         ? { id: cidObj.id, nome: cidNomeVal, telefone: cidObj.telefone || '' } 
         : { id: c.cidadao_id, nome: cidNomeVal, telefone: '' };
 
+      const ultimaMsgEm = msgsMap[c.cod_coleta] || null;
+      const tAtualizado = c.atualizado_em ? new Date(c.atualizado_em).getTime() : 0;
+      const tCriado = c.criado_em ? new Date(c.criado_em).getTime() : 0;
+      const tMsg = ultimaMsgEm ? new Date(ultimaMsgEm).getTime() : 0;
+      const interacaoTimestamp = Math.max(
+        isNaN(tAtualizado) ? 0 : tAtualizado,
+        isNaN(tCriado) ? 0 : tCriado,
+        isNaN(tMsg) ? 0 : tMsg
+      );
+
       return {
         ...c,
         data: cData,
@@ -891,13 +916,39 @@ async function enriquecerColetas(coletasBrutas) {
         status: stObj,
         local_retirada: locObj,
         catador: catObj,
-        cidadao: cidFinal
+        cidadao: cidFinal,
+        ultima_mensagem_em: ultimaMsgEm,
+        interacao_timestamp: interacaoTimestamp
       };
     });
+
+    // Ordenação estrita: Coletas com interação mais recente (atualização, mensagem ou criação) em cima
+    enriquecidas.sort((a, b) => (b.interacao_timestamp || 0) - (a.interacao_timestamp || 0));
+    return enriquecidas;
   } catch (e) {
     console.warn('Erro ao enriquecer coletas:', e);
-    return coletasBrutas;
+    return coletasBrutas.sort((a, b) => {
+      const tA = Math.max(new Date(a.atualizado_em || 0).getTime(), new Date(a.criado_em || 0).getTime());
+      const tB = Math.max(new Date(b.atualizado_em || 0).getTime(), new Date(b.criado_em || 0).getTime());
+      return tB - tA;
+    });
   }
+}
+
+/**
+ * Retorna o timestamp da interação mais recente da coleta (edição, agendamento, status, mensagem ou criação)
+ */
+export function obterTimestampInteracao(coleta) {
+  if (!coleta) return 0;
+  if (coleta.interacao_timestamp) return coleta.interacao_timestamp;
+  const tAtualizado = coleta.atualizado_em ? new Date(coleta.atualizado_em).getTime() : 0;
+  const tCriado = coleta.criado_em ? new Date(coleta.criado_em).getTime() : 0;
+  const tMsg = coleta.ultima_mensagem_em ? new Date(coleta.ultima_mensagem_em).getTime() : 0;
+  return Math.max(
+    isNaN(tAtualizado) ? 0 : tAtualizado,
+    isNaN(tCriado) ? 0 : tCriado,
+    isNaN(tMsg) ? 0 : tMsg
+  );
 }
 
 /**

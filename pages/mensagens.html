@@ -119,6 +119,7 @@
 
     const initialUrlParams = new URLSearchParams(window.location.search);
     const initialDestParam = initialUrlParams.get('destinatario');
+    const initialColetaParam = initialUrlParams.get('coleta');
 
     if (btnVoltarTop) {
       btnVoltarTop.addEventListener('click', (e) => {
@@ -764,13 +765,27 @@
       btnEnviar.disabled = true;
 
       try {
-        const { error } = await supabase.from('mensagens').insert([{
+        const payloadMsg = {
           remetente_id: currentUserId,
           destinatario_id: destinatarioId,
           conteudo: txt
-        }]);
+        };
+        if (initialColetaParam) {
+          payloadMsg.coleta_id = initialColetaParam;
+        }
+
+        const { error } = await supabase.from('mensagens').insert([payloadMsg]);
 
         if (error) throw error;
+
+        if (initialColetaParam) {
+          try {
+            await supabase
+              .from('coleta')
+              .update({ atualizado_em: new Date().toISOString() })
+              .eq('cod_coleta', initialColetaParam);
+          } catch (eCol) {}
+        }
 
         input.value = '';
         carregarMensagens();
