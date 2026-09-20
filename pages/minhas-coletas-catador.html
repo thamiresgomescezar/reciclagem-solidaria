@@ -172,8 +172,8 @@
             let tagInteracaoHtml = '';
             if (ehAgendada && houveAtualizacao) {
               tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-regular fa-calendar-check" style="color: #9ca3af;"></i> Agendada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
-            } else if (ehRetirada && houveAtualizacao) {
-              tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-box-archive" style="color: #9ca3af;"></i> Retirada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
+            } else if (ehRetirada) {
+              tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-box-archive" style="color: #9ca3af;"></i> Retirada em ${dataHoraRetiradaFormatada || formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
             } else if (ehCancelada && houveAtualizacao) {
               tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-ban" style="color: #9ca3af;"></i> Cancelada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
             } else if (houveAtualizacao) {
@@ -200,7 +200,7 @@
                 ${ehRetirada ? `
                   <div style="background: #e8f5e9; border: 1.5px solid #a5d6a7; border-radius: 8px; padding: 6px 10px; margin-top: 4px; display: flex; align-items: center; gap: 8px; color: #1b5e20; font-size: 0.85rem; font-weight: 700;">
                     <i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.1rem;"></i>
-                    <span><strong>Retirada confirmada</strong></span>
+                    <span><strong>Retirada realizada em:</strong> <span style="color: #1b5e20; font-weight: 800;">${dataHoraRetiradaFormatada || 'Confirmada'}</span></span>
                   </div>
                 ` : ehCancelada ? `
                   <div style="background: #fff5f5; border: 1.5px solid #ef9a9a; border-radius: 8px; padding: 6px 10px; margin-top: 4px; display: flex; align-items: center; gap: 8px; color: #c62828; font-size: 0.85rem; font-weight: 700;">

@@ -577,9 +577,10 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
         }
 
         const fotoTag = (coleta.foto_url && coleta.foto_url.trim() !== '')
-          ? `<div style="position: relative; overflow: hidden; border-radius: 12px; background: #e8f5e9; border: 1.5px solid #a5d6a7; margin-top: 8px; margin-bottom: 2px;">
-              <img src="${coleta.foto_url}" data-src="${coleta.foto_url}" alt="${tipoMaterial} (${coleta.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 180px; object-fit: cover; border-radius: 10px; cursor: pointer; transition: transform 0.2s;" title="Clique para ampliar a foto">
-              <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #ffffff; padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">
+          ? `<div class="box-preview-foto" title="Clique para ampliar a foto">
+              <div class="backdrop-blur-foto" style="background-image: url('${coleta.foto_url}');"></div>
+              <img src="${coleta.foto_url}" data-src="${coleta.foto_url}" alt="${tipoMaterial} (${coleta.quantidade || ''})" class="img-preview-material">
+              <div class="tag-ampliar-foto">
                 <i class="fa-solid fa-magnifying-glass-plus"></i> Ampliar
               </div>
             </div>`
@@ -604,8 +605,8 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
           tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-regular fa-comment-dots" style="color: #9ca3af;"></i> Mensagem em ${formatarDataHoraPtBr(coleta.ultima_mensagem_em)}</span>`;
         } else if (ehAgendada && houveAtualizacao) {
           tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-regular fa-calendar-check" style="color: #9ca3af;"></i> Agendada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
-        } else if (ehRetirada && houveAtualizacao) {
-          tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-box-archive" style="color: #9ca3af;"></i> Retirada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
+        } else if (ehRetirada) {
+          tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-box-archive" style="color: #9ca3af;"></i> Retirada em ${dataHoraRetiradaFormatada || formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
         } else if (ehCancelada && houveAtualizacao) {
           tagInteracaoHtml = `<span style="display: flex; align-items: center; gap: 5px; color: #6b7280;"><i class="fa-solid fa-ban" style="color: #9ca3af;"></i> Cancelada em ${formatarDataHoraPtBr(coleta.atualizado_em)}</span>`;
         } else if (houveAtualizacao) {
@@ -614,12 +615,13 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
 
         let bannerDataHoraHtml = '';
         if (ehRetirada || /retirad/i.test(statusInfo.nome)) {
+          const dataHoraTexto = dataHoraRetiradaFormatada ? `Retirada realizada em: <strong style="color: #166534; font-weight: 700;">${dataHoraRetiradaFormatada}</strong>` : 'Retirada confirmada';
           bannerDataHoraHtml = `
             <div style="background: ${temaCard.bg}; border: 1px solid ${temaCard.borda}; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; margin-top: 4px;">
               <i class="fa-solid ${iconeCard}" style="color: ${temaCard.dot || temaCard.cor}; font-size: 1.15rem; flex-shrink: 0;"></i>
               <div style="display: flex; flex-direction: column; gap: 1px;">
                 <span style="font-size: 0.82rem; font-weight: 700; color: ${temaCard.cor};">${tituloBanner}</span>
-                <span style="font-size: 0.8rem; color: #4b5563;">Retirada confirmada</span>
+                <span style="font-size: 0.8rem; color: #4b5563;">${dataHoraTexto}</span>
               </div>
             </div>
           `;
@@ -727,11 +729,12 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
 
 function vincularEventosCards(listaContainer, feedbackMsg, perfil, todasColetas, catadores, listaStatus, locaisRetirada) {
   // 1. Modal de Foto Ampliada
-  document.querySelectorAll('.img-preview-material').forEach(img => {
-    img.addEventListener('click', (e) => {
-      const src = e.currentTarget.getAttribute('data-src') || e.currentTarget.src;
-      const alt = e.currentTarget.getAttribute('alt');
-      abrirModalFoto(src, alt);
+  document.querySelectorAll('.box-preview-foto').forEach(box => {
+    box.addEventListener('click', (e) => {
+      const img = box.querySelector('.img-preview-material');
+      const src = img ? (img.getAttribute('data-src') || img.src) : '';
+      const alt = img ? img.getAttribute('alt') : '';
+      if (src) abrirModalFoto(src, alt);
     });
   });
 

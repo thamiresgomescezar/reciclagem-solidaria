@@ -89,6 +89,13 @@
   <!-- SCRIPT SÍNCRONO IMEDIATO (Executa instantaneamente, independente de CDN, módulos ou rede) -->
   <script>
     (function() {
+      // Se a URL contiver ?pause, ?preview ou ?print, congela a tela na splash para captura de tela / print
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('pause') || urlParams.has('preview') || urlParams.has('print') || window.location.hash.indexOf('print') !== -1) {
+        console.log('Modo de captura/print ativado: tela inicial pausada.');
+        return;
+      }
+
       var redirecionado = false;
       function navegar(url) {
         if (redirecionado) return;
@@ -155,6 +162,10 @@
     import { getPerfilAtual } from './js/services/auth.js';
 
     async function validarESincronizar() {
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('pause') || urlParams.has('preview') || urlParams.has('print') || window.location.hash.indexOf('print') !== -1) {
+        return;
+      }
       try {
         const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
         const session = data?.session;
