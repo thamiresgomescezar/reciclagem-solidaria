@@ -109,12 +109,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           : `${localNome}, Franco da Rocha - SP`;
 
         const fotoTag = (coleta.foto_url && coleta.foto_url.trim() !== '')
-          ? `<div style="position: relative; overflow: hidden; border-radius: 12px; margin-top: 8px; margin-bottom: 2px; background: #e8f5e9; border: 1.5px solid #a5d6a7;">
-              <img src="${coleta.foto_url}" data-src="${coleta.foto_url}" alt="${tipoMaterial} (${coleta.quantidade || ''})" class="img-preview-material" style="width: 100%; height: 200px; object-fit: cover; border-radius: 10px; cursor: pointer; transition: transform 0.2s;" title="Clique para ampliar a foto do material" onerror="this.parentElement.innerHTML='<div style=\\'padding: 12px; text-align: center; color: #555; font-size: 0.82rem;\\'><i class=\\'fa-regular fa-image\\'></i> Imagem não disponível para visualização</div>';">
-              <div style="position: absolute; top: 8px; left: 8px; background: rgba(27,109,36,0.85); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+          ? `<div class="box-preview-foto" title="Clique para ampliar a foto do material">
+              <div class="backdrop-blur-foto" style="background-image: url('${coleta.foto_url}');"></div>
+              <img src="${coleta.foto_url}" data-src="${coleta.foto_url}" alt="${tipoMaterial} (${coleta.quantidade || ''})" class="img-preview-material" onerror="this.parentElement.innerHTML='<div style=\\'padding: 12px; text-align: center; color: #555; font-size: 0.82rem;\\'><i class=\\'fa-regular fa-image\\'></i> Imagem não disponível para visualização</div>';">
+              <div style="position: absolute; top: 8px; left: 8px; z-index: 2; background: rgba(27,109,36,0.85); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 0.73rem; font-weight: 700; display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px);">
                 <i class="fa-solid fa-camera"></i> Foto Anexada
               </div>
-              <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.7); color: #ffffff; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; pointer-events: none; display: flex; align-items: center; gap: 4px;">
+              <div class="tag-ampliar-foto">
                 <i class="fa-solid fa-magnifying-glass-plus"></i> Toque para ampliar
               </div>
             </div>`
@@ -188,11 +189,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         listaContainer.appendChild(card);
       });
 
-      document.querySelectorAll('.img-preview-material').forEach(img => {
-        img.addEventListener('click', (e) => {
-          const src = e.currentTarget.getAttribute('data-src') || e.currentTarget.src;
-          const alt = e.currentTarget.getAttribute('alt');
-          abrirModalFoto(src, alt);
+      document.querySelectorAll('.box-preview-foto').forEach(box => {
+        box.addEventListener('click', (e) => {
+          const img = box.querySelector('.img-preview-material');
+          const src = img ? (img.getAttribute('data-src') || img.src) : '';
+          const alt = img ? img.getAttribute('alt') : '';
+          if (src) abrirModalFoto(src, alt);
         });
       });
 
