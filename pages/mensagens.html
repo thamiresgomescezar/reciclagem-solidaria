@@ -202,18 +202,21 @@
           resCid,
           resCat,
           resColetas,
-          resPubs
+          resPubs,
+          resAdminsRpc
         ] = await Promise.allSettled([
           supabase.from('cidadao').select('id, nome, email, telefone, nivel_acesso').order('nome', { ascending: true }),
           supabase.from('catador').select('id, auth_user_id, nome, telefone').order('nome', { ascending: true }),
           supabase.from('coleta').select('cidadao_id, cidadao:cidadao_id(id, nome, email, telefone)'),
-          supabase.from('publicacoes').select('autor_id, autor:autor_id(id, nome, email)')
+          supabase.from('publicacoes').select('autor_id, autor:autor_id(id, nome, email)'),
+          supabase.rpc('buscar_admins')  // RPC com SECURITY DEFINER — bypassa RLS para catadores verem admins
         ]);
 
         const rawCid = (resCid.status === 'fulfilled' && Array.isArray(resCid.value?.data)) ? resCid.value.data : [];
         const rawCat = (resCat.status === 'fulfilled' && Array.isArray(resCat.value?.data)) ? resCat.value.data : [];
         const coletasList = (resColetas.status === 'fulfilled' && Array.isArray(resColetas.value?.data)) ? resColetas.value.data : [];
         const pubsList = (resPubs.status === 'fulfilled' && Array.isArray(resPubs.value?.data)) ? resPubs.value.data : [];
+        const rawAdminsRpc = (resAdminsRpc.status === 'fulfilled' && Array.isArray(resAdminsRpc.value?.data)) ? resAdminsRpc.value.data : [];
 
         // 1. Dicionário de nomes reais obtidos dinamicamente do banco de dados
         const nomesPorId = new Map();
@@ -266,6 +269,19 @@
         // Mapas unificados
         const mapaCidadaos = new Map();
         const mapaAdmins = new Map();
+
+        // A0) Pré-preenche admins via RPC (bypassa RLS — garante visibilidade para catadores)
+        rawAdminsRpc.forEach(adm => {
+          if (!adm.id || catadorIds.has(adm.id)) return;
+          mapaAdmins.set(adm.id, {
+            id: adm.id,
+            nome: adm.nome || nomesPorId.get(adm.id) || '',
+            email: adm.email || '',
+            telefone: adm.telefone || '',
+            nivel_acesso: 'administrador'
+          });
+          if (adm.nome) nomesPorId.set(adm.id, adm.nome);
+        });
 
         // A) Identificação de Administradores e Cidadãos a partir da tabela 'cidadao' do banco de dados
         rawCid.forEach(c => {
@@ -338,8 +354,9 @@
         });
 
         // D) Limpeza estrita final: garante que nenhum catador ou admin permaneça em mapaCidadaos
+        const idsAdminsRpc = new Set(rawAdminsRpc.map(a => a.id).filter(Boolean));
         for (const [id] of mapaCidadaos.entries()) {
-          if (catadorIds.has(id) || mapaAdmins.has(id)) {
+          if (catadorIds.has(id) || mapaAdmins.has(id) || idsAdminsRpc.has(id)) {
             mapaCidadaos.delete(id);
           }
         }
@@ -541,7 +558,7 @@
             opt.value = adm.id;
             opt.dataset.nome = adm.nome;
             opt.dataset.temApp = 'true';
-            opt.textContent = `${formatarNome(adm.nome)} (Administrador)`;
+            opt.textContent = `${formatarNome(adm.nome)}`;
             grpAdm.appendChild(opt);
           });
           selectDest.appendChild(grpAdm);
