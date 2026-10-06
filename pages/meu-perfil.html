@@ -80,7 +80,7 @@
                   <input type="email" id="perfil_email" class="input-underline" readonly disabled style="opacity: 0.7; background-color: #f0f0f0;">
                 </div>
                 <div class="campo">
-                  <label for="perfil_telefone">Telefone / WhatsApp:<span class="req">*</span></label>
+                  <label for="perfil_telefone">Telefone / Celular:<span class="req">*</span></label>
                   <input type="tel" id="perfil_telefone" class="input-underline" required>
                 </div>
               </div>
@@ -381,7 +381,7 @@
 
         if (!telefone) {
           statusMsg.className = 'status-message error';
-          statusMsg.textContent = 'Informe seu telefone / WhatsApp.';
+          statusMsg.textContent = 'Informe seu telefone.';
           return;
         }
 

@@ -464,12 +464,15 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
         let acoesHtml = '';
         if (éCatador) {
           if (ehAgendada) {
+            /* Disposição anterior, com o cancelamento em uma linha separada:
             acoesHtml = `
               <div class="card-coleta-acoes">
                 <div class="acoes-sublinha-dupla">
+                  <!-- MVP: integração com mapas fora do escopo.
                   <button type="button" class="btn-abrir-mapa btn-coleta-secondary" data-local="${localNome}" data-endereco="${enderecoCompleto}">
                     <i class="fa-solid fa-map-location-dot"></i> Ver no Mapa
                   </button>
+                  -->
                   ${coleta.cidadao_id ? `
                     <a href="./mensagens.html?destinatario=${coleta.cidadao_id}&coleta=${coleta.cod_coleta}" class="btn-coleta-secondary">
                       <i class="fa-solid fa-comments"></i> Conversar
@@ -479,6 +482,23 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
                 <button type="button" class="btn-desistir-agendamento btn-coleta-danger" data-id="${coleta.cod_coleta}" style="width: 100%;">
                   <i class="fa-solid fa-calendar-xmark"></i> Cancelar Agendamento
                 </button>
+              </div>
+            `;
+            */
+            acoesHtml = `
+              <div class="card-coleta-acoes">
+                <div class="acoes-linha-botoes">
+                  <div class="acoes-sublinha-dupla">
+                    ${coleta.cidadao_id ? `
+                      <a href="./mensagens.html?destinatario=${coleta.cidadao_id}&coleta=${coleta.cod_coleta}" class="btn-coleta-secondary">
+                        <i class="fa-solid fa-comments"></i> Conversar
+                      </a>
+                    ` : ''}
+                    <button type="button" class="btn-desistir-agendamento btn-coleta-danger" data-id="${coleta.cod_coleta}">
+                      <i class="fa-solid fa-calendar-xmark"></i> Cancelar Agendamento
+                    </button>
+                  </div>
+                </div>
               </div>
             `;
           } else if (ehRetirada) {
@@ -738,6 +758,7 @@ function vincularEventosCards(listaContainer, feedbackMsg, perfil, todasColetas,
     });
   });
 
+  /* MVP: modal e integração com mapas desativados.
   // 2. Modal de Mapa (Catador)
   document.querySelectorAll('.btn-abrir-mapa').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -746,6 +767,7 @@ function vincularEventosCards(listaContainer, feedbackMsg, perfil, todasColetas,
       abrirModalMapa(localNome, enderecoCompleto);
     });
   });
+  */
 
   // 3. Desistir de Agendamento (Catador)
   document.querySelectorAll('.btn-desistir-agendamento').forEach(btn => {
@@ -857,6 +879,7 @@ function showSuccess(feedbackMsg, msg) {
   feedbackMsg.className = 'status-message success';
 }
 
+/* MVP: mensagem sobre a futura integração com mapas desativada.
 function abrirModalMapa(nomePonto, enderecoCompleto) {
   showAlertModal({
     title: 'Funcionalidade Futura',
@@ -866,6 +889,7 @@ function abrirModalMapa(nomePonto, enderecoCompleto) {
     icon: '<i class="fa-solid fa-map-location-dot" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>'
   });
 }
+*/
 
 function abrirModalFoto(url, titulo) {
   let modal = document.getElementById('modal-foto-preview');

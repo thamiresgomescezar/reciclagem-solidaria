@@ -171,9 +171,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           ${fotoTag}
 
           <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
+            <!-- MVP: integração com mapas fora do escopo.
             <button type="button" class="btn-abrir-mapa btn-coleta-secondary" data-local="${localNome}" data-endereco="${enderecoCompleto}" style="flex: 1;">
               <i class="fa-solid fa-map-location-dot"></i> Ver no Mapa
             </button>
+            -->
             ${coleta.cidadao_id ? `
               <a href="./mensagens.html?destinatario=${coleta.cidadao_id}&coleta=${coleta.cod_coleta}" class="btn-coleta-secondary" style="flex: 1;">
                 <i class="fa-solid fa-comments"></i> Conversar
@@ -198,6 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       });
 
+      /* MVP: evento e modal de mapa desativados.
       document.querySelectorAll('.btn-abrir-mapa').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const localNome = e.currentTarget.getAttribute('data-local');
@@ -205,6 +208,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           abrirModalMapa(localNome, enderecoCompleto);
         });
       });
+      */
 
       document.querySelectorAll('.btn-agendar').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -530,6 +534,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
+/* MVP: mensagem sobre a futura integração com mapas desativada.
 function abrirModalMapa(nomePonto, enderecoCompleto) {
   showAlertModal({
     title: 'Funcionalidade Futura',
@@ -539,6 +544,7 @@ function abrirModalMapa(nomePonto, enderecoCompleto) {
     icon: '<i class="fa-solid fa-map-location-dot" style="color: var(--verde-escuro, #1b6d24); font-size: 1.25rem;"></i>'
   });
 }
+*/
 
 function gerarHorariosDisponiveis(slots, dateStr = null) {
   const lista = [];

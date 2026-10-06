@@ -114,7 +114,7 @@
               <small id="edit_email_hint" style="font-size: 0.75rem; color: #666; display: block; margin-top: 4px; line-height: 1.3;"></small>
             </div>
             <div class="campo">
-              <label for="edit_telefone">Telefone / WhatsApp:<span class="req">*</span></label>
+              <label for="edit_telefone">Telefone / Celular:<span class="req">*</span></label>
               <input type="tel" id="edit_telefone" class="input-underline" required>
             </div>
           </div>
@@ -321,7 +321,7 @@
 
         if (!telefone) {
           editStatusMsg.className = 'status-message error';
-          editStatusMsg.textContent = 'Informe o telefone / WhatsApp do usuário.';
+          editStatusMsg.textContent = 'Informe o telefone do usuário.';
           editStatusMsg.style.display = 'block';
           return;
         }

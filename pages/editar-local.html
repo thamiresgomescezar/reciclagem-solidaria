@@ -287,9 +287,11 @@
             </div>
 
             <div class="card-acoes-local" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1px solid #f0f0f0; width: 100%;">
+              <!-- MVP: integração com mapas fora do escopo.
               <button type="button" class="btn-abrir-mapa btn-secondary-pill" data-nome="${local.nome}" data-endereco="${endCompleto}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer; background: #ffffff; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; justify-content: center; width: 100%; height: 36px; box-sizing: border-box; white-space: nowrap;">
                 <i class="fa-solid fa-map-location-dot" style="color: #2e7d32;"></i> Ver no Mapa
               </button>
+              -->
               <button type="button" class="btn-editar-local btn-secondary-pill" data-id="${local.id}" style="padding: 7px 14px; font-size: 0.82rem; cursor: pointer; background: #e8f5e9; color: var(--verde-escuro, #1b6d24); border: 1.5px solid #a5d6a7; font-weight: 700; justify-content: center; width: 100%; height: 36px; box-sizing: border-box; white-space: nowrap;">
                 <i class="fa-solid fa-pen-to-square" style="color: #2e7d32;"></i> Editar Dados
               </button>
@@ -314,6 +316,7 @@
           });
         });
 
+        /* MVP: evento da integração com mapas desativado.
         container.querySelectorAll('.btn-abrir-mapa').forEach(b => {
           b.addEventListener('click', (e) => {
             const nome = e.currentTarget.getAttribute('data-nome') || 'Ponto de Coleta';
@@ -327,6 +330,7 @@
             });
           });
         });
+        */
 
         container.querySelectorAll('.btn-toggle-status').forEach(b => {
           b.addEventListener('click', async () => {
