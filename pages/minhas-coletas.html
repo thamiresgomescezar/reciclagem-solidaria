@@ -62,6 +62,24 @@
                 <i class="fa-solid fa-plus"></i> Nova Oferta
               </a>
             </div>
+            <script>
+              (function() {
+                try {
+                  var tipo = localStorage.getItem('reciclagem_tipo_usuario') || sessionStorage.getItem('reciclagem_tipo_usuario');
+                  if (tipo === 'catador') {
+                    var btn = document.getElementById('btn_top_acao');
+                    if (btn) {
+                      btn.href = './catador-materiais.html';
+                      btn.innerHTML = '<i class="fa-solid fa-list-check"></i> Ver Materiais Disponíveis';
+                    }
+                    var sub = document.getElementById('subtitulo_minhas_coletas');
+                    if (sub) {
+                      sub.textContent = 'Histórico e acompanhamento das coletas atribuídas a você';
+                    }
+                  }
+                } catch(e) {}
+              })();
+            </script>
 
             <div id="feedback-msg" class="status-message"></div>
 

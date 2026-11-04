@@ -49,8 +49,8 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
   const linkLeftEl = document.getElementById('link_left_minhas_coletas');
 
   if (perfil?.tipo === 'catador') {
-    if (tituloEl) tituloEl.textContent = 'Minhas Coletas Atribuídas';
-    if (subtituloEl) subtituloEl.textContent = 'Histórico e acompanhamento das coletas agendadas e retiradas';
+    if (tituloEl) tituloEl.textContent = 'Minhas Coletas';
+    if (subtituloEl) subtituloEl.textContent = 'Histórico e acompanhamento das coletas atribuídas a você';
     if (linkLeftEl) linkLeftEl.innerHTML = '<i class="fa-solid fa-clipboard-check"></i> Minhas Coletas';
     if (btnTopAcao) {
       btnTopAcao.href = './catador-materiais.html';

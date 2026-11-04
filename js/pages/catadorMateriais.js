@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ` : ''}
           </div>
 
-          <button class="btn-coleta-primary btn-agendar" data-coleta-id="${coleta.cod_coleta}" data-local-id="${coleta.local_retirada_id}" data-material="${materialNome || ''}" data-quantidade="${coleta.quantidade || ''}" style="height: 40px; width: 100%; font-size: 0.88rem; margin-top: 4px;">
+          <button class="btn-coleta-primary btn-agendar" data-coleta-id="${coleta.cod_coleta}" data-local-id="${coleta.local_retirada_id}" data-material="${tipoMaterial || ''}" data-quantidade="${coleta.quantidade || ''}" style="height: 40px; width: 100%; font-size: 0.88rem; margin-top: 4px;">
             <i class="fa-solid fa-calendar-plus"></i> Assumir e Agendar Coleta
           </button>
         `;
