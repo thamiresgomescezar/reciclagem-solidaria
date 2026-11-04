@@ -58,7 +58,7 @@
                 <div class="campo">
                   <label for="cod_material">Tipo de Material Reciclável:<span class="req">*</span></label>
                   <select id="cod_material" required>
-                    <option value="">-- Selecione o Tipo de Material --</option>
+                    <option value="">-- Selecione --</option>
                   </select>
                 </div>
 
@@ -67,9 +67,10 @@
                   <div class="grid-qtd-inline" style="display: grid; grid-template-columns: 75px 1fr; gap: 8px; width: 100%;">
                     <input type="number" id="quantidade_numero" class="input-underline" min="1" max="9999" value="1" placeholder="1" required style="width: 100%; text-align: center; font-weight: 700;">
                     <select id="quantidade_unidade" class="input-underline" required style="width: 100%; font-weight: 600; cursor: pointer;">
+                      <option value="" disabled selected>-- Selecione --</option>
                       <option value="saco(s) grande(s)">saco(s) grande(s)</option>
                       <option value="saco(s) médio(s)">saco(s) médio(s)</option>
-                      <option value="caixa(s)" selected>caixa(s)</option>
+                      <option value="caixa(s)">caixa(s)</option>
                       <option value="sacola(s)">sacola(s)</option>
                       <option value="pacote(s)">pacote(s)</option>
                       <option value="kg">kg (quilos)</option>
@@ -98,7 +99,7 @@
                 <div class="campo">
                   <label for="local_retirada_id">Ponto de Coleta / Retirada:<span class="req">*</span></label>
                   <select id="local_retirada_id" required>
-                    <option value="">-- Selecione o Ponto de Retirada --</option>
+                    <option value="">-- Selecione --</option>
                   </select>
                 </div>
               </div>

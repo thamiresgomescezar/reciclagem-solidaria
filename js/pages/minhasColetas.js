@@ -104,10 +104,17 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
 
     try {
       if (éCatador) {
-        coletas = await listarMinhasColetasCatador().catch(err => {
-          console.error('Erro ao consultar coletas do catador:', err);
-          return [];
-        });
+        const [cols, stats, locs] = await Promise.all([
+          listarMinhasColetasCatador().catch(err => {
+            console.error('Erro ao consultar coletas do catador:', err);
+            return [];
+          }),
+          getStatusDisponiveis().catch(() => []),
+          listarLocaisRetirada().catch(() => [])
+        ]);
+        coletas = cols;
+        listaStatus = stats;
+        locaisRetirada = locs;
       } else if (éAdmin) {
         const [cols, cats, stats, locs] = await Promise.all([
           listarTodasColetasAdmin('todos').catch(err => {
@@ -164,7 +171,6 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
       let statusListaEfetiva = (listaStatus && listaStatus.length > 0) ? [...listaStatus] : (statusEmCache ? [...statusEmCache] : [
         { cod_status: 1, status: 'disponível' },
         { cod_status: 2, status: 'agendada' },
-        { cod_status: 6, status: 'reagendada' },
         { cod_status: 3, status: 'retirada' },
         { cod_status: 4, status: 'cancelada' }
       ]);

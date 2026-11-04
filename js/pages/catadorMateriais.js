@@ -4,7 +4,7 @@ import { listarAgendaPorLocal } from '../services/agenda.js';
 import { renderCalendarGrid } from './calendarPicker.js';
 import { logout } from '../services/auth.js';
 import { supabase } from '../lib/supabaseClient.js';
-import { showAlertModal } from '../lib/modal.js';
+import { showAlertModal, showConfirmModal } from '../lib/modal.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const perfil = await proibirAcessoInvalido(['catador', 'administrador']);
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ` : ''}
           </div>
 
-          <button class="btn-coleta-primary btn-agendar" data-coleta-id="${coleta.cod_coleta}" data-local-id="${coleta.local_retirada_id}" style="height: 40px; width: 100%; font-size: 0.88rem; margin-top: 4px;">
+          <button class="btn-coleta-primary btn-agendar" data-coleta-id="${coleta.cod_coleta}" data-local-id="${coleta.local_retirada_id}" data-material="${materialNome || ''}" data-quantidade="${coleta.quantidade || ''}" style="height: 40px; width: 100%; font-size: 0.88rem; margin-top: 4px;">
             <i class="fa-solid fa-calendar-plus"></i> Assumir e Agendar Coleta
           </button>
         `;
@@ -214,7 +214,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.addEventListener('click', async (e) => {
           const coletaId = e.currentTarget.getAttribute('data-coleta-id');
           const localId = e.currentTarget.getAttribute('data-local-id');
-          await abrirModalAgendamento(coletaId, localId);
+          const mat = e.currentTarget.getAttribute('data-material') || '';
+          const qtd = e.currentTarget.getAttribute('data-quantidade') || '';
+          const materialInfo = mat && qtd ? `${mat} (${qtd})` : (mat || qtd);
+          await abrirModalAgendamento(coletaId, localId, materialInfo);
         });
       });
 
@@ -256,7 +259,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Modal de Agendamento com Calendário Interativo e Escolha de Horário
-  async function abrirModalAgendamento(coletaId, localId) {
+  async function abrirModalAgendamento(coletaId, localId, materialInfo = '') {
     let modal = document.getElementById('modal-agendamento');
     if (!modal) {
       modal = document.createElement('div');
@@ -492,12 +495,28 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (resErr && errUpdate) throw errUpdate;
 
           const [ano, mes, dia] = dataSelecionadaStr.split('-');
-          showSuccess(`Coleta agendada com sucesso para ${dia}/${mes}/${ano} às ${horaVal}!`);
           modal.style.display = 'none';
 
-          setTimeout(() => {
-            window.location.href = './minhas-coletas.html';
-          }, 1200);
+          // Atualiza a listagem para remover o material agendado dos disponíveis
+          await carregarLista();
+
+          const infoMat = materialInfo ? ` do material "${materialInfo.trim()}"` : '';
+          showConfirmModal({
+            title: 'Coleta Agendada com Sucesso!',
+            message: `O agendamento${infoMat} foi registrado com sucesso para o dia ${dia}/${mes}/${ano} às ${horaVal}.\n\nDeseja ir para a tela de Minhas Coletas para acompanhar seus agendamentos ou prefere continuar visualizando materiais disponíveis?`,
+            confirmText: '<i class="fa-solid fa-clipboard-check"></i> Ver Minhas Coletas',
+            confirmClass: 'btn-acao-secundaria', // Atalho para outra tela -> Branco com borda verde
+            cancelText: '<i class="fa-solid fa-recycle"></i> Continuar Vendo Materiais',
+            cancelClass: 'btn-acao-primaria',    // Ação principal de permanecer na tela -> Verde institucional
+            confirmColor: '#1b6d24',
+            icon: '<i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.25rem;"></i>',
+            onConfirm: () => {
+              window.location.href = './minhas-coletas.html';
+            },
+            onCancel: () => {
+              showSuccess(`Coleta agendada com sucesso para ${dia}/${mes}/${ano} às ${horaVal}! Você pode continuar selecionando outros materiais.`);
+            }
+          });
 
         } catch (err) {
           console.error('Erro no agendamento:', err);

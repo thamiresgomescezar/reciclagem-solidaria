@@ -365,7 +365,18 @@ export async function criarStatus(nomeStatus, regras = {}) {
     insertData.regra_catador = regraCatador;
     insertData.bloquear_dados = bloquearDados;
     insertData.regras = { regra_catador: regraCatador, bloquear_dados: bloquearDados, icone, cor };
-    try { await listarStatus(); } catch (e) {}
+    try {
+    const raw = localStorage.getItem('reciclagem_lista_status');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const filtrada = parsed.filter(s => s.cod_status !== cod);
+        localStorage.setItem('reciclagem_lista_status', JSON.stringify(filtrada));
+      }
+    }
+  } catch (e) {}
+
+  try { await listarStatus(); } catch (e) {}
   }
 
   return insertData;
@@ -435,6 +446,17 @@ export async function atualizarStatus(cod_status, novoNome, regras = null) {
     updateData.bloquear_dados = bloquearDados;
     updateData.regras = { regra_catador: regraCatador, bloquear_dados: bloquearDados, icone, cor };
   }
+  try {
+    const raw = localStorage.getItem('reciclagem_lista_status');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const filtrada = parsed.filter(s => s.cod_status !== cod);
+        localStorage.setItem('reciclagem_lista_status', JSON.stringify(filtrada));
+      }
+    }
+  } catch (e) {}
+
   try { await listarStatus(); } catch (e) {}
 
   return updateData;
@@ -479,6 +501,17 @@ export async function excluirStatus(cod_status) {
     }
     throw error;
   }
+
+  try {
+    const raw = localStorage.getItem('reciclagem_lista_status');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const filtrada = parsed.filter(s => s.cod_status !== cod);
+        localStorage.setItem('reciclagem_lista_status', JSON.stringify(filtrada));
+      }
+    }
+  } catch (e) {}
 
   try { await listarStatus(); } catch (e) {}
 

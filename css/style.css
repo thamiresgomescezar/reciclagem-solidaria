@@ -913,6 +913,9 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
   transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
   box-sizing: border-box;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .btn-coleta-primary i {
@@ -946,6 +949,9 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
   transition: all 0.15s ease;
   box-sizing: border-box;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .btn-coleta-secondary i {
@@ -983,6 +989,9 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
   transition: all 0.15s ease;
   box-sizing: border-box;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .btn-coleta-danger i {
@@ -1034,10 +1043,12 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
   gap: 8px;
   flex: 2 1 200px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .card-coleta-acoes .acoes-linha-botoes > .acoes-sublinha-dupla > * {
-  flex: 1 1 100px;
+  flex: 1 1 160px;
+  min-width: 0;
   justify-content: center !important;
   text-align: center !important;
   box-sizing: border-box !important;
@@ -1067,6 +1078,9 @@ button i, a i, .btn-tab i, .btn-avancar i, .btn-secondary-pill i, .btn-primary-p
   gap: 6px;
   box-sizing: border-box;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .card-coleta-finalizada .acoes-finalizadas-botoes {
@@ -1550,7 +1564,7 @@ option:disabled {
 
   .card-coleta-acoes .acoes-linha-botoes > .acoes-sublinha-dupla {
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+    grid-template-columns: 1fr !important;
     gap: 8px !important;
     width: 100% !important;
     flex: none !important;
@@ -1560,6 +1574,7 @@ option:disabled {
     width: 100% !important;
     height: 38px !important;
     font-size: 0.82rem !important;
+    padding: 0 10px !important;
   }
 
   /* Filtros em Grade de 2 Colunas para Telas Estreitas (Mobile / Telas até 650px) */
@@ -1919,7 +1934,7 @@ option:disabled {
 
   .card-coleta-acoes .acoes-linha-botoes > .acoes-sublinha-dupla {
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+    grid-template-columns: 1fr !important;
     gap: 8px !important;
     width: 100% !important;
     flex: none !important;
@@ -1929,6 +1944,7 @@ option:disabled {
     width: 100% !important;
     height: 38px !important;
     font-size: 0.82rem !important;
+    padding: 0 10px !important;
   }
 }
 

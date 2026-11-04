@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     listaLocais = locais || [];
 
     if (materiais && materiais.length > 0) {
-      selectMaterial.innerHTML = '<option value="">-- Selecione o Tipo de Material --</option>';
+      selectMaterial.innerHTML = '<option value="">-- Selecione --</option>';
       materiais.forEach(mat => {
         const opt = document.createElement('option');
         opt.value = mat.cod_material;
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (listaLocais && listaLocais.length > 0) {
-      selectLocal.innerHTML = '<option value="">-- Selecione o Ponto de Retirada --</option>';
+      selectLocal.innerHTML = '<option value="">-- Selecione --</option>';
       listaLocais.forEach(loc => {
         const opt = document.createElement('option');
         opt.value = loc.id;
@@ -272,13 +272,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const cod_material = selectMaterial.value;
     const qtdNumVal = inputQtdNum ? inputQtdNum.value : '1';
-    const qtdUnidadeVal = selectQtdUnidade ? selectQtdUnidade.value : 'caixa(s)';
+    const qtdUnidadeVal = selectQtdUnidade ? selectQtdUnidade.value : '';
     const qtdOutroVal = inputQtdOutro ? inputQtdOutro.value : '';
     const fotoFile = inputFoto?.files[0];
     const local_retirada_id = selectLocal.value;
 
     if (!cod_material) {
       showError('Por favor, selecione o tipo de material.');
+      return;
+    }
+
+    if (!qtdUnidadeVal) {
+      showError('Por favor, selecione a unidade de medida da quantidade (ex: sacos, caixas, kg).');
+      if (selectQtdUnidade) selectQtdUnidade.focus();
+      return;
+    }
+
+    if (qtdUnidadeVal === 'outro' && !qtdOutroVal.trim()) {
+      showError('Por favor, especifique a unidade personalizada (ex: tambores, baldes).');
+      if (inputQtdOutro) inputQtdOutro.focus();
       return;
     }
 
@@ -329,7 +341,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Limpa formulário, preview de foto e reabilita botão de envio
       form.reset();
       if (inputQtdNum) inputQtdNum.value = '1';
-      if (selectQtdUnidade) selectQtdUnidade.value = 'caixa(s)';
+      if (selectQtdUnidade) selectQtdUnidade.value = '';
       if (boxQtdOutro) boxQtdOutro.style.display = 'none';
       if (inputQtdOutro) inputQtdOutro.value = '';
       if (checkConfirmarAgenda) checkConfirmarAgenda.checked = true;
