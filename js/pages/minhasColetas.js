@@ -57,9 +57,10 @@ async function carregarLista(listaContainer, feedbackMsg, perfil, filtroDesejado
       btnTopAcao.innerHTML = '<i class="fa-solid fa-list-check"></i> Ver Materiais Disponíveis';
     }
   } else if (perfil?.tipo === 'cidadao') {
-    if (tituloEl) tituloEl.textContent = 'Histórico de Coletas';
-    if (subtituloEl) subtituloEl.textContent = 'Gerencie o status, edite informações, reagende ou confirme a retirada';
-    if (linkLeftEl) linkLeftEl.innerHTML = '<i class="fa-solid fa-clipboard-check"></i> Histórico de Coletas';
+    // Mesmos textos do HTML de minhas-ofertas.html para não haver troca visível após o carregamento
+    if (tituloEl) tituloEl.textContent = 'Minhas Ofertas';
+    if (subtituloEl) subtituloEl.textContent = 'Acompanhe suas ofertas de descarte sustentável e o status dos agendamentos';
+    if (linkLeftEl) linkLeftEl.innerHTML = '<i class="fa-solid fa-recycle"></i> Minhas Ofertas';
     if (btnTopAcao) {
       btnTopAcao.href = './inserir-material.html';
       btnTopAcao.innerHTML = '<i class="fa-solid fa-plus"></i> Nova Oferta';

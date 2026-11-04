@@ -504,9 +504,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           showConfirmModal({
             title: 'Coleta Agendada com Sucesso!',
             message: `O agendamento${infoMat} foi registrado com sucesso para o dia ${dia}/${mes}/${ano} às ${horaVal}.\n\nDeseja ir para a tela de Minhas Coletas para acompanhar seus agendamentos ou prefere continuar visualizando materiais disponíveis?`,
-            confirmText: '<i class="fa-solid fa-clipboard-check"></i> Ver Minhas Coletas',
+            confirmText: '<i class="fa-solid fa-clipboard-check"></i> Minhas Coletas',
             confirmClass: 'btn-acao-secundaria', // Atalho para outra tela -> Branco com borda verde
-            cancelText: '<i class="fa-solid fa-recycle"></i> Continuar Vendo Materiais',
+            cancelText: '<i class="fa-solid fa-recycle"></i> Ver Materiais Disponíveis',
             cancelClass: 'btn-acao-primaria',    // Ação principal de permanecer na tela -> Verde institucional
             confirmColor: '#1b6d24',
             icon: '<i class="fa-solid fa-circle-check" style="color: #2e7d32; font-size: 1.25rem;"></i>',
