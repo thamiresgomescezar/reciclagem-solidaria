@@ -119,12 +119,12 @@ mensagens · publicacoes
 └── vercel.json        # Configuração de deploy
 ```
 
-## 👩‍💻 Autoria
+## 👥 Equipe
 
-Desenvolvido por **Thamires Cezar** como Projeto Integrador do curso na **Fatec Franco da Rocha**.
+Projeto Integrador desenvolvido em grupo na **Fatec Franco da Rocha**. O desenvolvimento técnico (frontend, banco de dados e publicação) ficou a cargo de **Thamires Cezar**.
 
 [![GitHub](https://img.shields.io/badge/GitHub-thamiresgomescezar-181717?style=flat&logo=github)](https://github.com/thamiresgomescezar)
 
 ## ©️ Direitos de uso
 
-Este repositório está público apenas para **consulta e apresentação** do projeto. Todos os direitos são reservados: o código, o banco de dados e os materiais visuais não podem ser copiados, reproduzidos, redistribuídos ou usados em outras aplicações sem autorização prévia da autora.
+Este repositório está público apenas para **consulta e apresentação** do projeto. Todos os direitos são reservados: o código, o banco de dados e os materiais visuais não podem ser copiados, reproduzidos, redistribuídos ou usados em outras aplicações sem autorização prévia da equipe do projeto.
