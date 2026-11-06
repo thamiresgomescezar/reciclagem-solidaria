@@ -121,9 +121,7 @@ mensagens · publicacoes
 
 ## 👥 Equipe
 
-Projeto Integrador desenvolvido em grupo na **Fatec Franco da Rocha**. O desenvolvimento técnico (frontend, banco de dados e publicação) ficou a cargo de **Thamires Cezar**.
-
-[![GitHub](https://img.shields.io/badge/GitHub-thamiresgomescezar-181717?style=flat&logo=github)](https://github.com/thamiresgomescezar)
+Projeto Integrador desenvolvido em grupo na **Fatec Franco da Rocha**.
 
 ## ©️ Direitos de uso
 
