@@ -91,8 +91,6 @@ cidadao ──< local_retirada
 mensagens · publicacoes
 ```
 
-O script completo (tabelas, RLS, funções, triggers e dados iniciais) está em [`db/schema.sql`](db/schema.sql).
-
 ## 🖼️ Protótipos
 
 | Tela inicial (web) | Painel do administrador | Inserir material |
@@ -115,52 +113,18 @@ O script completo (tabelas, RLS, funções, triggers e dados iniciais) está em 
 │   ├── services/      # Acesso a dados (auth, coletas, materiais, agenda, mensagens...)
 │   └── pages/         # Lógica de cada tela
 ├── pages/             # Telas HTML do sistema
-├── db/schema.sql      # Script do banco (tabelas, RLS, RPCs, triggers, seeds)
 ├── index.html         # Página inicial
 ├── manifest.json      # Manifesto do PWA
 ├── sw.js              # Service worker
 └── vercel.json        # Configuração de deploy
 ```
 
-## ⚙️ Como rodar localmente
-
-### 1. Servir os arquivos
-
-O projeto usa ES6 modules, então precisa ser servido por HTTP (abrir via `file://` não funciona). Qualquer uma das opções abaixo serve:
-
-```bash
-# Python
-python -m http.server 8080
-
-# Node
-npx serve .
-```
-
-Ou use a extensão **Live Server** do VS Code.
-
-### 2. Configurar o banco (Supabase)
-
-1. Crie um projeto no [Supabase](https://supabase.com).
-2. No **SQL Editor**, cole o conteúdo de [`db/schema.sql`](db/schema.sql) e execute.
-   > ⚠️ O script recria as tabelas do zero (`drop table ... cascade`). Use em um projeto novo ou de testes.
-3. Em [`js/lib/supabaseClient.js`](js/lib/supabaseClient.js), substitua `SUPABASE_URL` e `SUPABASE_ANON_KEY` pelos dados do seu projeto (**Project Settings → API**).
-
-> A chave usada no frontend é a chave pública (*publishable/anon*). Ela pode ficar no código, porque o acesso aos dados é controlado pelas políticas de RLS do banco.
-
-### 3. Criar o administrador inicial
-
-1. No Supabase, vá em **Authentication → Users → Add user → Create new user** e informe e-mail e senha.
-2. Copie o `UUID` do usuário criado e execute no **SQL Editor**:
-
-```sql
-insert into public.cidadao (id, nome, email, nivel_acesso, situacao)
-values ('COLE_O_UUID_AQUI', 'Nome do Administrador', 'admin@exemplo.com', 'administrador', 'ativo');
-```
-
-Pronto: faça login com esse usuário para acessar o painel administrativo e cadastrar catadores.
-
 ## 👩‍💻 Autoria
 
 Desenvolvido por **Thamires Cezar** como Projeto Integrador do curso na **Fatec Franco da Rocha**.
 
 [![GitHub](https://img.shields.io/badge/GitHub-thamiresgomescezar-181717?style=flat&logo=github)](https://github.com/thamiresgomescezar)
+
+## ©️ Direitos de uso
+
+Este repositório está público apenas para **consulta e apresentação** do projeto. Todos os direitos são reservados: o código, o banco de dados e os materiais visuais não podem ser copiados, reproduzidos, redistribuídos ou usados em outras aplicações sem autorização prévia da autora.
