@@ -26,7 +26,19 @@ Muitos catadores autônomos dependem de encontrar material reciclável por acaso
 
 - o **cidadão** cadastra o material que tem para doar e onde ele pode ser retirado;
 - o **catador** vê as ofertas disponíveis, agenda a coleta e acompanha seu histórico;
-- a **administração** (Fatec) gerencia catadores, tipos de material, status, publicações e relatórios.
+- a **administração** gerencia catadores, tipos de material, status, publicações e relatórios.
+
+### 🏫 Estudo de caso: Fatec Franco da Rocha
+
+Nesta primeira fase (MVP), a plataforma é usada apenas na **Fatec Franco da Rocha**, que funciona como ponto de coleta:
+
+- a **coordenação** do curso atua como administradora;
+- **colaboradores** da unidade, como a equipe da secretaria, participam como cidadãos e ofertam os materiais;
+- os **catadores** cadastrados retiram os materiais na Fatec, conforme a agenda de atendimento definida pela unidade.
+
+## 🚀 Próximos passos
+
+Depois da validação do MVP na Fatec, a ideia é expandir a plataforma para **outros pontos de coleta**, cada um com seus próprios locais de retirada e agenda de atendimento.
 
 ## ✨ Funcionalidades
 
