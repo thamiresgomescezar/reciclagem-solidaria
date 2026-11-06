@@ -36,9 +36,9 @@ Nesta primeira fase (MVP), a plataforma é usada apenas na **Fatec Franco da Roc
 - **colaboradores** da unidade, como a equipe da secretaria, participam como cidadãos e ofertam os materiais;
 - os **catadores** cadastrados retiram os materiais na Fatec, conforme a agenda de atendimento definida pela unidade.
 
-## 🚀 Próximos passos
+## 🌱 Possibilidade de expansão
 
-Depois da validação do MVP na Fatec, a ideia é expandir a plataforma para **outros pontos de coleta**, cada um com seus próprios locais de retirada e agenda de atendimento.
+Embora o MVP seja focado na Fatec, a plataforma foi pensada para permitir, depois da validação, o uso em **outros pontos de coleta**, cada um com seus próprios locais de retirada e agenda de atendimento.
 
 ## ✨ Funcionalidades
 
