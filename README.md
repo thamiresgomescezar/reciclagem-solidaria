@@ -123,6 +123,15 @@ mensagens · publicacoes
 
 Projeto Integrador desenvolvido em grupo na **Fatec Franco da Rocha**.
 
+| Integrante | LinkedIn |
+| --- | --- |
+| Grazyelle Pontes Vieira | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/grazyellepvieira) |
+| Isabela Rocha dos Santos | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/isabela-rocha-48ba61390/) |
+| Jennifer Santos Lima | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/jennifer-santos-lima-9485a2344) |
+| Maria Eduarda de Moraes dos Santos | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/maria-eduarda-de-moraes-dos-santos-64386b320) |
+| Thamires Gomes Cezar | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/thamires-gomes-cezar) |
+| Vitória Gonçalves de Abreu Lopes | [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/vit%C3%B3ria-gon%C3%A7alves-de-abreu-lopes-917853321) |
+
 ## ©️ Direitos de uso
 
 Este repositório está público apenas para **consulta e apresentação** do projeto. Todos os direitos são reservados: o código, o banco de dados e os materiais visuais não podem ser copiados, reproduzidos, redistribuídos ou usados em outras aplicações sem autorização prévia da equipe do projeto.
